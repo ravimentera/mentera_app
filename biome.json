@@ -1,0 +1,75 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "files": {
+    "maxSize": 10000000,
+    "ignore": [
+      ".git/**",
+      ".next/**",
+      "node_modules/**",
+      "public/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/vendor-chunks/**",
+      "**/static/chunks/**",
+      "**/webpack-runtime.js",
+      "**/*.min.js"
+    ]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "a11y": {
+        "noSvgWithoutTitle": "off"
+      },
+      "suspicious": {
+        "noRedundantUseStrict": "off",
+        "noExplicitAny": "off",
+        "noImplicitAnyLet": "off"
+      },
+      "style": {
+        "noVar": "off",
+        "useTemplate": "off",
+        "useSelfClosingElements": "off",
+        "useImportType": "off"
+      },
+      "complexity": {
+        "noForEach": "off"
+      }
+    },
+    "ignore": [
+      ".git/**",
+      ".next/**",
+      "node_modules/**",
+      "public/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/__generated__/**",
+      "**/vendor-chunks/**",
+      "**/static/chunks/**",
+      "**/webpack-runtime.js",
+      "**/*.min.js"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "ignore": [
+      ".git/**",
+      ".next/**",
+      "node_modules/**",
+      "public/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/vendor-chunks/**",
+      "**/static/chunks/**",
+      "**/webpack-runtime.js",
+      "**/*.min.js"
+    ]
+  }
+}
