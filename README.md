@@ -208,3 +208,7 @@ pnpm start
 ## 📄 License
 
 MIT
+
+## Test Change
+
+This is a test change to verify the Git hooks are working properly.
