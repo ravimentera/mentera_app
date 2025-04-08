@@ -212,3 +212,11 @@ MIT
 ## Test Change
 
 This is a test change to verify the Git hooks are working properly.
+
+# Mentera-AI
+
+A production-ready MVP practice project for Mentera-AI and AI assistant.
+
+## Development
+
+This project uses pnpm as the package manager. Make sure you have it installed globally or use npm's exec feature.
