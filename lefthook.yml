@@ -3,36 +3,21 @@ pre-commit:
   commands:
     lint:
       glob: "*.{js,ts,jsx,tsx}"
-      run: |
-        export PATH="/usr/local/bin:$PATH"
-        files=$(echo "{staged_files}" | xargs -0 printf "%q ")
-        eval "pnpm biome check $files"
+      run: PATH="/usr/local/bin:$PATH" pnpm biome check {staged_files}
     format:
       glob: "*.{js,ts,jsx,tsx}"
-      run: |
-        export PATH="/usr/local/bin:$PATH"
-        files=$(echo "{staged_files}" | xargs -0 printf "%q ")
-        eval "pnpm biome format --write $files && git add $files"
+      run: PATH="/usr/local/bin:$PATH" pnpm biome format --write {staged_files} && git add {staged_files}
     fix:
       glob: "*.{js,ts,jsx,tsx}"
-      run: |
-        export PATH="/usr/local/bin:$PATH"
-        files=$(echo "{staged_files}" | xargs -0 printf "%q ")
-        eval "pnpm biome check --write $files && git add $files"
+      run: PATH="/usr/local/bin:$PATH" pnpm biome check --write {staged_files} && git add {staged_files}
     typecheck:
       glob: "*.{ts,tsx}"
-      run: |
-        export PATH="/usr/local/bin:$PATH"
-        pnpm tsc --noEmit
+      run: PATH="/usr/local/bin:$PATH" pnpm tsc --noEmit
 
 pre-push:
   parallel: true
   commands:
     full-check:
-      run: |
-        export PATH="/usr/local/bin:$PATH"
-        pnpm biome check .
+      run: PATH="/usr/local/bin:$PATH" pnpm biome check .
     typecheck:
-      run: |
-        export PATH="/usr/local/bin:$PATH"
-        pnpm tsc --noEmit
+      run: PATH="/usr/local/bin:$PATH" pnpm tsc --noEmit
