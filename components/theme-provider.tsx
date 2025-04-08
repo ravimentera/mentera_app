@@ -8,12 +8,10 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Force light theme on document
     const root = window.document.documentElement;
     root.classList.remove("dark");
     root.classList.add("light");
-  }, []);
-
-  useEffect(() => {
     setMounted(true);
   }, []);
 
