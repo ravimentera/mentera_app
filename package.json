@@ -31,6 +31,9 @@
     "clsx": "^2.0.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "formik": "^2.4.5",
+    "isomorphic-ws": "^5.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.294.0",
     "next": "14.1.0",
     "next-themes": "^0.2.1",
@@ -42,6 +45,7 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.2.5",
+    "ws": "^8.18.1",
     "yup": "^1.3.3",
     "zod": "^3.22.4"
   },
