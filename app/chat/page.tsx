@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Button, Input, Label } from "@/components/atoms";
+import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
 import { useFormik } from "formik";
-import WebSocket from "isomorphic-ws"; // required in browser context
+import WebSocket from "isomorphic-ws";
+import { useEffect, useRef, useState } from "react";
+import { Message } from "./types";
 
 const testMedSpa = {
   medspaId: "MS-1001",
@@ -49,9 +52,7 @@ const testPatient = {
 };
 
 const ChatClient = () => {
-  const [messages, setMessages] = useState<
-    { sender: "user" | "ai"; text: string }[]
-  >([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [streamBuffer, setStreamBuffer] = useState("");
   const socketRef = useRef<WebSocket | null>(null);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
@@ -75,7 +76,7 @@ const ChatClient = () => {
           patientInfo: testPatient,
           medSpaContext: testMedSpa,
           streaming: true,
-        })
+        }),
       );
 
       resetForm();
@@ -87,11 +88,7 @@ const ChatClient = () => {
       const res = await fetch("/api/token");
       const { token } = await res.json();
 
-      const socket = new WebSocket(
-        `ws://${process.env.NEXT_PUBLIC_WS_HOST || "localhost"}:${
-          process.env.NEXT_PUBLIC_WS_PORT || "5003"
-        }/ws`
-      );
+      const socket = new WebSocket(getWebSocketUrl());
       socketRef.current = socket;
 
       socket.onopen = () => {
@@ -99,7 +96,7 @@ const ChatClient = () => {
         socket.send(JSON.stringify({ type: "auth", token }));
       };
 
-      socket.onmessage = (event) => {
+      socket.onmessage = (event: any) => {
         try {
           const message = JSON.parse(event.data);
 
@@ -125,10 +122,7 @@ const ChatClient = () => {
                 typeof message.response?.content === "string"
                   ? message.response.content
                   : JSON.stringify(message.response?.content || {});
-              setMessages((prev) => [
-                ...prev,
-                { sender: "ai", text: finalContent },
-              ]);
+              setMessages((prev) => [...prev, { sender: "ai", text: finalContent }]);
               setStreamBuffer("");
               break;
             }
@@ -155,7 +149,7 @@ const ChatClient = () => {
         }
       };
 
-      socket.onerror = (err) => {
+      socket.onerror = (err: any) => {
         console.error("WebSocket error:", err);
       };
 
@@ -170,8 +164,7 @@ const ChatClient = () => {
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages, streamBuffer]);
 
@@ -192,17 +185,12 @@ const ChatClient = () => {
 
   return (
     <div className="flex flex-col h-screen w-full max-w-4xl mx-auto bg-white border rounded shadow-lg">
-      <div
-        className="flex-grow overflow-y-auto p-4 space-y-2"
-        ref={chatContainerRef}
-      >
+      <div className="flex-grow overflow-y-auto p-4 space-y-2" ref={chatContainerRef}>
         {messages.map((msg, idx) => (
           <div
             key={idx}
             className={`max-w-[75%] px-4 py-2 rounded-lg ${
-              msg.sender === "user"
-                ? "bg-blue-100 self-end text-right"
-                : "bg-gray-100 self-start"
+              msg.sender === "user" ? "bg-blue-100 self-end text-right" : "bg-gray-100 self-start"
             }`}
           >
             {msg.text}
@@ -215,24 +203,23 @@ const ChatClient = () => {
         )}
       </div>
 
-      <form onSubmit={formik.handleSubmit} className="border-t p-4">
-        <div className="flex gap-2">
-          <input
+      <form onSubmit={formik.handleSubmit} className="border-t p-4 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="message">Your Message</Label>
+          <Input
+            id="message"
             name="message"
             type="text"
+            placeholder="Type your message..."
             value={formik.values.message}
             onChange={formik.handleChange}
-            placeholder="Type your message..."
-            className="flex-grow px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            disabled={!formik.values.message.trim()}
-          >
-            Send
-          </button>
         </div>
+
+        <Button type="submit" className="w-full" disabled={!formik.values.message.trim()}>
+          Send
+        </Button>
       </form>
     </div>
   );
