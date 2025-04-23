@@ -46,8 +46,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 
   const handleLogout = () => {
     // Clear auth cookie
-    document.cookie =
-      "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     setIsLoggedIn(false);
 
     // Show logout toast notification
@@ -62,12 +61,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       <div className="flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <div className="lg:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="mr-2"
-              onClick={handleMenuClick}
-            >
+            <Button variant="ghost" size="icon" className="mr-2" onClick={handleMenuClick}>
               <HamburgerMenuIcon className="h-5 w-5" />
               <span className="sr-only">Toggle mobile menu</span>
             </Button>
@@ -79,11 +73,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               href={isLoggedIn ? "/dashboard" : "/"}
               className="flex items-center gap-2 relative z-50"
             >
-              <img
-                src="/logo-with-name-light.svg"
-                alt="Mentera AI Logo"
-                className="w-36"
-              />
+              <img src="/logo-with-name-light.svg" alt="Mentera AI Logo" className="w-36" />
             </Link>
           </div>
         </div>
@@ -102,12 +92,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
 
       {/* Mobile menu drawer */}
-      <div
-        className={cn(
-          "fixed inset-0 z-50 lg:hidden",
-          isMobileMenuOpen ? "block" : "hidden"
-        )}
-      >
+      <div className={cn("fixed inset-0 z-50 lg:hidden", isMobileMenuOpen ? "block" : "hidden")}>
         <button
           type="button"
           className="fixed inset-0 bg-background/80 backdrop-blur-sm"
@@ -115,10 +100,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         />
         <div className="fixed inset-y-0 left-0 w-full max-w-xs border-r bg-background p-6 shadow-lg">
           <div className="flex items-center justify-between mb-8">
-            <Link
-              href={isLoggedIn ? "/dashboard" : "/"}
-              className="flex items-center gap-2"
-            >
+            <Link href={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-2">
               {/* Spa/Health Icon */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -139,15 +121,9 @@ export function Header({ onMenuClick }: HeaderProps) {
                 <path d="m18 20-3-6" />
                 <path d="m18 20 3-6" />
               </svg>
-              <span className="text-2xl font-bold text-primary">
-                Mentera-AI
-              </span>
+              <span className="text-2xl font-bold text-primary">Mentera-AI</span>
             </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
+            <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
               <span className="sr-only">Close</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"

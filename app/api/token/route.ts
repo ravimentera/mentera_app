@@ -1,6 +1,6 @@
+import jwt from "jsonwebtoken";
 // app/api/token/route.ts
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-key";
 
@@ -13,7 +13,7 @@ export async function GET() {
       medspaId: "MS-1001",
     },
     JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "1h" },
   );
 
   return NextResponse.json({ token: testToken });

@@ -162,6 +162,7 @@ const ChatClient = () => {
     connectWebSocket();
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <keeping this since we need to scroll to the bottom on every new message>
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -188,7 +189,7 @@ const ChatClient = () => {
       <div className="flex-grow overflow-y-auto p-4 space-y-2" ref={chatContainerRef}>
         {messages.map((msg, idx) => (
           <div
-            key={idx}
+            key={`${msg.text}-${idx}`}
             className={`max-w-[75%] px-4 py-2 rounded-lg ${
               msg.sender === "user" ? "bg-blue-100 self-end text-right" : "bg-gray-100 self-start"
             }`}
