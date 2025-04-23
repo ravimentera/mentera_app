@@ -36,13 +36,11 @@ function SidebarItem({ href, icon, title, isCollapsed }: SidebarItemProps) {
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-200 relative group",
         isActive
           ? "bg-primary text-primary-foreground font-medium"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
       <span className="h-5 w-5 shrink-0">{icon}</span>
-      {!isCollapsed && (
-        <span className="transition-opacity duration-200">{title}</span>
-      )}
+      {!isCollapsed && <span className="transition-opacity duration-200">{title}</span>}
     </Link>
   );
 
@@ -118,13 +116,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div
           className={cn(
             "border-r bg-background h-full transition-all duration-300",
-            isCollapsed
-              ? `w-[${SIDEBAR_COLLAPSED_WIDTH}px]`
-              : `w-[${SIDEBAR_EXPANDED_WIDTH}px]`,
+            isCollapsed ? `w-[${SIDEBAR_COLLAPSED_WIDTH}px]` : `w-[${SIDEBAR_EXPANDED_WIDTH}px]`,
             isMobile && isCollapsed ? `w-[${SIDEBAR_COLLAPSED_WIDTH}px]` : "",
             isMobile && !isCollapsed
               ? `fixed inset-y-0 left-0 w-[${SIDEBAR_EXPANDED_WIDTH}px] shadow-xl z-30`
-              : ""
+              : "",
           )}
         >
           <div className="flex h-full flex-col">
@@ -133,7 +129,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               <div
                 className={cn(
                   "border-b h-16 relative z-50 flex items-center",
-                  isCollapsed ? "justify-center p-2" : "justify-between p-3"
+                  isCollapsed ? "justify-center p-2" : "justify-between p-3",
                 )}
               >
                 {!isCollapsed && (
@@ -157,16 +153,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                       <path d="m18 20-3-6" />
                       <path d="m18 20 3-6" />
                     </svg>
-                    <span className="text-xl font-bold text-primary">
-                      Mentera-AI
-                    </span>
+                    <span className="text-xl font-bold text-primary">Mentera-AI</span>
                   </Link>
                 )}
                 {isCollapsed && (
-                  <Link
-                    href="/dashboard"
-                    className="flex justify-center items-center"
-                  >
+                  <Link href="/dashboard" className="flex justify-center items-center">
                     <Tooltip content="Mentera-AI Dashboard" side="right">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -249,7 +240,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               className={cn(
                 "flex h-9 w-9 items-center justify-center rounded-full border-2 border-border bg-card",
                 "hover:bg-muted hover:text-primary transition-colors",
-                "shadow-[0_2px_10px_rgba(0,0,0,0.1)]"
+                "shadow-[0_2px_10px_rgba(0,0,0,0.1)]",
               )}
               style={{
                 boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
