@@ -92,7 +92,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               : `lg:ml-[${SIDEBAR_EXPANDED_WIDTH}px]`,
           )}
         >
-          <div className="pb-8">{children}</div>
+          {/* <div className="pb-8">{children}</div> */}
+
+          <div className="flex flex-col h-full">{children}</div>
         </main>
       </div>
     </div>

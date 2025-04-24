@@ -4,6 +4,7 @@ import { Tooltip, TooltipProvider } from "@/components/atoms";
 import { cn } from "@/lib/utils";
 import {
   CalendarIcon,
+  ChatBubbleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CrumpledPaperIcon,
@@ -215,7 +216,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   />
                   <SidebarItem
                     href="/chat"
-                    icon={<GearIcon className="h-5 w-5" />}
+                    icon={<ChatBubbleIcon className="h-5 w-5" />}
                     title="Chat"
                     isCollapsed={isCollapsed}
                   />
