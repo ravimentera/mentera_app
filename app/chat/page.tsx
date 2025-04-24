@@ -1,12 +1,18 @@
 "use client";
 
 import { Button, Input, Label } from "@/components/atoms";
+import { Toggle } from "@/components/molecules";
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
+import { clsx } from "clsx";
 import { useFormik } from "formik";
 import WebSocket from "isomorphic-ws";
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { v4 as uuid } from "uuid";
 import { ChatMessage, Patient, WebSocketResponseMessage } from "./types";
+
+import "./chat-markdown.css"; // adjust path if needed
 
 const testMedSpa = {
   medspaId: "MS-1001",
@@ -86,6 +92,26 @@ const patientDatabase: Record<string, Patient> = {
   },
 };
 
+function sanitizeMarkdown(content: string): string {
+  return (
+    content
+      .trim()
+      // Collapse 3+ line breaks → 2
+      .replace(/\n{3,}/g, "\n\n")
+
+      // Remove trailing spaces from each line
+      .split("\n")
+      .map((line) => line.trimEnd())
+      .join("\n")
+
+      // Remove blank lines between list items (bullet spacing)
+      .replace(/-\s+(.+)\n\s*\n(?=-\s)/g, "- $1\n") // removes single blank lines between `- item` list
+
+      // Optional: normalize multiple blank lines after lists
+      .replace(/(\n\s*[-*]\s[^\n]+)+\n{2,}/g, (match) => match.trimEnd() + "\n\n")
+  );
+}
+
 export default function ChatClient() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamBuffer, setStreamBuffer] = useState<string>("");
@@ -152,21 +178,27 @@ export default function ChatClient() {
           case "chat_stream_chunk":
             setStreamBuffer((prev) => prev + extractChunk(message.chunk));
             break;
-          case "chat_stream_complete":
+          case "chat_stream_complete": {
+            const rawContent = (message.response?.content as string) || "";
+            const cleaned = sanitizeMarkdown(rawContent);
             setMessages((prev) => [
               ...prev,
-              { id: uuid(), sender: "ai", text: String(message.response?.content || "") },
+              { id: uuid(), sender: "ai", text: String(cleaned || "") },
             ]);
             setStreamBuffer("");
             logMetadata(message.response?.metadata);
             break;
-          case "chat_response":
+          }
+          case "chat_response": {
+            const rawContent = (message.response?.content as string) || "";
+            const cleaned = sanitizeMarkdown(rawContent);
             setMessages((prev) => [
               ...prev,
-              { id: uuid(), sender: "ai", text: extractChunk(message.response?.content) },
+              { id: uuid(), sender: "ai", text: extractChunk(cleaned) },
             ]);
             logMetadata(message.response?.metadata);
             break;
+          }
           case "error":
             console.error("Error: ", message.error);
             break;
@@ -216,72 +248,82 @@ export default function ChatClient() {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto bg-white border rounded shadow-lg">
-      <div className="p-2 border-b flex gap-4 items-center text-sm bg-gray-50">
-        <label>
+    <div className="flex flex-col h-screen w-full max-w-3xl mx-auto border-x bg-white">
+      {/* Topbar */}
+      <div className="px-4 py-2 border-b bg-white/80 backdrop-blur-md sticky top-0 z-10 flex items-center gap-4 text-sm">
+        <label className="font-medium">
           Patient:
           <select
-            className="ml-2 border px-2 py-1 rounded"
+            className="ml-2 border rounded px-2 py-1 bg-white text-black"
             value={currentPatientId}
             onChange={(e) => setCurrentPatientId(e.target.value as keyof typeof patientDatabase)}
           >
             {Object.keys(patientDatabase).map((id) => (
-              <option key={id}>{id}</option>
+              <option key={id} value={id}>
+                {id}
+              </option>
             ))}
           </select>
         </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={isPatientContextEnabled}
-            onChange={() => setIsPatientContextEnabled((v) => !v)}
-          />
-          <span className="ml-1">Patient Context</span>
-        </label>
-        <label>
-          <input type="checkbox" checked={forceFresh} onChange={() => setForceFresh((v) => !v)} />
-          <span className="ml-1">Force Fresh</span>
-        </label>
-        <label>
-          <input type="checkbox" checked={cacheDebug} onChange={() => setCacheDebug((v) => !v)} />
-          <span className="ml-1">Cache Debug</span>
-        </label>
+        <div className="flex items-center gap-3">
+          <Toggle label="Patient Context" />
+          <Toggle label="Force Fresh" />
+          <Toggle label="Cache Debug" />
+        </div>
       </div>
 
-      <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-2">
+      {/* Chat content */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-6" ref={chatContainerRef}>
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`max-w-[75%] px-4 py-2 rounded-lg whitespace-pre-wrap ${
-              msg.sender === "user" ? "bg-blue-100 self-end text-right" : "bg-gray-100 self-start"
-            }`}
+            className={clsx(
+              "flex flex-col gap-1",
+              msg.sender === "user" ? "items-end" : "items-start",
+            )}
           >
-            {msg.text}
+            <div
+              className={clsx(
+                "rounded-xl px-4 py-3 max-w-[85%] prose prose-sm whitespace-pre-wrap",
+                msg.sender === "user"
+                  ? "bg-blue-400 text-black font-medium shadow-sm"
+                  : "bg-gray-100 text-gray-900 shadow border border-gray-200",
+              )}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+            </div>
           </div>
         ))}
+
         {streamBuffer && (
-          <div className="max-w-[75%] px-4 py-2 rounded-lg bg-gray-100 self-start animate-pulse">
-            {streamBuffer}
+          <div className="flex items-start">
+            <div className="bg-gray-100 px-4 py-3 rounded-xl max-w-[85%] text-gray-700 animate-pulse prose prose-sm whitespace-pre-wrap">
+              {streamBuffer}
+            </div>
           </div>
         )}
       </div>
 
-      <form onSubmit={formik.handleSubmit} className="border-t p-4 space-y-4">
-        <div>
-          <Label htmlFor="message">Your Message</Label>
+      {/* Input */}
+      <form onSubmit={formik.handleSubmit} className="border-t bg-white p-4">
+        <div className="flex items-center gap-2">
           <Input
             id="message"
             name="message"
-            type="text"
             placeholder="Type your message..."
             value={formik.values.message}
             onChange={formik.handleChange}
+            className="flex-1 bg-gray-50 border px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
             required
           />
+          <Button
+            type="submit"
+            disabled={!formik.values.message.trim()}
+            className="rounded-lg px-5 py-2 shadow"
+          >
+            Send
+          </Button>
         </div>
-        <Button type="submit" className="w-full" disabled={!formik.values.message.trim()}>
-          Send
-        </Button>
       </form>
     </div>
   );
