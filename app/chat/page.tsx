@@ -113,6 +113,12 @@ function sanitizeMarkdown(content: string): string {
 }
 
 export default function ChatClient() {
+  const maxRetries = 3;
+  const retryDelay = 2000; // milliseconds
+
+  const retryCount = useRef(0);
+  const retryTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamBuffer, setStreamBuffer] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
@@ -158,11 +164,14 @@ export default function ChatClient() {
   useEffect(() => {
     const connect = async () => {
       const { token } = await fetch("/api/token").then((r) => r.json());
+
       const socket = new WebSocket(getWebSocketUrl());
       socketRef.current = socket;
 
       socket.onopen = () => {
+        console.log("Connected to WebSocket");
         setConnected(true);
+        retryCount.current = 0; // Reset retry count
         socket.send(JSON.stringify({ type: "auth", token }));
       };
 
@@ -214,7 +223,23 @@ export default function ChatClient() {
           console.error(e);
         }
       };
-      socket.onclose = () => setConnected(false);
+      socket.onclose = () => {
+        console.warn("WebSocket connection closed");
+
+        setConnected(false);
+        if (retryCount.current < maxRetries) {
+          retryCount.current += 1;
+          console.log(
+            `Retrying connection in ${retryDelay}ms (attempt ${retryCount.current}/${maxRetries})...`,
+          );
+
+          retryTimeout.current = setTimeout(() => {
+            connect();
+          }, retryDelay);
+        } else {
+          console.error("Max retry attempts reached. Giving up.");
+        }
+      };
     };
 
     connect();
@@ -266,9 +291,21 @@ export default function ChatClient() {
           </select>
         </label>
         <div className="flex items-center gap-3">
-          <Toggle label="Patient Context" />
-          <Toggle label="Force Fresh" />
-          <Toggle label="Cache Debug" />
+          <Toggle
+            label="Patient Context"
+            checked={isPatientContextEnabled}
+            onChange={() => setIsPatientContextEnabled((v) => !v)}
+          />
+          <Toggle
+            label="Force Fresh"
+            checked={forceFresh}
+            onChange={() => setForceFresh((v) => !v)}
+          />
+          <Toggle
+            label="Cache Debug"
+            checked={cacheDebug}
+            onChange={() => setCacheDebug((v) => !v)}
+          />
         </div>
       </div>
 

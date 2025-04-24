@@ -1,13 +1,16 @@
-import { useState } from "react";
+type ToggleProps = {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+};
 
-export const Toggle = ({ label }: { label: string }) => {
-  const [checked, setChecked] = useState(false);
+export const Toggle = ({ label, checked, onChange }: ToggleProps) => {
   return (
-    <label className="inline-flex items-center gap-1 cursor-pointer text-gray-700">
+    <label className="inline-flex items-center gap-1 cursor-pointer text-gray-700 text-sm">
       <input
         type="checkbox"
         checked={checked}
-        onChange={() => setChecked(!checked)}
+        onChange={onChange}
         className="accent-blue-500 w-4 h-4"
       />
       {label}
