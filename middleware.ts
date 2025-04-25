@@ -14,7 +14,8 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/appointments") ||
     pathname.startsWith("/profile") ||
-    pathname.startsWith("/settings")
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/chat")
   ) {
     // In a real app, check for authentication token
     // For this demo, we'll mock "auth" by checking a session cookie
@@ -36,6 +37,7 @@ export const config = {
   matcher: [
     // Match the root path and dashboard paths
     "/",
+    "/chat",
     "/dashboard/:path*",
     "/appointments/:path*",
     "/profile/:path*",
