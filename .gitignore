@@ -11,3 +11,7 @@ out/
 
 # Local development
 .zshrc
+
+# TypeScript incremental build info
+tsconfig.tsbuildinfo
+

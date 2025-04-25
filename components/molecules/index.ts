@@ -33,3 +33,5 @@ export {
   TabsList,
   TabsTrigger,
 } from "./tabs";
+
+export { Toggle } from "./toggle";

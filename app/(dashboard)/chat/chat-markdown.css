@@ -1,0 +1,30 @@
+/* styles/chat-markdown.css */
+
+.chat-markdown {
+  @apply prose prose-sm whitespace-pre-wrap;
+
+  /* Reduce spacing */
+}
+
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.chat-markdown p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.chat-markdown ul,
+.chat-markdown ol {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.chat-markdown li {
+  margin-top: 0;
+  margin-bottom: 0;
+}
