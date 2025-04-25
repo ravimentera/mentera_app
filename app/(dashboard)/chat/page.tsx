@@ -1,8 +1,10 @@
 "use client";
 
+import { ChatMessage, WebSocketResponseMessage } from "@/app/(dashboard)/chat/types";
 import { Button, Input, Label } from "@/components/atoms";
 import { Toggle } from "@/components/molecules";
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
+import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
 import { clsx } from "clsx";
 import { useFormik } from "formik";
 import WebSocket from "isomorphic-ws";
@@ -10,108 +12,11 @@ import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { v4 as uuid } from "uuid";
-import { ChatMessage, Patient, WebSocketResponseMessage } from "./types";
+
+import { sanitizeMarkdown } from "@/lib/utils";
 
 import "./chat-markdown.css"; // adjust path if needed
 import ChatMessageSkeleton from "@/components/skeletons/ChatMessageSkeleton";
-
-const testMedSpa = {
-  medspaId: "MS-1001",
-  name: "Destination Aesthetics",
-  location: "San Francisco",
-};
-
-const testNurse = {
-  id: "NR-2001",
-  email: "rachel.garcia@medspa.com",
-  role: "PROVIDER",
-  firstName: "Rachel",
-  lastName: "Garcia",
-  specialties: ["Botox", "Dermal Fillers"],
-  medspaId: testMedSpa.medspaId,
-};
-
-const patientDatabase: Record<string, Patient> = {
-  "PT-1003": {
-    id: "PT-1003",
-    chartId: "CH-5003",
-    treatmentNotes: {
-      procedure: "Laser Hair Removal",
-      areasTreated: ["Underarms"],
-      unitsUsed: null,
-      sessionNumber: 3,
-      observations:
-        "No adverse reactions. Patient reported 80% reduction in hair growth, high satisfaction with results.",
-      providerRecommendations:
-        "Continue with remaining sessions as planned; assess after session 5 for potential maintenance treatments.",
-    },
-    preProcedureCheck: {
-      medications: ["None"],
-      consentSigned: true,
-      allergyCheck: "Latex allergy confirmed, precautions taken",
-    },
-    postProcedureCare: {
-      instructionsProvided: true,
-      followUpRecommended: "2025-03-27",
-      productsRecommended: ["Aloe Vera Gel"],
-    },
-    nextTreatment: "Laser Hair Removal session 4",
-    followUpDate: "2025-03-27",
-    alerts: ["Latex allergy"],
-    medspaId: testMedSpa.medspaId,
-    providerSpecialty: "Laser Hair Removal",
-    treatmentOutcome: "Positive",
-  },
-  "PT-1004": {
-    id: "PT-1004",
-    chartId: "CH-5004",
-    treatmentNotes: {
-      procedure: "Chemical Peel",
-      areasTreated: ["Face"],
-      unitsUsed: null,
-      sessionNumber: 2,
-      observations:
-        "Mild redness post-procedure. Patient showing good progress with acne scarring reduction.",
-      providerRecommendations: "Continue series of 6 treatments as planned.",
-    },
-    preProcedureCheck: {
-      medications: ["Tretinoin - discontinued 1 week prior"],
-      consentSigned: true,
-      allergyCheck: "No known allergies",
-    },
-    postProcedureCare: {
-      instructionsProvided: true,
-      followUpRecommended: "2025-04-15",
-      productsRecommended: ["Gentle Cleanser", "SPF 50"],
-    },
-    nextTreatment: "Chemical Peel session 3",
-    followUpDate: "2025-04-15",
-    alerts: ["Avoid sun exposure"],
-    medspaId: testMedSpa.medspaId,
-    providerSpecialty: "Chemical Peels",
-    treatmentOutcome: "Positive",
-  },
-};
-
-function sanitizeMarkdown(content: string): string {
-  return (
-    content
-      .trim()
-      // Collapse 3+ line breaks → 2
-      .replace(/\n{3,}/g, "\n\n")
-
-      // Remove trailing spaces from each line
-      .split("\n")
-      .map((line) => line.trimEnd())
-      .join("\n")
-
-      // Remove blank lines between list items (bullet spacing)
-      .replace(/-\s+(.+)\n\s*\n(?=-\s)/g, "- $1\n") // removes single blank lines between `- item` list
-
-      // Optional: normalize multiple blank lines after lists
-      .replace(/(\n\s*[-*]\s[^\n]+)+\n{2,}/g, (match) => match.trimEnd() + "\n\n")
-  );
-}
 
 export default function ChatClient() {
   const maxRetries = 3;
