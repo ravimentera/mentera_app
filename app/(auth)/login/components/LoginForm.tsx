@@ -1,0 +1,157 @@
+import { Button } from "@/components/atoms/button";
+import { Input, PasswordInput } from "@/components/atoms/input";
+import { Label } from "@/components/atoms/label";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+
+interface FormData {
+  email: string;
+  password: string;
+}
+
+export function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams?.get("returnUrl") || "/dashboard";
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Simulate API call (1 second delay)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Set a cookie that expires in 1 day
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 1);
+      document.cookie = `auth_session=demo_authenticated; expires=${expiryDate.toUTCString()}; path=/`;
+
+      toast.success("Login successful! Welcome to Mentera.");
+      router.push(returnUrl);
+    } catch (error) {
+      toast.error("Failed to login. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      toast.success("Google sign-in successful!");
+      router.push(returnUrl);
+    }, 1500);
+  };
+
+  return (
+    <div className="w-full md:w-1/2 p-6 md:p-12 flex items-center justify-center">
+      <div className="w-full max-w-md">
+        {/* Form heading */}
+        <div className="space-y-2 text-center mb-12 flex justify-between items-start">
+          <div className="flex-1">
+            <p className="text-3xl font-semibold text-gray-900 text-left">Login to Mentera</p>
+          </div>
+          <div className="flex flex-col justify-end items-end mt-2">
+            <p className="text-[#6B7280] text-md text-right">New member?</p>
+            <Link
+              href="/register"
+              className="text-[#C026D3] font-semibold text-sm ml-1 hover:underline"
+            >
+              Create Account here
+            </Link>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">
+              Email<span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className={cn(
+                "w-full",
+                formData.email &&
+                  !formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) &&
+                  "border-destructive",
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">
+              Password<span className="text-destructive">*</span>
+            </Label>
+            <PasswordInput
+              id="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div></div>
+            <Link href="/forgot-password" className="text-[#6B7280] text-sm hover:underline">
+              Forgot your password?
+            </Link>
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full mt-2 bg-[#C026D3] hover:bg-[#BD05DD]"
+            disabled={isLoading || !formData.email || !formData.password}
+          >
+            {isLoading ? "Please wait..." : "Login"}
+          </Button>
+
+          <div className="flex items-center my-8">
+            <div className="flex-1 border-t border-gray-200"></div>
+            <div className="px-4 text-xs text-gray-500">or</div>
+            <div className="flex-1 border-t border-gray-200"></div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+            className="w-full relative bg-[#F1F5F9] hover:bg-gray-100"
+          >
+            <Image
+              src="/google.svg"
+              alt="Google Logo"
+              width={20}
+              height={20}
+              className="absolute left-4"
+            />
+            <span className="text-[#0F172A]">Login with Google</span>
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}
