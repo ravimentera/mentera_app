@@ -7,21 +7,37 @@ export interface Step {
   title: string;
   number: number;
   href: string;
+  isCompleted?: boolean;
+  isNavigable?: boolean;
 }
 
 interface FormStepperProps {
   steps: Step[];
   activeStep: string;
   className?: string;
+  disableForwardNavigation?: boolean;
 }
 
-export function FormStepper({ steps, activeStep, className }: FormStepperProps) {
+export function FormStepper({
+  steps,
+  activeStep,
+  className,
+  disableForwardNavigation = false,
+}: FormStepperProps) {
   return (
     <div className={cn("flex items-center justify-center", className)}>
       {steps.map((step, index) => {
         const isActive = step.id === activeStep;
-        const isCompleted = steps.findIndex((s) => s.id === activeStep) > index;
+        const isCompleted = step.isCompleted || steps.findIndex((s) => s.id === activeStep) > index;
         const isLastStep = index === steps.length - 1;
+        const activeStepIndex = steps.findIndex((s) => s.id === activeStep);
+
+        // Only allow navigating to previous steps or the current step
+        // if disableForwardNavigation is true
+        const isNavigable =
+          step.isNavigable !== undefined
+            ? step.isNavigable
+            : !disableForwardNavigation || index <= activeStepIndex || isCompleted;
 
         return (
           <React.Fragment key={step.id}>
@@ -39,24 +55,37 @@ export function FormStepper({ steps, activeStep, className }: FormStepperProps) 
                     : isCompleted
                       ? "bg-[#F1F5F9] text-[#C026D3]"
                       : "bg-gray-100 text-gray-500",
+                  !isNavigable && "opacity-50 cursor-not-allowed",
                 )}
               >
-                <Link href={step.href} className="flex items-center justify-center">
-                  {step.number}
-                </Link>
+                {isNavigable ? (
+                  <Link href={step.href} className="flex items-center justify-center w-full h-full">
+                    {step.number}
+                  </Link>
+                ) : (
+                  <span className="flex items-center justify-center w-full h-full">
+                    {step.number}
+                  </span>
+                )}
               </div>
               <div className="ml-3">
-                <Link
-                  href={step.href}
-                  className={cn(
-                    "text-base font-medium",
-                    isActive
-                      ? "bg-gradient-to-r from-[#111A53] to-[#BD05DD] bg-clip-text text-transparent font-semibold text-xl"
-                      : "text-gray-500",
-                  )}
-                >
-                  {step.title}
-                </Link>
+                {isNavigable ? (
+                  <Link
+                    href={step.href}
+                    className={cn(
+                      "text-base font-medium",
+                      isActive
+                        ? "bg-gradient-to-r from-[#111A53] to-[#BD05DD] bg-clip-text text-transparent font-semibold text-xl"
+                        : "text-gray-500",
+                    )}
+                  >
+                    {step.title}
+                  </Link>
+                ) : (
+                  <span className={cn("text-base font-medium text-gray-400 cursor-not-allowed")}>
+                    {step.title}
+                  </span>
+                )}
               </div>
             </div>
 

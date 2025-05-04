@@ -1,3 +1,5 @@
+import { FEATURE_ICON_COLORS, GRADIENTS } from "@/app/constants/theme-constants";
+import { GradientBackground } from "@/components/templates";
 import Image from "next/image";
 
 const features = [
@@ -5,19 +7,19 @@ const features = [
     id: "schedule",
     icon: "/assets/icons/schedule-icon.svg",
     text: "Smart patient scheduling & reminders",
-    bgColor: "bg-[#DBEAFE]",
+    bgColor: FEATURE_ICON_COLORS.SCHEDULE,
   },
   {
     id: "dashboard",
     icon: "/assets/icons/dashboard-icon.svg",
     text: "Automated follow-up campaigns",
-    bgColor: "bg-[#E7D7F8]",
+    bgColor: FEATURE_ICON_COLORS.DASHBOARD,
   },
   {
     id: "robot",
     icon: "/assets/icons/robot-icon.svg",
     text: "AI-powered treatment recommendations",
-    bgColor: "bg-[#FCE7F3]",
+    bgColor: FEATURE_ICON_COLORS.ROBOT,
   },
 ];
 
@@ -35,25 +37,7 @@ export function AuthMarketingSection() {
     <div className="hidden md:flex md:w-1/2 relative p-24 flex-col justify-between overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `
-              linear-gradient(180deg, 
-                #FFFFFF 0%,
-                rgba(255, 255, 255, 0.9) 40%,
-                rgba(255, 255, 255, 0.7) 70%,
-                rgba(255, 255, 255, 0.3) 90%,
-                rgba(255, 255, 255, 0) 100%
-              ),
-              linear-gradient(90deg, 
-                rgba(143, 3, 160, 0.8) 0%,
-                rgba(110, 241, 187, 0.8) 80%
-              )
-            `,
-            backgroundSize: "100% 100%",
-          }}
-        />
+        <GradientBackground gradientColors={GRADIENTS.AUTH_BACKGROUND} />
       </div>
 
       {/* Logo */}

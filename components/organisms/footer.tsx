@@ -1,3 +1,4 @@
+import { STATIC_ROUTES } from "@/app/constants/route-constants";
 import Link from "next/link";
 
 export function Footer() {
@@ -10,22 +11,13 @@ export function Footer() {
           </p>
         </div>
         <div className="flex gap-4">
-          <Link
-            href="/terms"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          <Link href={STATIC_ROUTES.TERMS} className="text-gray-400 hover:text-white">
             Terms
           </Link>
-          <Link
-            href="/privacy"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          <Link href={STATIC_ROUTES.PRIVACY} className="text-gray-400 hover:text-white">
             Privacy
           </Link>
-          <Link
-            href="/contact"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          <Link href={STATIC_ROUTES.CONTACT} className="text-gray-400 hover:text-white">
             Contact
           </Link>
         </div>

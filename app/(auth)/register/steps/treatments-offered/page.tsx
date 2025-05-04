@@ -1,81 +1,85 @@
 "use client";
 
-import { Button } from "@/components/atoms";
+import { AUTH_ROUTES } from "@/app/constants/route-constants";
+import { Button } from "@/components/atoms/button";
 import { TreatmentOption, TreatmentPillGroup } from "@/components/molecules/TreatmentPillGroup";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRegistration } from "../../context/RegistrationContext";
 
 const treatmentOptions: TreatmentOption[] = [
-  { value: "treatments-offered", label: "Treatments Offered" },
   { value: "chemical-peels", label: "Chemical Peels" },
-  { value: "body-contouring", label: "Body Contouring" },
-  { value: "skin-tightening", label: "Skin Tightening" },
   { value: "botox", label: "Botox" },
-  { value: "laser-hair-removal", label: "Laser Hair Removal" },
-  { value: "facial-treatments", label: "Facial Treatments" },
   { value: "dermal-fillers", label: "Dermal Fillers" },
+  { value: "laser-treatments", label: "Laser Treatments" },
   { value: "microdermabrasion", label: "Microdermabrasion" },
+  { value: "facial-treatments", label: "Facial Treatments" },
+  { value: "body-contouring", label: "Body Contouring" },
   { value: "prp-therapy", label: "PRP Therapy" },
 ];
 
 export default function TreatmentsOfferedPage() {
-  const { formData, updateFormData, steps } = useRegistration();
-  const router = useRouter();
-  const [selectedTreatments, setSelectedTreatments] = useState<string[]>(
-    formData.treatmentCategories || [],
-  );
+  const { formData, updateFormData } = useRegistration();
+  const [selectedTreatments, setSelectedTreatments] = useState<string[]>([]);
 
-  const handleTreatmentsChange = (selected: string[]) => {
-    setSelectedTreatments(selected);
+  const handleSelectionChange = (selections: string[]) => {
+    setSelectedTreatments(selections);
   };
 
   const handleSubmit = async () => {
-    try {
-      if (selectedTreatments.length === 0) {
-        toast.error("Please select at least one treatment");
-        return;
-      }
+    console.log("Treatment selections:", selectedTreatments);
+    updateFormData({
+      treatmentCategories: selectedTreatments,
+    });
 
-      // Update form data with selected treatments
-      updateFormData({
-        ...formData,
-        treatmentCategories: selectedTreatments,
-      });
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    toast.success("Treatments saved successfully");
+    console.log("Treatments saved successfully", formData);
+    // Navigate to dashboard
+    window.location.href = AUTH_ROUTES.LOGIN;
+  };
 
-      toast.success("Registration completed successfully!");
-      router.push("/dashboard");
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("There was an error completing your registration");
-    }
+  const handleSkip = () => {
+    updateFormData({
+      treatmentCategories: [],
+    });
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-2xl shadow-md">
-      <h2 className="text-xl font-semibold text-[#1F2937] mb-8">
-        Select treatments that you offered
-      </h2>
+    <div className="space-y-6">
+      <div className="bg-white rounded-[20px] shadow-md p-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          Select the treatments your business offers (optional)
+        </h2>
 
-      <TreatmentPillGroup
-        title=""
-        options={treatmentOptions}
-        onChange={handleTreatmentsChange}
-        initialSelected={formData.treatmentCategories || []}
-      />
+        <div className="space-y-6">
+          <TreatmentPillGroup
+            title="Treatments Offered"
+            options={treatmentOptions}
+            initialSelected={selectedTreatments}
+            onChange={handleSelectionChange}
+          />
 
-      <div className="flex justify-between mt-10">
-        <Button
-          variant="outline"
-          onClick={() => router.push("/register/steps/business-information")}
-        >
-          Previous
-        </Button>
-        <Button onClick={handleSubmit}>Submit</Button>
+          <div className="flex justify-end pt-4">
+            <Button
+              onClick={handleSubmit}
+              className="bg-[#C026D3] hover:bg-[#BD05DD] text-white font-medium text-base rounded-lg px-4 py-2"
+            >
+              Submit
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-center">
+        <Link href={AUTH_ROUTES.LOGIN} onClick={handleSkip}>
+          <Button type="button" variant="link" className="text-gray-500 hover:text-gray-700">
+            Skip and go to login
+          </Button>
+        </Link>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { registrationSteps } from "../config/formConfig";
+import { REGISTRATION_STEPS } from "../config/formConfig";
 
 export default function StepsIndexPage() {
-  const firstStep = registrationSteps[0].id;
+  const firstStep = REGISTRATION_STEPS[0].id;
   redirect(`/register/steps/${firstStep}`);
 }

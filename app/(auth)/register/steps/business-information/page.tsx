@@ -1,5 +1,6 @@
 "use client";
 
+import { REGISTRATION_ROUTES } from "@/app/constants/route-constants";
 import { DynamicForm } from "@/components/organisms/DynamicForm";
 import { FormikHelpers } from "formik";
 import { toast } from "sonner";
@@ -16,6 +17,9 @@ export default function BusinessInformationPage() {
 
   const handleSubmit = async (values: any, helpers: FormikHelpers<any>) => {
     try {
+      // Log form data to console
+      console.log("Business information form data:", values);
+
       // Store form data in the context
       updateFormData(values);
 
@@ -32,14 +36,16 @@ export default function BusinessInformationPage() {
   };
 
   return (
-    <DynamicForm
-      title={businessInfoStep.title}
-      description={businessInfoStep.description}
-      fields={businessInfoStep.fields}
-      initialValues={formData}
-      validationSchema={businessInfoStep.validationSchema}
-      onSubmit={handleSubmit}
-      nextStep="/register/steps/treatments-offered"
-    />
+    <div className="space-y-6">
+      <DynamicForm
+        title={businessInfoStep.title}
+        description={businessInfoStep.description}
+        fields={businessInfoStep.fields}
+        initialValues={formData}
+        validationSchema={businessInfoStep.validationSchema}
+        onSubmit={handleSubmit}
+        nextStep={REGISTRATION_ROUTES.TREATMENTS_OFFERED}
+      />
+    </div>
   );
 }
