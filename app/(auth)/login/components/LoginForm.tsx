@@ -1,3 +1,5 @@
+import { LOGIN_INITIAL_VALUES } from "@/app/constants/auth-constants";
+import { AUTH_ROUTES, REDIRECT_PATHS } from "@/app/constants/route-constants";
 import { Button } from "@/components/atoms/button";
 import { Input, PasswordInput } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
@@ -16,12 +18,9 @@ interface FormData {
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams?.get("returnUrl") || "/dashboard";
+  const returnUrl = searchParams?.get("returnUrl") || REDIRECT_PATHS.AFTER_LOGIN;
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState<FormData>(LOGIN_INITIAL_VALUES);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -72,7 +71,7 @@ export function LoginForm() {
           <div className="flex flex-col justify-end items-end mt-2">
             <p className="text-[#6B7280] text-md text-right">New member?</p>
             <Link
-              href="/register"
+              href={AUTH_ROUTES.REGISTER}
               className="text-[#C026D3] font-semibold text-sm ml-1 hover:underline"
             >
               Create Account here
@@ -115,7 +114,10 @@ export function LoginForm() {
 
           <div className="flex items-center justify-between">
             <div></div>
-            <Link href="/forgot-password" className="text-[#6B7280] text-sm hover:underline">
+            <Link
+              href={AUTH_ROUTES.FORGOT_PASSWORD}
+              className="text-[#6B7280] text-sm hover:underline"
+            >
               Forgot your password?
             </Link>
           </div>
@@ -141,13 +143,7 @@ export function LoginForm() {
             disabled={isLoading}
             className="w-full relative bg-[#F1F5F9] hover:bg-gray-100"
           >
-            <Image
-              src="/google.svg"
-              alt="Google Logo"
-              width={20}
-              height={20}
-              className="absolute left-4"
-            />
+            <Image src="/google.svg" alt="Google Logo" width={20} height={20} />
             <span className="text-[#0F172A]">Login with Google</span>
           </Button>
         </form>

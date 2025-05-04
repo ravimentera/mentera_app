@@ -1,3 +1,4 @@
+import { AUTH_ROUTES, REDIRECT_PATHS } from "@/app/constants/route-constants";
 import { Button } from "@/components/atoms/button";
 import { Input, PasswordInput } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
@@ -60,7 +61,7 @@ export function RegistrationForm({
 }: RegistrationFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams?.get("returnUrl") || "/dashboard";
+  const returnUrl = searchParams?.get("returnUrl") || REDIRECT_PATHS.AFTER_LOGIN;
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
@@ -84,6 +85,7 @@ export function RegistrationForm({
       // Validate passwords match
       if (formData.password !== formData.confirmPassword) {
         toast.error("Passwords do not match");
+        setIsLoading(false);
         return;
       }
 
@@ -95,16 +97,16 @@ export function RegistrationForm({
       expiryDate.setDate(expiryDate.getDate() + 1);
       document.cookie = `auth_session=demo_authenticated; expires=${expiryDate.toUTCString()}; path=/`;
 
-      toast.success("Account created successfully! Welcome to Mentera.");
+      toast.success("Account created successfully! Please complete your profile setup.");
 
       if (onSubmitSuccess) {
         onSubmitSuccess(formData);
       } else {
-        router.push(returnUrl);
+        // Redirect to the registration steps flow instead of the returnUrl
+        router.push("/register/steps");
       }
     } catch (error) {
       toast.error("Failed to create account. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -133,7 +135,7 @@ export function RegistrationForm({
           <div className="flex flex-col justify-end items-end mt-2">
             <p className="text-[#6B7280] text-md text-right">{labels.loginText}</p>
             <Link
-              href="/login"
+              href={AUTH_ROUTES.LOGIN}
               className="text-[#C026D3] font-semibold text-sm ml-1 hover:underline"
             >
               {labels.loginLink}
