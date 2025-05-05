@@ -1,8 +1,9 @@
 "use client";
 
+import { AUTH_ROUTES, DASHBOARD_PATHS, STATIC_ROUTES } from "@/app/constants/route-constants";
 import { Button } from "@/components/atoms";
+import { Cross1Icon, HamburgerMenuIcon, MenteraIcon } from "@/components/atoms/icons";
 import { cn } from "@/lib/utils";
-import { HamburgerMenuIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -70,7 +71,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           {/* Only show logo on desktop */}
           <div className="hidden lg:block">
             <Link
-              href={isLoggedIn ? "/dashboard" : "/"}
+              href={isLoggedIn ? DASHBOARD_PATHS.HOME : STATIC_ROUTES.HOME}
               className="flex items-center gap-2 relative z-50"
             >
               <img src="/logo-with-name-light.svg" alt="Mentera AI Logo" className="w-36" />
@@ -84,7 +85,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               Logout
             </Button>
           ) : (
-            <Link href="/login">
+            <Link href={AUTH_ROUTES.LOGIN}>
               <Button variant="outline">Login</Button>
             </Link>
           )}
@@ -100,46 +101,18 @@ export function Header({ onMenuClick }: HeaderProps) {
         />
         <div className="fixed inset-y-0 left-0 w-full max-w-xs border-r bg-background p-6 shadow-lg">
           <div className="flex items-center justify-between mb-8">
-            <Link href={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-2">
+            <Link
+              href={isLoggedIn ? DASHBOARD_PATHS.HOME : STATIC_ROUTES.HOME}
+              className="flex items-center gap-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
               {/* Spa/Health Icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="30"
-                height="30"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-8 w-8 text-primary"
-                style={{ display: "inline-block" }}
-              >
-                <path d="M18 20V8.5a4.5 4.5 0 0 0-9 0v5" />
-                <path d="M6 12a4.5 4.5 0 0 0 9 0" />
-                <circle cx="6" cy="12" r="1" />
-                <path d="m18 20-3-6" />
-                <path d="m18 20 3-6" />
-              </svg>
+              <MenteraIcon className="h-8 w-8 text-primary" />
               <span className="text-2xl font-bold text-primary">Mentera-AI</span>
             </Link>
             <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
               <span className="sr-only">Close</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-5 w-5"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <Cross1Icon className="h-5 w-5" />
             </Button>
           </div>
           <nav className="flex flex-col gap-4">
@@ -151,28 +124,28 @@ export function Header({ onMenuClick }: HeaderProps) {
               Home
             </Link>
             <Link
-              href="/dashboard"
+              href={DASHBOARD_PATHS.HOME}
               className="text-base font-medium hover:text-primary"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Dashboard
             </Link>
             <Link
-              href="/appointments"
+              href={DASHBOARD_PATHS.APPOINTMENTS}
               className="text-base font-medium hover:text-primary"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Appointments
             </Link>
             <Link
-              href="/profile"
+              href={DASHBOARD_PATHS.PROFILE}
               className="text-base font-medium hover:text-primary"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Profile
             </Link>
             <Link
-              href="/settings"
+              href={DASHBOARD_PATHS.SETTINGS}
               className="text-base font-medium hover:text-primary"
               onClick={() => setIsMobileMenuOpen(false)}
             >

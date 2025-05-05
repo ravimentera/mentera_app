@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { type VariantProps, cva } from "class-variance-authority";
 import * as React from "react";
+import { GoogleIcon } from "./icons";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
@@ -52,4 +53,32 @@ function Button({
   );
 }
 
-export { Button, buttonVariants };
+function GoogleSignInButton({
+  onClick,
+  disabled,
+  className,
+  children = "Sign up with Google",
+  ...props
+}: React.ComponentProps<"button"> & {
+  onClick?: () => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-black",
+        className,
+      )}
+      {...props}
+    >
+      <GoogleIcon width="24" height="24" />
+      <span>{children}</span>
+    </Button>
+  );
+}
+
+export { Button, GoogleSignInButton, buttonVariants };

@@ -1,3 +1,4 @@
+import { STATIC_ROUTES } from "@/app/constants/route-constants";
 import { Button } from "@/components/atoms";
 import Link from "next/link";
 
@@ -9,7 +10,7 @@ export default function NotFound() {
         The page you are looking for does not exist or has been moved.
       </p>
       <Button asChild>
-        <Link href="/">Return Home</Link>
+        <Link href={STATIC_ROUTES.HOME}>Return Home</Link>
       </Button>
     </div>
   );
