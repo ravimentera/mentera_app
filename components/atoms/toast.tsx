@@ -1,5 +1,6 @@
 "use client";
 
+import { Cross1Icon } from "@/components/atoms/icons";
 import { cn } from "@/lib/utils";
 import { type ReactNode, createContext, useContext, useEffect, useState } from "react";
 
@@ -143,21 +144,7 @@ export function ToastProvider({
                 className="ml-auto rounded-full p-1 hover:bg-white/20"
                 aria-label="Close toast"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <Cross1Icon width="16" height="16" aria-hidden="true" />
               </button>
             </div>
           </div>

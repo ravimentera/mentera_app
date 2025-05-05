@@ -1,55 +1,40 @@
 "use client";
 
-import { Button, Input, Label } from "@/components/atoms";
+import { Button } from "@/components/atoms/button";
+import { AuthMarketingSection } from "@/components/organisms/AuthMarketingSection";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { RegistrationForm } from "./components/RegistrationForm";
 
 export default function RegisterPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams?.get("redirectTo");
+  const stepFlow = searchParams?.get("stepFlow") === "true";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Redirect to login
-    window.location.href = "/login";
-  };
+  // If redirectTo is provided, we'll pass it to the registration steps later
+  const redirect = redirectTo ? `?redirectTo=${redirectTo}` : "";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Full Name</Label>
-        <Input id="name" type="text" placeholder="John Doe" required />
-      </div>
+    <div className="flex min-h-screen bg-white w-full">
+      <AuthMarketingSection />
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" placeholder="name@example.com" required />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" required placeholder="Enter password" />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="confirm-password">Confirm Password</Label>
-        <Input id="confirm-password" type="password" required />
-      </div>
-
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Creating account..." : "Create account"}
-      </Button>
-
-      <div className="text-center text-sm">
-        Already have an account?{" "}
-        <Link href="/login" className="text-primary hover:underline">
-          Sign in
-        </Link>
-      </div>
-    </form>
+      {stepFlow ? (
+        <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col items-center justify-center">
+          <div className="w-full max-w-md space-y-8 text-center">
+            <h1 className="text-3xl font-bold">Create Your Med Spa Account</h1>
+            <p className="text-gray-600">
+              Complete a simple multi-step process to set up your business account on Mentera
+            </p>
+            <Link href={`/register/steps${redirect}`}>
+              <Button className="w-full mt-8 bg-[#C026D3] hover:bg-[#BD05DD] text-white">
+                Start Registration
+              </Button>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <RegistrationForm />
+      )}
+    </div>
   );
 }
