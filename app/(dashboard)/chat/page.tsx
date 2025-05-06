@@ -71,14 +71,25 @@ export default function ChatClient() {
     const connect = async () => {
       const { token } = await fetch("/api/token").then((r) => r.json());
 
-      const socket = new WebSocket(getWebSocketUrl());
+      const medspaId = "MS-1001";
+
+      const url = new URL(getWebSocketUrl());
+      url.searchParams.set("token", token);
+      url.searchParams.set("medspaId", medspaId);
+
+      const socket = new WebSocket(url);
       socketRef.current = socket;
 
       socket.onopen = () => {
         console.log("Connected to WebSocket");
         setConnected(true);
         retryCount.current = 0; // Reset retry count
-        socket.send(JSON.stringify({ type: "auth", token }));
+        socket.send(
+          JSON.stringify({
+            type: "auth",
+            token: token.replace(/^Bearer\s+/, ""),
+          }),
+        );
       };
 
       socket.onmessage = (event: MessageEvent<string>) => {
