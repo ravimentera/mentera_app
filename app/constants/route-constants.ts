@@ -32,7 +32,6 @@ export const DASHBOARD_PATHS = {
   ANALYTICS: "/analytics",
   SETTINGS: "/settings",
   PROFILE: "/profile",
-  CHAT: "/chat",
 };
 
 // API Routes
