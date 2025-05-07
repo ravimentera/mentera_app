@@ -10,6 +10,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import ChatClient from "./chat/ChatClient";
 
 export function DrawerComponent() {
   return (
@@ -32,13 +33,10 @@ export function DrawerComponent() {
           </Button>
         </DrawerClose>
         <DrawerHeader>
-          <DrawerTitle>Drawer Title</DrawerTitle>
-          <DrawerDescription>Drawer description content.</DrawerDescription>
+          <DrawerTitle>Talk to Tera</DrawerTitle>
+          <DrawerDescription>Your smart assistant is here to help you anytime.</DrawerDescription>
         </DrawerHeader>
-        <div className="p-4 space-y-4 overflow-y-auto">
-          <p>This is the main content of the drawer.</p>
-          <p>You can add any elements here.</p>
-        </div>
+        <ChatClient />
         <DrawerFooter></DrawerFooter>
       </DrawerContent>
     </Drawer>
