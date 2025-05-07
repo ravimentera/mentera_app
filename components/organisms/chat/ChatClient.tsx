@@ -27,7 +27,7 @@ export default function ChatClient() {
   }, [messages, streamBuffer]);
 
   return (
-    <div className="flex flex-col h-full w-full bg-white lg:px-12 px-4">
+    <div className="flex flex-col h-full w-full bg-white">
       <ChatTopbar
         currentPatientId={currentPatientId}
         setCurrentPatientId={setCurrentPatientId}
@@ -38,13 +38,18 @@ export default function ChatClient() {
         cacheDebug={cacheDebug}
         setCacheDebug={setCacheDebug}
       />
-      <ChatMessageList
-        messages={messages}
-        streamBuffer={streamBuffer}
-        loading={loading}
-        chatContainerRef={chatContainerRef}
-      />
-      <ChatInput onSend={sendMessage} />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <ChatMessageList
+          messages={messages}
+          streamBuffer={streamBuffer}
+          loading={loading}
+          chatContainerRef={chatContainerRef}
+        />
+
+        <div className="shrink-0">
+          <ChatInput onSend={sendMessage} />
+        </div>
+      </div>
     </div>
   );
 }

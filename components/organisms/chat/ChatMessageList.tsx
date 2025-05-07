@@ -29,7 +29,7 @@ export function ChatMessageList({
         >
           <div
             className={clsx(
-              "rounded-xl px-4 py-3 max-w-[85%] prose prose-sm whitespace-pre-wrap",
+              "rounded-xl px-4 py-3 max-w-[85%] prose prose-sm",
               msg.sender === "user"
                 ? "bg-blue-400 text-black font-medium shadow-sm"
                 : "bg-gray-100 text-gray-900 shadow border border-gray-200",
