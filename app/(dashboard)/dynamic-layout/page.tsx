@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components";
+import { Button } from "@/components/atoms/button";
 import { LayoutRenderer } from "@/components/layout-renderer/LayoutRenderer";
 import { useState } from "react";
 
