@@ -23,7 +23,7 @@ export function DrawerComponent() {
           <RobotIcon width={48} height={48} />
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-screen w-1/2">
+      <DrawerContent className="h-screen w-1/2 flex flex-col">
         <DrawerClose asChild>
           <Button
             className="absolute top-4 right-4 text-gray-500 hover:text-black transition"
@@ -32,12 +32,18 @@ export function DrawerComponent() {
             ✕
           </Button>
         </DrawerClose>
-        <DrawerHeader>
+
+        <DrawerHeader className="shrink-0">
           <DrawerTitle>Talk to Tera</DrawerTitle>
           <DrawerDescription>Your smart assistant is here to help you anytime.</DrawerDescription>
         </DrawerHeader>
-        <ChatClient />
-        <DrawerFooter></DrawerFooter>
+
+        {/* Allocate full height for ChatClient between header and footer */}
+        <div className="flex-1 overflow-hidden">
+          <ChatClient />
+        </div>
+
+        <DrawerFooter className="shrink-0 hidden" />
       </DrawerContent>
     </Drawer>
   );
