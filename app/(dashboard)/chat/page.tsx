@@ -1,288 +1,294 @@
-"use client";
+// "use client";
 
-import { ChatMessage, WebSocketResponseMessage } from "@/app/(dashboard)/chat/types";
-import { Button, Input, Label } from "@/components/atoms";
-import { Toggle } from "@/components/molecules";
-import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
-import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
-import { clsx } from "clsx";
-import { useFormik } from "formik";
-import WebSocket from "isomorphic-ws";
-import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { v4 as uuid } from "uuid";
+// import { ChatMessage, WebSocketResponseMessage } from "@/app/(dashboard)/chat/types";
+// import { Button, Input, Label } from "@/components/atoms";
+// import { Toggle } from "@/components/molecules";
+// import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
+// import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
+// import { clsx } from "clsx";
+// import { useFormik } from "formik";
+// import WebSocket from "isomorphic-ws";
+// import { useEffect, useRef, useState } from "react";
+// import ReactMarkdown from "react-markdown";
+// import remarkGfm from "remark-gfm";
+// import { v4 as uuid } from "uuid";
 
-import { sanitizeMarkdown } from "@/lib/utils";
+// import { sanitizeMarkdown } from "@/lib/utils";
 
-import "./chat-markdown.css"; // adjust path if needed
-import ChatMessageSkeleton from "@/components/skeletons/ChatMessageSkeleton";
+// import "./chat-markdown.css"; // adjust path if needed
+// import ChatMessageSkeleton from "@/components/skeletons/ChatMessageSkeleton";
 
-export default function ChatClient() {
-  const maxRetries = 3;
-  const retryDelay = 2000; // milliseconds
+// export default function ChatClient() {
+//   const maxRetries = 3;
+//   const retryDelay = 2000; // milliseconds
 
-  const retryCount = useRef(0);
-  const retryTimeout = useRef<NodeJS.Timeout | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [streamBuffer, setStreamBuffer] = useState<string>("");
-  const [connected, setConnected] = useState<boolean>(false);
-  const [currentPatientId, setCurrentPatientId] = useState<keyof typeof patientDatabase>("PT-1003");
-  const [isPatientContextEnabled, setIsPatientContextEnabled] = useState<boolean>(true);
-  const [forceFresh, setForceFresh] = useState<boolean>(false);
-  const [cacheDebug, setCacheDebug] = useState<boolean>(false);
-  const socketRef = useRef<WebSocket | null>(null);
-  const chatContainerRef = useRef<HTMLDivElement | null>(null);
-  const conversationId = useRef<string>(`conv_${Date.now()}`);
+//   const retryCount = useRef(0);
+//   const retryTimeout = useRef<NodeJS.Timeout | null>(null);
+//   const [loading, setLoading] = useState<boolean>(false);
+//   const [messages, setMessages] = useState<ChatMessage[]>([]);
+//   const [streamBuffer, setStreamBuffer] = useState<string>("");
+//   const [connected, setConnected] = useState<boolean>(false);
+//   const [currentPatientId, setCurrentPatientId] = useState<keyof typeof patientDatabase>("PT-1003");
+//   const [isPatientContextEnabled, setIsPatientContextEnabled] = useState<boolean>(true);
+//   const [forceFresh, setForceFresh] = useState<boolean>(false);
+//   const [cacheDebug, setCacheDebug] = useState<boolean>(false);
+//   const socketRef = useRef<WebSocket | null>(null);
+//   const chatContainerRef = useRef<HTMLDivElement | null>(null);
+//   const conversationId = useRef<string>(`conv_${Date.now()}`);
 
-  const formik = useFormik({
-    initialValues: { message: "" },
-    onSubmit: ({ message }, { resetForm }) => {
-      if (!connected || !socketRef.current) return;
+//   const formik = useFormik({
+//     initialValues: { message: "" },
+//     onSubmit: ({ message }, { resetForm }) => {
+//       if (!connected || !socketRef.current) return;
 
-      const patient = patientDatabase[currentPatientId];
-      setMessages((prev) => [...prev, { id: uuid(), sender: "user", text: message }]);
+//       const patient = patientDatabase[currentPatientId];
+//       setMessages((prev) => [...prev, { id: uuid(), sender: "user", text: message }]);
 
-      const payload: any = {
-        type: "chat",
-        nurseId: testNurse.id,
-        message,
-        conversationId: conversationId.current,
-        medspaId: testMedSpa.medspaId,
-        medSpaContext: testMedSpa,
-        streaming: true,
-        cacheControl: { debug: cacheDebug, forceFresh },
-        debug: { timestamp: new Date().toISOString() },
-      };
+//       const payload: any = {
+//         type: "chat",
+//         nurseId: testNurse.id,
+//         message,
+//         conversationId: conversationId.current,
+//         medspaId: testMedSpa.medspaId,
+//         medSpaContext: testMedSpa,
+//         streaming: true,
+//         cacheControl: { debug: cacheDebug, forceFresh },
+//         debug: { timestamp: new Date().toISOString() },
+//       };
 
-      if (isPatientContextEnabled && patient) {
-        payload.patientId = patient.id;
-        payload.patientInfo = patient;
-        payload.debug.activePatientContext = patient.id;
-      }
+//       if (isPatientContextEnabled && patient) {
+//         payload.patientId = patient.id;
+//         payload.patientInfo = patient;
+//         payload.debug.activePatientContext = patient.id;
+//       }
 
-      socketRef.current.send(JSON.stringify(payload));
-      resetForm();
-    },
-  });
+//       socketRef.current.send(JSON.stringify(payload));
+//       resetForm();
+//     },
+//   });
 
-  useEffect(() => {
-    const connect = async () => {
-      const { token } = await fetch("/api/token").then((r) => r.json());
+//   useEffect(() => {
+//     const connect = async () => {
+//       const { token } = await fetch("/api/token").then((r) => r.json());
 
-      const medspaId = "MS-1001";
+//       const medspaId = "MS-1001";
 
-      const url = new URL(getWebSocketUrl());
-      url.searchParams.set("token", token);
-      url.searchParams.set("medspaId", medspaId);
+//       const url = new URL(getWebSocketUrl());
+//       url.searchParams.set("token", token);
+//       url.searchParams.set("medspaId", medspaId);
 
-      const socket = new WebSocket(url);
-      socketRef.current = socket;
+//       const socket = new WebSocket(url);
+//       socketRef.current = socket;
 
-      socket.onopen = () => {
-        console.log("Connected to WebSocket");
-        setConnected(true);
-        retryCount.current = 0; // Reset retry count
-        socket.send(
-          JSON.stringify({
-            type: "auth",
-            token: token.replace(/^Bearer\s+/, ""),
-          }),
-        );
-      };
+//       socket.onopen = () => {
+//         console.log("Connected to WebSocket");
+//         setConnected(true);
+//         retryCount.current = 0; // Reset retry count
+//         socket.send(
+//           JSON.stringify({
+//             type: "auth",
+//             token: token.replace(/^Bearer\s+/, ""),
+//           }),
+//         );
+//       };
 
-      socket.onmessage = (event: MessageEvent<string>) => {
-        const message: WebSocketResponseMessage = JSON.parse(event.data);
-        switch (message.type) {
-          case "auth_success":
-            console.log("Authenticated");
-            break;
-          case "chat_stream_start":
-            setLoading(true);
-            setStreamBuffer("");
-            break;
-          case "chat_stream_chunk":
-            setStreamBuffer((prev) => prev + extractChunk(message.chunk));
-            break;
-          case "chat_stream_complete": {
-            const rawContent = (message.response?.content as string) || "";
-            const cleaned = sanitizeMarkdown(rawContent);
-            setMessages((prev) => [
-              ...prev,
-              { id: uuid(), sender: "ai", text: String(cleaned || "") },
-            ]);
-            setStreamBuffer("");
-            setLoading(false);
-            logMetadata(message.response?.metadata);
-            break;
-          }
-          case "chat_response": {
-            const rawContent = (message.response?.content as string) || "";
-            const cleaned = sanitizeMarkdown(rawContent);
-            setMessages((prev) => [
-              ...prev,
-              { id: uuid(), sender: "ai", text: extractChunk(cleaned) },
-            ]);
-            setLoading(false);
-            logMetadata(message.response?.metadata);
-            break;
-          }
-          case "error":
-            setLoading(false);
-            console.error("Error: ", message.error);
-            break;
-        }
-      };
+//       socket.onmessage = (event: MessageEvent<string>) => {
+//         const message: WebSocketResponseMessage = JSON.parse(event.data);
+//         switch (message.type) {
+//           case "auth_success":
+//             console.log("Authenticated");
+//             break;
+//           case "chat_stream_start":
+//             setLoading(true);
+//             setStreamBuffer("");
+//             break;
+//           case "chat_stream_chunk":
+//             setStreamBuffer((prev) => prev + extractChunk(message.chunk));
+//             break;
+//           case "chat_stream_complete": {
+//             const rawContent = (message.response?.content as string) || "";
+//             const cleaned = sanitizeMarkdown(rawContent);
+//             setMessages((prev) => [
+//               ...prev,
+//               { id: uuid(), sender: "ai", text: String(cleaned || "") },
+//             ]);
+//             setStreamBuffer("");
+//             setLoading(false);
+//             logMetadata(message.response?.metadata);
+//             break;
+//           }
+//           case "chat_response": {
+//             const rawContent = (message.response?.content as string) || "";
+//             const cleaned = sanitizeMarkdown(rawContent);
+//             setMessages((prev) => [
+//               ...prev,
+//               { id: uuid(), sender: "ai", text: extractChunk(cleaned) },
+//             ]);
+//             setLoading(false);
+//             logMetadata(message.response?.metadata);
+//             break;
+//           }
+//           case "error":
+//             setLoading(false);
+//             console.error("Error: ", message.error);
+//             break;
+//         }
+//       };
 
-      socket.onerror = (e: Event) => {
-        console.error("WebSocket error event triggered");
+//       socket.onerror = (e: Event) => {
+//         console.error("WebSocket error event triggered");
 
-        if ("message" in e) {
-          console.error("WebSocket error message:", (e as any).message);
-        } else {
-          console.error(e);
-        }
-      };
-      socket.onclose = () => {
-        console.warn("WebSocket connection closed");
+//         if ("message" in e) {
+//           console.error("WebSocket error message:", (e as any).message);
+//         } else {
+//           console.error(e);
+//         }
+//       };
+//       socket.onclose = () => {
+//         console.warn("WebSocket connection closed");
 
-        setConnected(false);
-        if (retryCount.current < maxRetries) {
-          retryCount.current += 1;
-          console.log(
-            `Retrying connection in ${retryDelay}ms (attempt ${retryCount.current}/${maxRetries})...`,
-          );
+//         setConnected(false);
+//         if (retryCount.current < maxRetries) {
+//           retryCount.current += 1;
+//           console.log(
+//             `Retrying connection in ${retryDelay}ms (attempt ${retryCount.current}/${maxRetries})...`,
+//           );
 
-          retryTimeout.current = setTimeout(() => {
-            connect();
-          }, retryDelay);
-        } else {
-          console.error("Max retry attempts reached. Giving up.");
-        }
-      };
-    };
+//           retryTimeout.current = setTimeout(() => {
+//             connect();
+//           }, retryDelay);
+//         } else {
+//           console.error("Max retry attempts reached. Giving up.");
+//         }
+//       };
+//     };
 
-    connect();
-  }, []);
+//     connect();
+//   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <keeping this since we need to scroll to the bottom on every new message>
-  useEffect(() => {
-    chatContainerRef.current?.scrollTo(0, chatContainerRef.current.scrollHeight);
-  }, [messages, streamBuffer]);
+//   // biome-ignore lint/correctness/useExhaustiveDependencies: <keeping this since we need to scroll to the bottom on every new message>
+//   useEffect(() => {
+//     chatContainerRef.current?.scrollTo(0, chatContainerRef.current.scrollHeight);
+//   }, [messages, streamBuffer]);
 
-  const extractChunk = (chunk: any): string => {
-    if (!chunk) return "";
-    if (typeof chunk === "string") return chunk;
-    if (typeof chunk.content === "string") return chunk.content;
-    if (typeof chunk.text === "string") return chunk.text;
-    if (chunk.content?.chunk?.text) return chunk.content.chunk.text;
-    return "";
-  };
+//   const extractChunk = (chunk: any): string => {
+//     if (!chunk) return "";
+//     if (typeof chunk === "string") return chunk;
+//     if (typeof chunk.content === "string") return chunk.content;
+//     if (typeof chunk.text === "string") return chunk.text;
+//     if (chunk.content?.chunk?.text) return chunk.content.chunk.text;
+//     return "";
+//   };
 
-  const logMetadata = (meta: any) => {
-    if (!meta) return;
-    console.log("Model:", meta.model || "unknown");
-    console.log("Processing Time:", meta.processingTime, "ms");
-    if (meta.cache) {
-      console.log("Cache Hit:", meta.cache.hit ? "YES" : "NO");
-      if (meta.cache.ttl) console.log("TTL:", meta.cache.ttl);
-    }
-    if (meta.contextIntegration) {
-      console.log("Context Integration:", meta.contextIntegration.score, "%");
-    }
-  };
+//   const logMetadata = (meta: any) => {
+//     if (!meta) return;
+//     console.log("Model:", meta.model || "unknown");
+//     console.log("Processing Time:", meta.processingTime, "ms");
+//     if (meta.cache) {
+//       console.log("Cache Hit:", meta.cache.hit ? "YES" : "NO");
+//       if (meta.cache.ttl) console.log("TTL:", meta.cache.ttl);
+//     }
+//     if (meta.contextIntegration) {
+//       console.log("Context Integration:", meta.contextIntegration.score, "%");
+//     }
+//   };
 
-  return (
-    <div className="flex flex-col h-full w-full bg-white lg:px-12 px-4">
-      {/* Topbar */}
-      <div className="px-4 py-2 border-b bg-white/80 backdrop-blur-md sticky top-0 z-10 flex items-center gap-4 text-sm">
-        <label className="font-medium">
-          Patient:
-          <select
-            className="ml-2 border rounded px-2 py-1 bg-white text-black"
-            value={currentPatientId}
-            onChange={(e) => setCurrentPatientId(e.target.value as keyof typeof patientDatabase)}
-          >
-            {Object.keys(patientDatabase).map((id) => (
-              <option key={id} value={id}>
-                {id}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="flex items-center gap-3">
-          <Toggle
-            label="Patient Context"
-            checked={isPatientContextEnabled}
-            onChange={() => setIsPatientContextEnabled((v) => !v)}
-          />
-          <Toggle
-            label="Force Fresh"
-            checked={forceFresh}
-            onChange={() => setForceFresh((v) => !v)}
-          />
-          <Toggle
-            label="Cache Debug"
-            checked={cacheDebug}
-            onChange={() => setCacheDebug((v) => !v)}
-          />
-        </div>
-      </div>
+//   return (
+//     <div className="flex flex-col h-full w-full bg-white lg:px-12 px-4">
+//       {/* Topbar */}
+//       <div className="px-4 py-2 border-b bg-white/80 backdrop-blur-md sticky top-0 z-10 flex items-center gap-4 text-sm">
+//         <label className="font-medium">
+//           Patient:
+//           <select
+//             className="ml-2 border rounded px-2 py-1 bg-white text-black"
+//             value={currentPatientId}
+//             onChange={(e) => setCurrentPatientId(e.target.value as keyof typeof patientDatabase)}
+//           >
+//             {Object.keys(patientDatabase).map((id) => (
+//               <option key={id} value={id}>
+//                 {id}
+//               </option>
+//             ))}
+//           </select>
+//         </label>
+//         <div className="flex items-center gap-3">
+//           <Toggle
+//             label="Patient Context"
+//             checked={isPatientContextEnabled}
+//             onChange={() => setIsPatientContextEnabled((v) => !v)}
+//           />
+//           <Toggle
+//             label="Force Fresh"
+//             checked={forceFresh}
+//             onChange={() => setForceFresh((v) => !v)}
+//           />
+//           <Toggle
+//             label="Cache Debug"
+//             checked={cacheDebug}
+//             onChange={() => setCacheDebug((v) => !v)}
+//           />
+//         </div>
+//       </div>
 
-      {/* Chat content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6" ref={chatContainerRef}>
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={clsx(
-              "flex flex-col gap-1",
-              msg.sender === "user" ? "items-end" : "items-start",
-            )}
-          >
-            <div
-              className={clsx(
-                "rounded-xl px-4 py-3 max-w-[85%] prose prose-sm whitespace-pre-wrap",
-                msg.sender === "user"
-                  ? "bg-blue-400 text-black font-medium shadow-sm"
-                  : "bg-gray-100 text-gray-900 shadow border border-gray-200",
-              )}
-            >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
-            </div>
-          </div>
-        ))}
-        {loading && <ChatMessageSkeleton />}
-        {streamBuffer && (
-          <div className="flex items-start">
-            <div className="bg-gray-100 px-4 py-3 rounded-xl max-w-[85%] text-gray-700 animate-pulse prose prose-sm whitespace-pre-wrap">
-              {streamBuffer}
-            </div>
-          </div>
-        )}
-      </div>
+//       {/* Chat content */}
+//       <div className="flex-1 overflow-y-auto p-4 space-y-6" ref={chatContainerRef}>
+//         {messages.map((msg) => (
+//           <div
+//             key={msg.id}
+//             className={clsx(
+//               "flex flex-col gap-1",
+//               msg.sender === "user" ? "items-end" : "items-start",
+//             )}
+//           >
+//             <div
+//               className={clsx(
+//                 "rounded-xl px-4 py-3 max-w-[85%] prose prose-sm whitespace-pre-wrap",
+//                 msg.sender === "user"
+//                   ? "bg-blue-400 text-black font-medium shadow-sm"
+//                   : "bg-gray-100 text-gray-900 shadow border border-gray-200",
+//               )}
+//             >
+//               <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+//             </div>
+//           </div>
+//         ))}
+//         {loading && <ChatMessageSkeleton />}
+//         {streamBuffer && (
+//           <div className="flex items-start">
+//             <div className="bg-gray-100 px-4 py-3 rounded-xl max-w-[85%] text-gray-700 animate-pulse prose prose-sm whitespace-pre-wrap">
+//               {streamBuffer}
+//             </div>
+//           </div>
+//         )}
+//       </div>
 
-      {/* Input */}
-      <form onSubmit={formik.handleSubmit} className="border-t bg-white p-4">
-        <div className="flex items-center gap-2">
-          <Input
-            id="message"
-            name="message"
-            placeholder="Type your message..."
-            value={formik.values.message}
-            onChange={formik.handleChange}
-            className="flex-1 bg-gray-50 border px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
-            required
-          />
-          <Button
-            type="submit"
-            disabled={!formik.values.message.trim()}
-            className="rounded-lg px-5 py-2 shadow"
-          >
-            Send
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
+//       {/* Input */}
+//       <form onSubmit={formik.handleSubmit} className="border-t bg-white p-4">
+//         <div className="flex items-center gap-2">
+//           <Input
+//             id="message"
+//             name="message"
+//             placeholder="Type your message..."
+//             value={formik.values.message}
+//             onChange={formik.handleChange}
+//             className="flex-1 bg-gray-50 border px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+//             required
+//           />
+//           <Button
+//             type="submit"
+//             disabled={!formik.values.message.trim()}
+//             className="rounded-lg px-5 py-2 shadow"
+//           >
+//             Send
+//           </Button>
+//         </div>
+//       </form>
+//     </div>
+//   );
+// }
+
+import ChatClient from "@/components/organisms/chat/ChatClient";
+
+export default function Chat() {
+  return <ChatClient />;
 }
