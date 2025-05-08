@@ -3,6 +3,7 @@
 import { Button, Input } from "@/components/atoms";
 import { Card, LineChart } from "@/components/organisms";
 import { useEffect, useState } from "react";
+import { AppointmentCalendar } from "./components/AppointmentCalendar";
 
 interface Appointment {
   id: string;
@@ -98,6 +99,39 @@ const generateAppointmentTrend = () => {
   }));
 };
 
+const mockAppointments = [
+  {
+    id: "1",
+    title: "Focus time",
+    startTime: new Date(2024, 4, 7, 12, 0),
+    endTime: new Date(2024, 4, 7, 14, 0),
+    type: "focus" as const,
+    description: "Deep work session",
+  },
+  {
+    id: "2",
+    title: "Lunch",
+    startTime: new Date(2024, 4, 7, 14, 0),
+    endTime: new Date(2024, 4, 7, 15, 0),
+    type: "lunch" as const,
+  },
+  {
+    id: "3",
+    title: "UI Brainstorming",
+    startTime: new Date(2024, 4, 9, 15, 0),
+    endTime: new Date(2024, 4, 9, 16, 0),
+    type: "meeting" as const,
+    description: "Team brainstorming session for new features",
+  },
+  {
+    id: "4",
+    title: "Busy",
+    startTime: new Date(2024, 4, 7, 22, 0),
+    endTime: new Date(2024, 4, 7, 23, 59),
+    type: "busy" as const,
+  },
+];
+
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -136,15 +170,18 @@ export default function AppointmentsPage() {
     }
   };
 
+  const handleEventClick = (appointment: any) => {
+    console.log("Clicked appointment:", appointment);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold">Appointments</h1>
-        <p className="text-muted-foreground">
-          View and manage your upcoming and past appointments.
-        </p>
+        <h1 className="text-2xl font-semibold text-gray-900">Appointments</h1>
+        <p className="text-gray-500">View and manage your upcoming and past appointments.</p>
       </div>
 
+      <AppointmentCalendar />
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="p-6 md:col-span-2">
           <div className="flex justify-between items-center mb-4">
@@ -160,23 +197,23 @@ export default function AppointmentsPage() {
           <h3 className="text-lg font-medium mb-4">Appointment Stats</h3>
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-muted-foreground">Total Appointments</p>
+              <p className="text-sm text-gray-500">Total Appointments</p>
               <p className="text-2xl font-bold">{appointments.length}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Upcoming</p>
+              <p className="text-sm text-gray-500">Upcoming</p>
               <p className="text-2xl font-bold">
                 {appointments.filter((a) => a.status === "upcoming").length}
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Completed</p>
+              <p className="text-sm text-gray-500">Completed</p>
               <p className="text-2xl font-bold">
                 {appointments.filter((a) => a.status === "completed").length}
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Cancelled</p>
+              <p className="text-sm text-gray-500">Cancelled</p>
               <p className="text-2xl font-bold">
                 {appointments.filter((a) => a.status === "cancelled").length}
               </p>
@@ -216,27 +253,21 @@ export default function AppointmentsPage() {
             <table className="w-full">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
-                    ID
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">ID</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
                     Customer
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
                     Treatment
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
                     Date & Time
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
                     Duration
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
-                    Actions
-                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Status</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -247,16 +278,14 @@ export default function AppointmentsPage() {
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium">{appointment.customerName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {appointment.customerEmail}
-                          </p>
+                          <p className="text-sm text-gray-500">{appointment.customerEmail}</p>
                         </div>
                       </td>
                       <td className="py-3 px-4">{appointment.treatment}</td>
                       <td className="py-3 px-4">
                         <div>
                           <p>{appointment.date}</p>
-                          <p className="text-sm text-muted-foreground">{appointment.time}</p>
+                          <p className="text-sm text-gray-500">{appointment.time}</p>
                         </div>
                       </td>
                       <td className="py-3 px-4">{appointment.duration}</td>
@@ -283,7 +312,7 @@ export default function AppointmentsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="py-10 text-center text-muted-foreground">
+                    <td colSpan={7} className="py-10 text-center text-gray-500">
                       No appointments found matching your criteria.
                     </td>
                   </tr>
@@ -293,7 +322,7 @@ export default function AppointmentsPage() {
           </div>
 
           <div className="p-4 border-t flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-500">
               Showing {filteredAppointments.length} of {appointments.length} appointments
             </p>
             <div className="flex space-x-2">
