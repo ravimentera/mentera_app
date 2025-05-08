@@ -19,6 +19,7 @@
     "clean-dev": "pnpm clean && pnpm dev"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.804.0",
     "@hookform/resolvers": "^3.3.4",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-dialog": "^1.1.13",

@@ -10,6 +10,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import Image from "next/image";
 import ChatClient from "./chat/ChatClient";
 
 export function DrawerComponent() {
@@ -18,9 +19,16 @@ export function DrawerComponent() {
       <DrawerTrigger asChild>
         <Button
           type="button"
-          className="fixed bottom-4 right-4 p-3 bg-blue-600 text-white rounded-full z-50 shadow-lg hover:bg-blue-700 transition"
+          className="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full z-50 shadow-lg hover:bg-blue-700 transition 
+             p-0 w-[54px] h-[54px] flex items-center justify-center"
         >
-          <RobotIcon width={48} height={48} />
+          <Image
+            src="/assets/icons/chat.png"
+            width={54}
+            height={54}
+            alt="Tera Chat Button"
+            className="rounded-full object-contain"
+          />
         </Button>
       </DrawerTrigger>
       <DrawerContent className="h-screen w-1/2 flex flex-col">
