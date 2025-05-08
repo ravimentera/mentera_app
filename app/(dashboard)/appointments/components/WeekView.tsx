@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { addDays, format, isSameDay, startOfWeek } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
 import { Appointment } from "./types";
 
 interface WeekViewProps {
@@ -93,7 +94,7 @@ export function WeekView({
         {/* Time slots column */}
         <div className="grid grid-rows-[repeat(24,_minmax(60px,_1fr))]">
           {Array.from({ length: 24 }, (_, i) => (
-            <div key={`time-slot-hour-${i}`} className="text-sm text-gray-500 -mt-2">
+            <div key={`time-slot-hour-${uuidv4()}`} className="text-sm text-gray-500 -mt-2">
               {format(new Date().setHours(i, 0), "h a")}
             </div>
           ))}

@@ -1,19 +1,17 @@
 "use client";
 
-import { DASHBOARD_PATHS } from "@/app/constants/route-constants";
+import { AUTH_ROUTES, DASHBOARD_PATHS } from "@/app/constants/route-constants";
 import { Tooltip, TooltipProvider } from "@/components/atoms";
 import {
-  CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  HomeIcon as CrumpledPaperIcon,
   MenteraLogoFull,
   MenteraLogoIcon,
-  PersonIcon,
 } from "@/components/atoms/icons";
 import { cn } from "@/lib/utils";
+import { CalendarDays, CheckSquare, ChevronRight, Home, MessageSquare, Users } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface SidebarItemProps {
@@ -21,12 +19,10 @@ interface SidebarItemProps {
   icon: React.ReactNode;
   title: string;
   isCollapsed: boolean;
+  isActive: boolean;
 }
 
-function SidebarItem({ href, icon, title, isCollapsed }: SidebarItemProps) {
-  const pathname = usePathname();
-  const isActive = pathname === href;
-
+function SidebarItem({ href, icon, title, isCollapsed, isActive, ...props }: SidebarItemProps) {
   const linkContent = (
     <Link
       href={href}
@@ -68,6 +64,8 @@ interface SidebarProps {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
   // Check if we're on mobile device and load stored state
   useEffect(() => {
@@ -114,6 +112,34 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     });
     window.dispatchEvent(event);
   };
+
+  const sidebarItems = [
+    {
+      name: "Dashboard",
+      href: DASHBOARD_PATHS.HOME,
+      icon: <Home className="h-5 w-5" />,
+    },
+    {
+      name: "Appointments",
+      href: DASHBOARD_PATHS.APPOINTMENTS,
+      icon: <CalendarDays className="h-5 w-5" />,
+    },
+    {
+      name: "Approvals",
+      href: DASHBOARD_PATHS.APPROVALS,
+      icon: <CheckSquare className="h-5 w-5" />,
+    },
+    {
+      name: "Inbox",
+      href: DASHBOARD_PATHS.INBOX,
+      icon: <MessageSquare className="h-5 w-5" />,
+    },
+    {
+      name: "Patients",
+      href: DASHBOARD_PATHS.PATIENTS,
+      icon: <Users className="h-5 w-5" />,
+    },
+  ];
 
   return (
     <TooltipProvider>
@@ -173,44 +199,40 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             >
               <div className="flex-1 overflow-y-auto px-2 py-2 hide-scrollbar">
                 <nav className="grid gap-1">
-                  <SidebarItem
-                    href={DASHBOARD_PATHS.HOME}
-                    icon={<CrumpledPaperIcon className="h-5 w-5" />}
-                    title="Dashboard"
-                    isCollapsed={isCollapsed}
-                  />
-                  <SidebarItem
-                    href={DASHBOARD_PATHS.APPOINTMENTS}
-                    icon={<CalendarIcon className="h-5 w-5" />}
-                    title="Appointments"
-                    isCollapsed={isCollapsed}
-                  />
-                  <SidebarItem
-                    href={DASHBOARD_PATHS.PROFILE}
-                    icon={<PersonIcon className="h-5 w-5" />}
-                    title="Profile"
-                    isCollapsed={isCollapsed}
-                  />
-                  {/* <SidebarItem
-                    href={DASHBOARD_PATHS.PROFILE_V2}
-                    icon={<PersonIcon className="h-5 w-5" />}
-                    title="Profile V2"
-                    isCollapsed={isCollapsed}
-                  />
-                  <SidebarItem
-                    href={DASHBOARD_PATHS.SETTINGS}
-                    icon={<GearIcon className="h-5 w-5" />}
-                    title="Settings"
-                    isCollapsed={isCollapsed}
-                  /> */}
+                  {sidebarItems.map((item) => (
+                    <SidebarItem
+                      title={item.name}
+                      isCollapsed={isCollapsed}
+                      key={item.name}
+                      {...item}
+                      isActive={pathname?.includes(item.href) ?? false}
+                    />
+                  ))}
                 </nav>
+              </div>
+              <div className="p-4 flex items-center gap-4">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="w-10 h-10 rounded-full bg-[#F4F1FE] flex items-center justify-center">
+                    <span className="text-[#6941C6] font-medium">SD</span>
+                  </div>
+                  <span className="text-sm font-medium text-[#09090B]">Sarah Doe</span>
+                </div>
+                <button
+                  type="button"
+                  className="p-1 hover:bg-gray-100 rounded-md"
+                  onClick={() => {
+                    router.push(AUTH_ROUTES.LOGIN);
+                  }}
+                >
+                  <ChevronRight size={16} className="text-[#A1A1AA]" />
+                </button>
               </div>
             </div>
           </div>
         </div>
         {/* Toggle button positioned to overlap sidebar and content */}
         <div
-          className="absolute z-[100]"
+          className="absolute z-10"
           style={{
             top: "80px",
             right: "0",
