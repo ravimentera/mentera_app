@@ -1,5 +1,6 @@
 "use client";
 
+import { DrawerComponent } from "@/components/organisms/drawer";
 import { DashboardLayout } from "@/components/templates";
 
 export default function DashboardLayoutWrapper({
@@ -7,5 +8,10 @@ export default function DashboardLayoutWrapper({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <DashboardLayout>
+      <DrawerComponent />
+      {children}
+    </DashboardLayout>
+  );
 }

@@ -180,12 +180,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     title="Settings"
                     isCollapsed={isCollapsed}
                   />
-                  <SidebarItem
-                    href={DASHBOARD_PATHS.CHAT}
-                    icon={<ChatBubbleIcon className="h-5 w-5" />}
-                    title="Chat"
-                    isCollapsed={isCollapsed}
-                  />
                 </nav>
               </div>
             </div>
