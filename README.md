@@ -110,7 +110,6 @@ Visit `http://localhost:3000` to see the application.
 │   │   │   ├── LineChart.tsx     # Line chart component
 │   │   │   └── DonutChart.tsx    # Donut chart component
 │   │   ├── card.tsx              # Card component
-│   │   ├── header.tsx            # Application header
 │   │   ├── footer.tsx            # Application footer
 │   │   ├── sidebar.tsx           # Navigation sidebar
 │   │   └── table.tsx             # Data tables
