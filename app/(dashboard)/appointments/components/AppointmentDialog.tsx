@@ -243,7 +243,12 @@ export function AppointmentDialog({
             </div>
           </div>
         ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            defaultValue={activeTab}
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <TabsList className="flex p-0 bg-[#FCFCFC]">
               <TabsTrigger
                 value="notify"
@@ -325,8 +330,7 @@ export function AppointmentDialog({
                           value={
                             editedMessage ||
                             appointment.notificationStatus?.message ||
-                            (generateCareInstructions &&
-                              generateCareInstructions(appointment).message)
+                            generateCareInstructions?.(appointment)?.message
                           }
                           onChange={(e) => setEditedMessage(e.target.value)}
                           className="min-h-[180px] resize-none pt-6"
@@ -515,12 +519,16 @@ export function AppointmentDialog({
                     Delete
                   </Button>
                 )}
-                <div className={cn("flex gap-2", mode === "new" && "ml-auto")}>
+                <div
+                  className={cn("flex gap-2", (mode as "new" | "edit") === "new" ? "ml-auto" : "")}
+                >
                   <Button variant="outline" onClick={handleClose}>
                     Cancel
                   </Button>
                   <Button onClick={handleSave}>
-                    {mode === "new" ? "Create Appointment" : "Update Appointment"}
+                    {(mode as "new" | "edit") === "new"
+                      ? "Create Appointment"
+                      : "Update Appointment"}
                   </Button>
                 </div>
               </div>
