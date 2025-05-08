@@ -13,13 +13,13 @@ export function ProfileHeader({ patient }: ProfileHeaderProps) {
   return (
     <div className="flex items-center justify-between bg-white border-b p-5">
       <div className="flex items-center gap-3">
-        <Link href="/dashboard">
+        <Link href="/patients">
           <Button variant="ghost" className="!p-0">
             <ArrowLeft className="size-6" />
           </Button>
         </Link>
         <h1 className="text-2xl font-semibold text-gray-900">
-          PT-{patient.id} | {patient.firstName} {patient.lastName}
+          {patient.id} | {patient.firstName} {patient.lastName}
         </h1>
       </div>
 
