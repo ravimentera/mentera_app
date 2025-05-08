@@ -237,7 +237,7 @@ export const DonutChart = ({
               />
               <div className="text-sm">
                 <span className="font-medium">{dataPoint.label}</span>
-                <span className="ml-1 text-muted-foreground">
+                <span className="ml-1 text-gray-500">
                   {Math.round((dataPoint.value / total) * 100)}%
                 </span>
               </div>

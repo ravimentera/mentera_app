@@ -1,7 +1,7 @@
 "use client";
 
 import { GoogleIcon } from "./GoogleIcon";
-import { MenteraIcon } from "./MenteraIcon";
+import { MenteraLogoIcon } from "./MenteraLogoIcon";
 import { StarIcon } from "./StarIcon";
 import { SuccessIcon } from "./SuccessIcon";
 import { IconName } from "./types";
@@ -33,7 +33,7 @@ export function Icon({
 
   switch (name) {
     case IconName.SPA:
-      return <MenteraIcon {...props} />;
+      return <MenteraLogoIcon {...props} />;
     case IconName.STAR:
       return <StarIcon {...props} filled={filled} />;
     case IconName.SUCCESS:

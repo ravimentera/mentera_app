@@ -8,7 +8,6 @@ export {
   CardTitle,
 } from "./card";
 export { Footer } from "./footer";
-export { Header } from "./header";
 export { ProfileForm } from "./profile-form";
 export { Sidebar } from "./sidebar";
 export { Table } from "./table";

@@ -209,13 +209,6 @@ export const LineChart = ({
                     fill="white"
                     stroke={color}
                     strokeWidth={2}
-                    className="animate-fade-in-delayed"
-                    style={{
-                      animationDelay: `${800 + idx * 100}ms`,
-                      opacity: mounted ? 1 : 0,
-                      transform: mounted ? "scale(1)" : "scale(0)",
-                      transition: `opacity 0.5s ease ${0.8 + idx * 0.1}s, transform 0.5s ease ${0.8 + idx * 0.1}s, r 0.2s ease-in-out`,
-                    }}
                     onMouseEnter={() => setActivePoint(idx)}
                     onMouseLeave={() => setActivePoint(null)}
                   />
@@ -251,7 +244,7 @@ export const LineChart = ({
                         fontSize="12"
                         fill="currentColor"
                       >
-                        Value: {point.value}
+                        Count: {point.value}
                       </text>
                     </g>
                   )}
