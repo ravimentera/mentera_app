@@ -130,7 +130,7 @@ export default function ProfilePage() {
         </Card>
 
         <Card className="p-6 md:col-span-2">
-          <Tabs value="overview" onValueChange={() => {}} defaultValue="overview">
+          <Tabs defaultValue="overview">
             <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="appointments">Appointments</TabsTrigger>

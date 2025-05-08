@@ -124,7 +124,7 @@ export default function SettingsPage() {
         <p className="text-gray-500">Manage your account settings and preferences.</p>
       </div>
 
-      <Tabs value="account" onValueChange={() => {}} defaultValue="account" className="space-y-6">
+      <Tabs defaultValue="account" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>

@@ -24,17 +24,13 @@ interface ProfileTabsProps {
 export function ProfileTabs({ activeTab, onTabChange, children }: ProfileTabsProps) {
   return (
     <div className="w-full">
-      <Tabs
-        value={activeTab}
-        onValueChange={onTabChange}
-        defaultValue={activeTab}
-        className="w-full"
-      >
+      <Tabs defaultValue={activeTab} className="w-full">
         <TabsList className="flex p-0 bg-[#FCFCFC]">
           {tabItems.map((tab) => (
             <TabsTrigger
               key={tab.id}
               value={tab.id}
+              onClick={() => onTabChange(tab.id)}
               className={`px-4 py-2.5 text-sm font-medium rounded-b-sm border-b-2 ${
                 activeTab === tab.id
                   ? "bg-[#F4F1FE] text-[#6941C6] border-[#6941C6] hover:bg-[#F4F1FE] hover:text-[#6941C6]"
