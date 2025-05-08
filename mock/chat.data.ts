@@ -1,4 +1,4 @@
-import { Patient } from "@/app/(dashboard)/chat/types";
+import { Patient } from "./types";
 
 export const testMedSpa = {
   medspaId: "MS-1001",
