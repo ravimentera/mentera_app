@@ -11,9 +11,12 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import Image from "next/image";
+import { useState } from "react";
 import ChatClient from "./chat/ChatClient";
 
 export function DrawerComponent() {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <Drawer direction="right">
       <DrawerTrigger asChild>
@@ -31,7 +34,15 @@ export function DrawerComponent() {
           />
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-screen w-1/2 flex flex-col">
+
+      <DrawerContent isExpanded={isExpanded}>
+        <Button
+          className="absolute top-4 right-4 text-gray-500 hover:text-black transition"
+          aria-label="Close"
+          onClick={() => setIsExpanded(true)}
+        >
+          ✕AZ
+        </Button>
         <DrawerClose asChild>
           <Button
             className="absolute top-4 right-4 text-gray-500 hover:text-black transition"
@@ -40,7 +51,6 @@ export function DrawerComponent() {
             ✕
           </Button>
         </DrawerClose>
-
         <DrawerHeader className="shrink-0">
           <DrawerTitle>Talk to Tera</DrawerTitle>
           <DrawerDescription>Your smart assistant is here to help you anytime.</DrawerDescription>
