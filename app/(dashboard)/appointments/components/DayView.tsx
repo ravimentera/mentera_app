@@ -57,10 +57,7 @@ export function DayView({
       {/* Time slots */}
       <div className="grid grid-rows-[repeat(24,_minmax(60px,_1fr))]">
         {Array.from({ length: 24 }, (_, i) => (
-          <div
-            key={`time-slot-${i.toString().padStart(2, "0")}-${format(new Date().setHours(i, 0), "ha")}`}
-            className="text-sm text-gray-500 -mt-2"
-          >
+          <div key={`time-slot-${i}`} className="text-sm text-gray-500 -mt-2">
             {format(new Date().setHours(i, 0), "h a")}
           </div>
         ))}
@@ -77,10 +74,7 @@ export function DayView({
         {/* Time grid lines */}
         <div className="absolute inset-0 grid grid-rows-[repeat(24,_minmax(60px,_1fr))] pointer-events-none">
           {Array.from({ length: 24 }, (_, i) => (
-            <div
-              key={`grid-line-${i.toString().padStart(2, "0")}-${format(new Date().setHours(i, 0), "ha")}`}
-              className="border-t border-gray-100"
-            />
+            <div key={`grid-line-${i}`} className="border-t border-gray-100" />
           ))}
         </div>
 
@@ -116,9 +110,8 @@ export function DayView({
             const showAvatar = !isCompact && heightInPixels >= 48;
 
             return (
-              <button
+              <div
                 key={appointment.id}
-                type="button"
                 data-appointment="true"
                 className={cn(
                   "absolute rounded-lg border cursor-pointer overflow-hidden group transition-colors hover:shadow-md",
@@ -130,6 +123,13 @@ export function DayView({
                   e.stopPropagation();
                   onAppointmentClick(appointment);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    onAppointmentClick(appointment);
+                  }
+                }}
+                tabIndex={0}
+                role="button"
               >
                 <div className={cn("flex flex-col", isCompact ? "gap-0" : "gap-1")}>
                   <div className={cn("flex items-start", isCompact ? "gap-0.5" : "gap-1")}>
@@ -190,7 +190,7 @@ export function DayView({
                     </span>
                   )}
                 </div>
-              </button>
+              </div>
             );
           }),
         )}

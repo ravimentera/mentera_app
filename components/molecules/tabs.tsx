@@ -18,15 +18,22 @@ type TabsContextValue = {
 
 const TabsContext = createContext<TabsContextValue | undefined>(undefined);
 
-interface TabsProps {
-  value: string;
+export interface TabsProps extends HTMLAttributes<HTMLDivElement> {
   defaultValue: string;
-  onValueChange: (value: string) => void;
+  value?: string;
+  onValueChange?: (value: string) => void;
+  children: ReactNode;
   className?: string;
-  children: React.ReactNode;
 }
 
-export function Tabs({ value, defaultValue, onValueChange, className, children }: TabsProps) {
+export function Tabs({
+  defaultValue,
+  value,
+  onValueChange,
+  children,
+  className,
+  ...props
+}: TabsProps) {
   const [selectedTab, setSelectedTab] = useState(defaultValue);
 
   // Use controlled or uncontrolled state
@@ -40,7 +47,9 @@ export function Tabs({ value, defaultValue, onValueChange, className, children }
 
   return (
     <TabsContext.Provider value={{ selectedTab: currentTab, setSelectedTab: setCurrentTab }}>
-      <div className={cn("space-y-2", className)}>{children}</div>
+      <div className={cn("space-y-2", className)} {...props}>
+        {children}
+      </div>
     </TabsContext.Provider>
   );
 }

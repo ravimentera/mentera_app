@@ -36,7 +36,7 @@ export function AppointmentCalendar({
   const [dragEnd, setDragEnd] = useState<number | null>(null);
   const [showNewAppointmentDialog, setShowNewAppointmentDialog] = useState(false);
   const [calendarAppointments, setCalendarAppointments] = useState<Appointment[]>(appointments);
-  const [editingAppointment, setEditingAppointment] = useState<Appointment | undefined>(undefined);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("edit");
   const [isGeneratingMessage, setIsGeneratingMessage] = useState(false);
@@ -161,21 +161,20 @@ export function AppointmentCalendar({
         patientId: "temp-patient-id",
         chartId: "temp-chart-id",
         patient: {
-          firstName: "New",
-          lastName: "Patient",
+          firstName: appointmentData.patient?.firstName || "",
+          lastName: appointmentData.patient?.lastName || "",
         },
         provider: {
           providerId: "temp-provider-id",
-          firstName: "Dr.",
-          lastName: "Provider",
+          firstName: "Doctor",
+          lastName: "Name",
           specialties: [],
         },
-        title: "New Appointment",
-        startTime: dragStart ? new Date(dragStart) : new Date(),
-        endTime: dragEnd ? new Date(dragEnd) : new Date(Date.now() + 30 * 60 * 1000),
+        startTime: appointmentData.startTime || new Date(),
+        endTime: appointmentData.endTime || new Date(),
         status: "scheduled",
-        type: "general",
-        notes: "",
+        notes: appointmentData.notes,
+        type: appointmentData.type || "general",
       };
       setCalendarAppointments((prev) => [...prev, newAppointment]);
     } else {
@@ -198,7 +197,7 @@ export function AppointmentCalendar({
         prev.map((apt) => (apt.id === updatedAppointment.id ? updatedAppointment : apt)),
       );
       setShowEditDialog(false);
-      setEditingAppointment(undefined);
+      setEditingAppointment(null);
       resetForm();
     }
   };
@@ -238,7 +237,7 @@ export function AppointmentCalendar({
       );
       toast.success("Care instructions have been approved and sent to the patient.");
       setShowEditDialog(false);
-      setEditingAppointment(undefined);
+      setEditingAppointment(null);
       setEditedMessage("");
     }
   };
@@ -267,7 +266,7 @@ export function AppointmentCalendar({
         setIsGeneratingMessage(false);
         toast.error("Care instructions have been declined.");
         setShowEditDialog(false);
-        setEditingAppointment(undefined);
+        setEditingAppointment(null);
         setEditedMessage("");
       }, 1000);
     }

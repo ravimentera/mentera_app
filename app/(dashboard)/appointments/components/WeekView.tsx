@@ -93,10 +93,7 @@ export function WeekView({
         {/* Time slots column */}
         <div className="grid grid-rows-[repeat(24,_minmax(60px,_1fr))]">
           {Array.from({ length: 24 }, (_, i) => (
-            <div
-              key={`time-slot-hour-${i.toString().padStart(2, "0")}-${format(new Date().setHours(i, 0), "ha")}`}
-              className="text-sm text-gray-500 -mt-2"
-            >
+            <div key={`time-slot-hour-${i}`} className="text-sm text-gray-500 -mt-2">
               {format(new Date().setHours(i, 0), "h a")}
             </div>
           ))}

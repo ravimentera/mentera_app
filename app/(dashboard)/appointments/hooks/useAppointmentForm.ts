@@ -96,11 +96,10 @@ export function useAppointmentForm({
       },
       provider: {
         providerId: "temp-provider-id",
-        firstName: "Dr.",
-        lastName: "Provider",
+        firstName: "Doctor",
+        lastName: "Name",
         specialties: [],
       },
-      title: formData.title,
       startTime,
       endTime,
       status: "scheduled",

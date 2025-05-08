@@ -18,12 +18,10 @@ export interface Appointment {
   status: "scheduled" | "completed" | "cancelled";
   notes?: string;
   type: "therapy" | "consultation" | "followup" | "general";
-  title: string;
-  description?: string;
   notificationStatus?: {
     status: "pending" | "approved" | "disapproved";
     sent: boolean;
-    message: string;
+    message?: string;
     type: "pre-care" | "post-care";
     editedMessage?: string;
   };

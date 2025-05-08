@@ -53,10 +53,7 @@ export function WeeklyCalendar({ appointments, onEventClick }: WeeklyCalendarPro
           {/* Time slots background */}
           <div className="absolute inset-0 grid grid-rows-[repeat(24,_minmax(60px,_1fr))]">
             {Array.from({ length: 24 }, (_, i) => (
-              <div
-                key={`time-slot-${i.toString().padStart(2, "0")}`}
-                className="border-b border-gray-100"
-              />
+              <div key={i} className="border-b border-gray-100" />
             ))}
           </div>
 
