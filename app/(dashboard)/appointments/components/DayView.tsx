@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
 import { Appointment } from "./types";
 
 interface DayViewProps {
@@ -57,7 +58,7 @@ export function DayView({
       {/* Time slots */}
       <div className="grid grid-rows-[repeat(24,_minmax(60px,_1fr))]">
         {Array.from({ length: 24 }, (_, i) => (
-          <div key={`time-slot-${i}`} className="text-sm text-gray-500 -mt-2">
+          <div key={`time-slot-${uuidv4()}`} className="text-sm text-gray-500 -mt-2">
             {format(new Date().setHours(i, 0), "h a")}
           </div>
         ))}
@@ -74,7 +75,7 @@ export function DayView({
         {/* Time grid lines */}
         <div className="absolute inset-0 grid grid-rows-[repeat(24,_minmax(60px,_1fr))] pointer-events-none">
           {Array.from({ length: 24 }, (_, i) => (
-            <div key={`grid-line-${i}`} className="border-t border-gray-100" />
+            <div key={`grid-line-${uuidv4()}`} className="border-t border-gray-100" />
           ))}
         </div>
 
@@ -128,8 +129,6 @@ export function DayView({
                     onAppointmentClick(appointment);
                   }
                 }}
-                tabIndex={0}
-                role="button"
               >
                 <div className={cn("flex flex-col", isCompact ? "gap-0" : "gap-1")}>
                   <div className={cn("flex items-start", isCompact ? "gap-0.5" : "gap-1")}>

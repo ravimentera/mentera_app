@@ -1,8 +1,8 @@
 import { addDays, format, startOfWeek } from "date-fns";
 import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { CalendarEvent } from "./CalendarEvent";
 import { TimeGrid } from "./TimeGrid";
-
 interface Appointment {
   id: string;
   title: string;
@@ -53,7 +53,7 @@ export function WeeklyCalendar({ appointments, onEventClick }: WeeklyCalendarPro
           {/* Time slots background */}
           <div className="absolute inset-0 grid grid-rows-[repeat(24,_minmax(60px,_1fr))]">
             {Array.from({ length: 24 }, (_, i) => (
-              <div key={i} className="border-b border-gray-100" />
+              <div key={uuidv4()} className="border-b border-gray-100" />
             ))}
           </div>
 
