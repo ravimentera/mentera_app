@@ -4,22 +4,17 @@ import { DASHBOARD_PATHS } from "@/app/constants/route-constants";
 import { Tooltip, TooltipProvider } from "@/components/atoms";
 import {
   CalendarIcon,
-  ChatBubbleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   HomeIcon as CrumpledPaperIcon,
-  GearIcon,
-  MenteraIcon,
+  MenteraLogoFull,
+  MenteraLogoIcon,
   PersonIcon,
 } from "@/components/atoms/icons";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-
-// Define sidebar widths as constants
-const SIDEBAR_EXPANDED_WIDTH = 240;
-const SIDEBAR_COLLAPSED_WIDTH = 60;
 
 interface SidebarItemProps {
   href: string;
@@ -36,14 +31,21 @@ function SidebarItem({ href, icon, title, isCollapsed }: SidebarItemProps) {
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-200 relative group",
+        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-300 ease-in-out relative group whitespace-nowrap",
         isActive
-          ? "bg-primary text-primary-foreground font-medium"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          ? "bg-[#8A03D31A] text-[#8A03D3] font-medium"
+          : "text-gray-500 hover:bg-muted hover:text-foreground",
       )}
     >
-      <span className="h-5 w-5 shrink-0">{icon}</span>
-      {!isCollapsed && <span className="transition-opacity duration-200">{title}</span>}
+      <span className="h-5 w-5 shrink-0 transition-transform duration-300 ease-in-out">{icon}</span>
+      <span
+        className={cn(
+          "transition-all duration-300 ease-in-out",
+          isCollapsed ? "opacity-0 w-0" : "opacity-100 w-auto",
+        )}
+      >
+        {title}
+      </span>
     </Link>
   );
 
@@ -118,16 +120,37 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="relative">
         <div
           className={cn(
-            "border-r bg-background h-full transition-all duration-300",
-            isCollapsed ? `w-[${SIDEBAR_COLLAPSED_WIDTH}px]` : `w-[${SIDEBAR_EXPANDED_WIDTH}px]`,
-            isMobile && isCollapsed ? `w-[${SIDEBAR_COLLAPSED_WIDTH}px]` : "",
-            isMobile && !isCollapsed
-              ? `fixed inset-y-0 left-0 w-[${SIDEBAR_EXPANDED_WIDTH}px] shadow-xl z-30`
-              : "",
+            "border-r bg-background h-full transition-all duration-300 ease-in-out fixed lg:relative",
+            isCollapsed ? "w-[60px]" : "w-[240px]",
+            isMobile && isCollapsed ? "w-[60px]" : "",
+            isMobile && !isCollapsed ? "shadow-xl z-30" : "",
           )}
         >
           <div className="flex h-full flex-col">
-            {/* Only show the header with logo on mobile */}
+            {/* Sidebar header for desktop */}
+            {!isMobile && (
+              <div
+                className={cn(
+                  "h-16 flex items-center overflow-hidden bg-slate-50",
+                  isCollapsed ? "justify-center p-2" : "justify-start px-4",
+                )}
+              >
+                <Link
+                  href={DASHBOARD_PATHS.HOME}
+                  className={cn(
+                    "flex items-center transition-all duration-300 ease-in-out",
+                    isCollapsed ? "justify-center" : "justify-start",
+                  )}
+                >
+                  {isCollapsed ? (
+                    <MenteraLogoIcon className="h-8 w-8 transition-all duration-300 ease-in-out" />
+                  ) : (
+                    <MenteraLogoFull className="h-10 transition-all duration-300 ease-in-out" />
+                  )}
+                </Link>
+              </div>
+            )}
+            {/* Sidebar header for mobile */}
             {isMobile && (
               <div
                 className={cn(
@@ -135,23 +158,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   isCollapsed ? "justify-center p-2" : "justify-between p-3",
                 )}
               >
-                {!isCollapsed && (
-                  <Link href={DASHBOARD_PATHS.HOME} className="flex items-center gap-2">
-                    <MenteraIcon className="h-6 w-6 text-primary" />
-                    <span className="text-xl font-bold text-primary">Mentera-AI</span>
-                  </Link>
-                )}
-                {isCollapsed && (
-                  <Link href={DASHBOARD_PATHS.HOME} className="flex justify-center items-center">
-                    <Tooltip content="Mentera-AI Dashboard" side="right">
-                      <MenteraIcon className="h-6 w-6 text-primary" />
-                    </Tooltip>
-                  </Link>
-                )}
+                <Link href={DASHBOARD_PATHS.HOME} className="flex items-center gap-2">
+                  {isCollapsed ? (
+                    <MenteraLogoIcon className="h-8 w-8" />
+                  ) : (
+                    <MenteraLogoFull className="h-10" />
+                  )}
+                </Link>
               </div>
             )}
             <div
-              className="flex flex-col h-full overflow-hidden"
+              className="flex flex-col h-full overflow-hidden bg-slate-50"
               style={{ height: !isMobile ? "calc(100vh - 4rem)" : "100%" }}
             >
               <div className="flex-1 overflow-y-auto px-2 py-2 hide-scrollbar">
@@ -174,12 +191,18 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     title="Profile"
                     isCollapsed={isCollapsed}
                   />
+                  {/* <SidebarItem
+                    href={DASHBOARD_PATHS.PROFILE_V2}
+                    icon={<PersonIcon className="h-5 w-5" />}
+                    title="Profile V2"
+                    isCollapsed={isCollapsed}
+                  />
                   <SidebarItem
                     href={DASHBOARD_PATHS.SETTINGS}
                     icon={<GearIcon className="h-5 w-5" />}
                     title="Settings"
                     isCollapsed={isCollapsed}
-                  />
+                  /> */}
                 </nav>
               </div>
             </div>
@@ -199,7 +222,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               type="button"
               onClick={toggleSidebar}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-full border-2 border-border bg-card",
+                "flex h-6 w-6 items-center justify-center rounded-full border-2 border-border bg-card",
                 "hover:bg-muted hover:text-primary transition-colors",
                 "shadow-[0_2px_10px_rgba(0,0,0,0.1)]",
               )}
@@ -209,9 +232,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? (
-                <ChevronRightIcon className="h-5 w-5" />
+                <ChevronRightIcon className="h-3 w-3" />
               ) : (
-                <ChevronLeftIcon className="h-5 w-5" />
+                <ChevronLeftIcon className="h-3 w-3" />
               )}
             </button>
           </Tooltip>
