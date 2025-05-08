@@ -28,6 +28,8 @@ export const DASHBOARD_PATHS = {
   HOME: "/dashboard", // This is a special case - it's at /dashboard path but in (dashboard)/dashboard folder
   PATIENTS: "/patients",
   APPOINTMENTS: "/appointments",
+  APPROVALS: "/approvals",
+  INBOX: "/inbox",
   TREATMENTS: "/treatments",
   ANALYTICS: "/analytics",
   SETTINGS: "/settings",
