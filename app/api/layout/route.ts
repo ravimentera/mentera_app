@@ -1,3 +1,4 @@
+import { mockData } from "@/mock/mockTera/mockData";
 import {
   BedrockAgentRuntimeClient,
   InvokeAgentCommand,
@@ -6,13 +7,19 @@ import {
 } from "@aws-sdk/client-bedrock-agent-runtime";
 import { NextRequest, NextResponse } from "next/server";
 
+// Environment variables
 const agentId = process.env.BEDROCK_AGENT_ID;
 const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID;
 const region = process.env.AWS_REGION;
 
-if (!agentId || !agentAliasId || !region) {
+// Determine if mocking is enabled for the API route
+// const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
+// @TODO: make it false after demo
+const ENABLE_MOCK_LAYOUT_API = true; // IS_DEVELOPMENT && process.env.NEXT_PUBLIC_ENABLE_MOCK_CHAT === 'true';
+
+if (!ENABLE_MOCK_LAYOUT_API && (!agentId || !agentAliasId || !region)) {
   console.error(
-    "CRITICAL: Missing Bedrock Agent environment variables (BEDROCK_AGENT_ID, BEDROCK_AGENT_ALIAS_ID, AWS_REGION)",
+    "CRITICAL: Missing Bedrock Agent environment variables (BEDROCK_AGENT_ID, BEDROCK_AGENT_ALIAS_ID, AWS_REGION) and mock is disabled.",
   );
 }
 
@@ -27,70 +34,31 @@ const RETRY_DELAY_MS = 1000;
 
 function isValidJson(text: string | null): boolean {
   if (text === null || typeof text !== "string" || text.trim() === "") {
-    console.log("isValidJson: Input is null, not a string, or empty after trim. Returning false.");
     return false;
   }
   try {
     JSON.parse(text);
-    console.log(
-      "isValidJson: Successfully parsed. Returning true for text starting with:",
-      text.substring(0, 70) + "...",
-    );
     return true;
   } catch (e: any) {
-    console.error(
-      "isValidJson: Failed to parse. Error:",
-      e.message,
-      "For text starting with:",
-      text.substring(0, 70) + "...",
-    );
     return false;
   }
 }
 
 function extractJsonBlock(rawAgentResponse: string): string | null {
-  console.log(
-    "extractJsonBlock: Attempting to extract JSON. Input length:",
-    rawAgentResponse?.length,
-  );
   if (!rawAgentResponse || typeof rawAgentResponse !== "string") {
-    console.log("extractJsonBlock: Input is null or not a string.");
     return null;
   }
-
   const fencedBlockRegex = /```json\s*([\s\S]*?)\s*```/;
   const match = rawAgentResponse.match(fencedBlockRegex);
-
   if (match?.[1]) {
     const extracted = match[1].trim();
-    console.log(
-      "extractJsonBlock: Found fenced JSON block. Content starts with:",
-      extracted.substring(0, 70) + "...",
-    );
-    if (isValidJson(extracted)) {
-      return extracted;
-    }
-    console.warn("extractJsonBlock: Fenced block found but content is not valid JSON.");
+    if (isValidJson(extracted)) return extracted;
     return null;
   }
-  console.log("extractJsonBlock: No valid fenced JSON block found.");
-
   const trimmedAgentResponse = rawAgentResponse.trim();
   if (trimmedAgentResponse.startsWith("{") && trimmedAgentResponse.endsWith("}")) {
-    console.log(
-      "extractJsonBlock: No fence found. Checking if entire trimmed response is JSON. Starts with:",
-      trimmedAgentResponse.substring(0, 70) + "...",
-    );
-    if (isValidJson(trimmedAgentResponse)) {
-      console.log("extractJsonBlock: Entire trimmed response is valid JSON.");
-      return trimmedAgentResponse;
-    }
-    console.log(
-      "extractJsonBlock: Entire trimmed response looked like JSON but failed validation.",
-    );
+    if (isValidJson(trimmedAgentResponse)) return trimmedAgentResponse;
   }
-
-  console.log("extractJsonBlock: No extractable/valid JSON found in agent response.");
   return null;
 }
 
@@ -99,14 +67,6 @@ function delay(ms: number) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!agentId || !agentAliasId || !region) {
-    console.error("Bedrock Agent configuration is incomplete for this request.");
-    return NextResponse.json(
-      { error: "Server configuration error for Bedrock Agent." },
-      { status: 500 },
-    );
-  }
-
   try {
     const body = (await req.json()) as LayoutRequestBody;
 
@@ -114,6 +74,95 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Invalid request: 'markdown' (non-empty string) is required" },
         { status: 400 },
+      );
+    }
+
+    // --- Mocking Logic ---
+    if (ENABLE_MOCK_LAYOUT_API) {
+      console.log(
+        "[Mock API /api/layout] Mocking enabled. Searching for markdown in mockData.js...",
+      );
+      const incomingMarkdownTrimmed = body.markdown.trim();
+
+      const matchedEntry = mockData.find(
+        (entry) => entry.markdown.trim() === incomingMarkdownTrimmed,
+      );
+
+      if (matchedEntry) {
+        console.log(
+          "[Mock API /api/layout] Found matching markdown in mockData.js. Query:",
+          matchedEntry.query,
+        );
+        let layoutPayload: any = matchedEntry.layout;
+
+        if (typeof layoutPayload === "string") {
+          console.log(
+            "[Mock API /api/layout] Layout from mockData is a string. Attempting to parse. String starts with:",
+            layoutPayload.substring(0, 100) + "...",
+          );
+          try {
+            layoutPayload = JSON.parse(layoutPayload);
+          } catch (e: any) {
+            // Catch specific error 'e'
+            console.error(
+              "[Mock API /api/layout] Failed to parse layout string from mockData.js. Error:",
+              e.message,
+            );
+            console.error(
+              "[Mock API /api/layout] Problematic layout string (for query: '" +
+                matchedEntry.query +
+                "'):\n",
+              matchedEntry.layout,
+            ); // Log the problematic string
+            return NextResponse.json(
+              {
+                error:
+                  "Mock data for layout is malformed and could not be parsed as JSON. Please check for unescaped newlines or special characters within string values if your layout is a string in mockData.js. It's recommended to use direct JavaScript objects for layouts.",
+                details: e.message, // Include the specific parsing error
+                mockQuery: matchedEntry.query,
+              },
+              { status: 500 },
+            );
+          }
+        }
+
+        if (typeof layoutPayload === "object" && layoutPayload !== null) {
+          console.log("[Mock API /api/layout] Returning mock layout object.");
+          return NextResponse.json(layoutPayload);
+          // biome-ignore lint/style/noUselessElse: reason for ignoring
+        } else {
+          console.error(
+            "[Mock API /api/layout] Mock layout data is not a valid object after potential parse for query:",
+            matchedEntry.query,
+          );
+          return NextResponse.json(
+            { error: "Mock data for layout is not a valid object.", mockQuery: matchedEntry.query },
+            { status: 500 },
+          );
+        }
+        // biome-ignore lint/style/noUselessElse: ignored
+      } else {
+        console.warn(
+          "[Mock API /api/layout] No exact markdown match found in mockData.js for the provided input:",
+          incomingMarkdownTrimmed.substring(0, 100) + "...",
+        );
+        return NextResponse.json(
+          {
+            error:
+              "Mock mode enabled, but no matching markdown found in mockData.js for the provided input.",
+          },
+          { status: 404 },
+        );
+      }
+    }
+    // --- End Mocking Logic ---
+
+    // If mocking is not enabled, proceed with Bedrock Agent
+    if (!agentId || !agentAliasId || !region) {
+      console.error("Bedrock Agent configuration is incomplete for this request.");
+      return NextResponse.json(
+        { error: "Server configuration error for Bedrock Agent." },
+        { status: 500 },
       );
     }
 
@@ -136,27 +185,23 @@ Markdown Content to Process:
 ${body.markdown}
 ---
 `;
-
     let lastError: any = null;
     let lastRawContent: string | null = null;
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         console.log(
-          `[Attempt ${attempt}/${MAX_RETRIES}] Invoking Bedrock Agent with inputText (first 100 chars): "${inputText.substring(0, 100).replace(/\n/g, " ")}..." for markdown: "${body.markdown.substring(0, 50)}..."`,
+          `[Bedrock API /api/layout Attempt ${attempt}/${MAX_RETRIES}] Invoking for markdown: "${body.markdown.substring(0, 50)}..."`,
         );
-
-        const input: InvokeAgentCommandInput = {
+        const inputCmd: InvokeAgentCommandInput = {
           agentId,
           agentAliasId,
-          sessionId: crypto.randomUUID(), // Consider session management if context needs to persist across calls for a user
+          sessionId: crypto.randomUUID(),
           inputText,
-          enableTrace: false, // Set to true for debugging Bedrock traces
+          enableTrace: false,
         };
-
-        const command = new InvokeAgentCommand(input);
+        const command = new InvokeAgentCommand(inputCmd);
         const response: InvokeAgentCommandOutput = await bedrockAgentClient.send(command);
-
         let rawAgentContent = "";
         if (response.completion) {
           for await (const chunkEvent of response.completion) {
@@ -167,10 +212,7 @@ ${body.markdown}
             }
           }
         } else {
-          console.warn(
-            `[Attempt ${attempt}/${MAX_RETRIES}] Bedrock Agent response had no completion events.`,
-          );
-          lastError = new Error("Agent response was empty or had no completion stream.");
+          lastError = new Error("Agent response empty/no completion stream.");
           lastRawContent = rawAgentContent;
           if (attempt < MAX_RETRIES) {
             await delay(RETRY_DELAY_MS);
@@ -178,50 +220,39 @@ ${body.markdown}
           }
           break;
         }
-
         lastRawContent = rawAgentContent;
-        console.log(`[Attempt ${attempt}/${MAX_RETRIES}] Raw content from agent:`, rawAgentContent);
-
+        console.log(
+          `[Bedrock API /api/layout Attempt ${attempt}/${MAX_RETRIES}] Raw content:`,
+          rawAgentContent,
+        );
         const extractedJsonString = extractJsonBlock(rawAgentContent);
-
         if (extractedJsonString) {
           const layout = JSON.parse(extractedJsonString);
-          console.log(`[Attempt ${attempt}/${MAX_RETRIES}] Successfully processed JSON layout.`);
           return NextResponse.json(layout);
         }
-
-        console.warn(`[Attempt ${attempt}/${MAX_RETRIES}] Failed to extract valid JSON.`);
-        lastError = new Error(
-          "Agent did not return a recognizable and valid JSON structure based on the prompt's strict output requirements.",
-        );
+        lastError = new Error("Agent did not return recognizable/valid JSON.");
         if (attempt < MAX_RETRIES) {
           await delay(RETRY_DELAY_MS);
           continue;
         }
         break;
       } catch (error: any) {
-        console.error(
-          `[Attempt ${attempt}/${MAX_RETRIES}] Error during Bedrock Agent interaction:`,
-          error.message || error,
-        );
         lastError = error;
         if (attempt < MAX_RETRIES) {
           await delay(RETRY_DELAY_MS);
         }
       }
     }
-
-    console.error("All attempts to fetch layout from Bedrock Agent failed.");
     return NextResponse.json(
       {
-        error: "Failed to get valid layout from Bedrock Agent after multiple attempts.",
-        details: lastError?.message || "No specific error message from last attempt.",
+        error: "Bedrock Agent failed after multiple attempts.",
+        details: lastError?.message,
         lastRawAgentResponse: lastRawContent,
       },
       { status: 502 },
     );
   } catch (error: any) {
-    console.error("Unhandled API Error:", error);
+    console.error("/api/layout Unhandled Error:", error);
     return NextResponse.json(
       { error: error.message || "Unexpected server error" },
       { status: 500 },
