@@ -1,8 +1,10 @@
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
+import { addMessage } from "@/lib/store/messagesSlice";
 import { sanitizeMarkdown } from "@/lib/utils";
 import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
 import WebSocket from "isomorphic-ws";
 import { useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 import { v4 as uuid } from "uuid";
 import { ChatMessage, WebSocketResponseMessage } from "./types";
 import { extractChunk, logMetadata } from "./utils";
@@ -29,6 +31,7 @@ export function useWebSocketChat({
 
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const dispatch = useDispatch(); // @TODO: Need to verify whether Messages are saved to Redux or not.
   const [streamBuffer, setStreamBuffer] = useState("");
   const [loading, setLoading] = useState(false);
   const conversationId = useRef(`conv_${Date.now()}`);
@@ -36,7 +39,9 @@ export function useWebSocketChat({
   const sendMessage = (text: string) => {
     if (!connected || !socketRef.current) return;
     const patient = patientDatabase[currentPatientId];
-    setMessages((prev) => [...prev, { id: uuid(), sender: "user", text }]);
+    const newMessage: ChatMessage = { id: uuid(), sender: "user", text };
+    setMessages((prev) => [...prev, newMessage]);
+    dispatch(addMessage(newMessage));
 
     const payload: any = {
       type: "chat",
@@ -86,23 +91,31 @@ export function useWebSocketChat({
           case "chat_stream_chunk":
             setStreamBuffer((prev) => prev + extractChunk(msg.chunk));
             break;
-          case "chat_stream_complete":
-            setMessages((prev) => [
-              ...prev,
-              { id: uuid(), sender: "ai", text: sanitizeMarkdown(msg.response?.content || "") },
-            ]);
+          case "chat_stream_complete": {
+            const streamMessage: ChatMessage = {
+              id: uuid(),
+              sender: "ai",
+              text: sanitizeMarkdown(msg.response?.content || ""),
+            };
+            setMessages((prev) => [...prev, streamMessage]);
+            dispatch(addMessage(streamMessage));
             setLoading(false);
             setStreamBuffer("");
             logMetadata(msg.response?.metadata);
             break;
-          case "chat_response":
-            setMessages((prev) => [
-              ...prev,
-              { id: uuid(), sender: "ai", text: extractChunk(msg.response?.content) },
-            ]);
+          }
+          case "chat_response": {
+            const chatResMessage: ChatMessage = {
+              id: uuid(),
+              sender: "ai",
+              text: extractChunk(msg.response?.content),
+            };
+            setMessages((prev) => [...prev, chatResMessage]);
+            dispatch(addMessage(chatResMessage));
             setLoading(false);
             logMetadata(msg.response?.metadata);
             break;
+          }
           case "error":
             setLoading(false);
             console.error("Error:", msg.error);
