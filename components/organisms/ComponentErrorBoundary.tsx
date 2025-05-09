@@ -1,41 +1,43 @@
-"use client";
+"use client"; // Assuming this might be needed if it's part of a client-side rendering tree
+
 import React, { Component, ErrorInfo, ReactNode } from "react";
 
 // Props for the ErrorBoundary component
 interface Props {
   children: ReactNode;
-  componentName?: string; // Optional: to display which component failed
+  componentName?: string; // Optional: to help developers identify the component via logs
 }
 
 // State for the ErrorBoundary component
 interface State {
   hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
+  // error: Error | null; // We still store the error for logging, but don't expose it directly to user
+  // errorInfo: ErrorInfo | null; // We still store errorInfo for logging
 }
 
-// A simple card component to display the error message
-const ErrorDisplayCard = ({
-  error,
-  componentName,
-}: {
-  error: Error | null;
-  componentName?: string;
-}) => (
-  <div className="p-4 my-2 bg-red-100 border border-red-400 text-red-700 rounded-md shadow-md w-full">
-    <h3 className="font-bold text-lg mb-2">
-      Oops! Component Error {componentName ? `in "${componentName}"` : ""}
-    </h3>
-    <p className="text-sm mb-1">Something went wrong while rendering this part of the layout.</p>
-    {error && (
-      <details className="mt-2 text-xs bg-red-50 p-2 rounded">
-        <summary className="cursor-pointer font-medium">Error Details</summary>
-        <pre className="mt-1 whitespace-pre-wrap break-all">{error.toString()}</pre>
-      </details>
-    )}
+// Updated ErrorDisplayCard for a more user-friendly message
+const UserFriendlyErrorDisplay = ({ componentName }: { componentName?: string }) => (
+  <div className="p-4 my-2 bg-orange-100 border border-orange-300 text-orange-700 rounded-md shadow-sm w-full text-center">
+    <h3 className="font-semibold text-md mb-1">Something Went Wrong</h3>
+    <p className="text-sm">We're sorry, but a part of this page encountered a temporary issue.</p>
     <p className="text-xs mt-2">
-      Please check the console for more detailed technical information.
+      Please try refreshing the page. If the problem persists, our team has been notified.
     </p>
+    {/*
+      You could add a "Try Again" button here, but its functionality would depend
+      on how you want to reset the error state or the component's state.
+      A simple refresh is often the most straightforward initial suggestion.
+      Example:
+      <button
+        onClick={() => window.location.reload()}
+        className="mt-3 px-3 py-1 bg-orange-500 text-white text-xs rounded hover:bg-orange-600"
+      >
+        Refresh Page
+      </button>
+    */}
+    {/* {componentName && process.env.NODE_ENV === 'development' && (
+      <p className="text-xs mt-2 text-gray-500">(Developer info: Error in component "{componentName}")</p>
+    )} */}
   </div>
 );
 
@@ -43,31 +45,38 @@ class ComponentErrorBoundary extends Component<Props, State> {
   // Initialize state so the normal children are rendered
   public state: State = {
     hasError: false,
-    error: null,
-    errorInfo: null,
+    // error: null, // Not directly needed in state if only logging
+    // errorInfo: null, // Not directly needed in state if only logging
   };
 
   // This lifecycle method is called after an error has been thrown by a descendant component.
-  // It receives the error that was thrown as a parameter and should return a value to update state.
-  public static getDerivedStateFromError(error: Error): State {
+  public static getDerivedStateFromError(_: Error): Pick<State, "hasError"> {
     // Update state so the next render will show the fallback UI.
-    return { hasError: true, error, errorInfo: null }; // errorInfo will be set in componentDidCatch
+    // We only need to set hasError to true. The actual error object is handled by componentDidCatch.
+    return { hasError: true };
   }
 
   // This lifecycle method is also called after an error has been thrown by a descendant component.
-  // It receives two parameters:
-  // 1. error - The error that was thrown.
-  // 2. errorInfo - An object with a componentStack key containing information about which component threw the error.
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // You can also log the error to an error reporting service here
-    console.error("ComponentErrorBoundary caught an error:", error, errorInfo);
-    this.setState({ errorInfo }); // Store errorInfo for potential display or further logging
+    // Log the error and errorInfo to the console for developers
+    console.error(
+      "ComponentErrorBoundary caught an error:",
+      error,
+      errorInfo,
+      "Component Name:",
+      this.props.componentName,
+    );
+    // You could also log the error to an external error reporting service here:
+    // logErrorToMyService(error, errorInfo, { componentName: this.props.componentName });
+
+    // No need to call this.setState({ error, errorInfo }) unless you want to pass them to the fallback UI,
+    // which we are avoiding for the user-facing message. getDerivedStateFromError already set hasError.
   }
 
   public render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
-      return <ErrorDisplayCard error={this.state.error} componentName={this.props.componentName} />;
+      // Render the user-friendly fallback UI
+      return <UserFriendlyErrorDisplay componentName={this.props.componentName} />;
     }
 
     // Normally, just render children

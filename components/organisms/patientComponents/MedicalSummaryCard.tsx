@@ -34,7 +34,7 @@ export function MedicalSummaryCard({ allergies, onEditLink = "#" }: MedicalSumma
         <div className="text-sm text-gray-700 space-y-4">
           {allergies.map((item) => (
             <div key={uuid()}>
-              <div className="font-medium text-gray-900">Allergies to {item.name}</div>
+              <div className="font-medium text-gray-900">{item.name}</div>
               <div className="text-gray-600">Reaction : {item.reactions}</div>
             </div>
           ))}
