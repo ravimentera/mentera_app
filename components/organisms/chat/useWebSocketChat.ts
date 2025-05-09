@@ -21,6 +21,23 @@ interface UseChatWebSocketProps {
   onMessage?: (messages: ChatMessage[]) => void;
 }
 
+/**
+ * Extracts the actual message content after a "Bot: " marker.
+ * If the marker is not found, returns the original content.
+ * @param rawContent The raw string content from the AI response.
+ * @returns The processed string.
+ */
+const getBotActualResponse = (rawContent: string): string => {
+  const botMarker = "Bot: ";
+  const markerIndex = rawContent.indexOf(botMarker);
+  if (markerIndex !== -1) {
+    return rawContent.substring(markerIndex + botMarker.length).trim();
+  }
+  // Fallback: If "Bot: " isn't found, return the original content,
+  // assuming it might sometimes be directly the message or already processed.
+  return rawContent.trim();
+};
+
 export function useWebSocketChat({
   currentPatientId,
   isPatientContextEnabled,
@@ -55,7 +72,7 @@ export function useWebSocketChat({
       conversationId: conversationId.current,
       medspaId: testMedSpa.medspaId,
       medSpaContext: testMedSpa,
-      streaming: true, // Assuming you still want to request streaming for chat
+      streaming: true,
       cacheControl: { debug: cacheDebug, forceFresh },
       debug: { timestamp: new Date().toISOString() },
     };
@@ -69,16 +86,14 @@ export function useWebSocketChat({
     socketRef.current.send(JSON.stringify(payload));
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ignored
   useEffect(() => {
     const connect = async () => {
-      // Ensure /api/token endpoint is available and returns a valid token structure
       let token = "";
       try {
         const tokenResponse = await fetch("/api/token");
         if (!tokenResponse.ok) {
           console.error("Failed to fetch token:", tokenResponse.status, await tokenResponse.text());
-          // Handle token fetch failure (e.g., retry, show error)
           return;
         }
         const tokenData = await tokenResponse.json();
@@ -89,13 +104,12 @@ export function useWebSocketChat({
         }
       } catch (error) {
         console.error("Error fetching token:", error);
-        // Handle token fetch error
         return;
       }
 
       const url = new URL(getWebSocketUrl());
       url.searchParams.set("token", token);
-      url.searchParams.set("medspaId", "MS-1001"); // Or use testMedSpa.medspaId
+      url.searchParams.set("medspaId", testMedSpa.medspaId);
 
       const socket = new WebSocket(url.toString());
       socketRef.current = socket;
@@ -107,7 +121,6 @@ export function useWebSocketChat({
           clearTimeout(retryTimeout.current);
           retryTimeout.current = null;
         }
-        // Ensure token is not prefixed with "Bearer " if server expects raw token
         socket.send(JSON.stringify({ type: "auth", token: token.replace(/^Bearer\s+/, "") }));
       };
 
@@ -119,59 +132,66 @@ export function useWebSocketChat({
             setStreamBuffer("");
             break;
           case "chat_stream_chunk":
+            // For streaming, we assume the "Bot: " prefix would appear at the beginning of the stream.
+            // If it's chunked, the prefix might be in the first chunk.
+            // This logic might need refinement if "Bot: " can appear mid-stream or after some initial non-bot text.
+            // For now, we'll apply getBotActualResponse to the accumulated streamBuffer at chat_stream_complete.
             setStreamBuffer((prev) => prev + extractChunk(msg.chunk));
             break;
           case "chat_stream_complete": {
-            const aiResponseContent = msg.response?.content || "";
+            // Process the full accumulated stream buffer
+            const rawAiResponseContent = msg.response?.content || streamBuffer; // Use response.content if available, else accumulated buffer
+            const actualBotMessage = getBotActualResponse(rawAiResponseContent);
+
             const streamMessage: ChatMessage = {
               id: uuid(),
               sender: "ai",
-              text: sanitizeMarkdown(aiResponseContent),
+              text: sanitizeMarkdown(actualBotMessage), // Use processed message for display
             };
             setMessages((prev) => [...prev, streamMessage]);
             dispatch(addMessage(streamMessage));
             setLoading(false);
-            setStreamBuffer("");
+            setStreamBuffer(""); // Clear buffer after processing
             logMetadata(msg.response?.metadata);
 
-            // Dispatch action to fetch dynamic layout if content is present
-            if (aiResponseContent.trim()) {
+            // Dispatch action to fetch dynamic layout with the processed bot message
+            if (actualBotMessage.trim()) {
               console.log(
-                "Dispatching fetchDynamicLayout from chat_stream_complete with markdown:",
-                aiResponseContent,
+                "Dispatching fetchDynamicLayout from chat_stream_complete with processed markdown:",
+                actualBotMessage,
               );
-              dispatch(fetchDynamicLayout(aiResponseContent));
+              dispatch(fetchDynamicLayout(actualBotMessage));
             }
             break;
           }
           case "chat_response": {
-            const aiResponseContent = msg.response?.content || "";
+            const rawAiResponseContent = msg.response?.content || "";
+            const actualBotMessage = getBotActualResponse(rawAiResponseContent);
+
             const chatResMessage: ChatMessage = {
               id: uuid(),
               sender: "ai",
-              text: extractChunk(aiResponseContent), // extractChunk might be same as sanitizeMarkdown or simpler
+              text: extractChunk(actualBotMessage), // Use processed message for display
             };
             setMessages((prev) => [...prev, chatResMessage]);
             dispatch(addMessage(chatResMessage));
             setLoading(false);
             logMetadata(msg.response?.metadata);
 
-            // Dispatch action to fetch dynamic layout if content is present
-            if (aiResponseContent.trim()) {
+            // Dispatch action to fetch dynamic layout with the processed bot message
+            if (actualBotMessage.trim()) {
               console.log(
-                "Dispatching fetchDynamicLayout from chat_response with markdown:",
-                aiResponseContent,
+                "Dispatching fetchDynamicLayout from chat_response with processed markdown:",
+                actualBotMessage,
               );
-              dispatch(fetchDynamicLayout(aiResponseContent));
+              dispatch(fetchDynamicLayout(actualBotMessage));
             }
             break;
           }
           case "error":
             setLoading(false);
             console.error("WebSocket Server Error:", msg.error);
-            // Potentially display this error to the user
             break;
-          // Handle other message types if any
           default:
             console.warn("Received unhandled WebSocket message type:", msg.type);
         }
@@ -185,23 +205,20 @@ export function useWebSocketChat({
           console.log(
             `WebSocket connection closed. Retrying attempt ${retryCount.current}/${maxRetries} in ${retryDelay / 1000}s...`,
           );
-          if (retryTimeout.current) clearTimeout(retryTimeout.current); // Clear any existing timeout
+          if (retryTimeout.current) clearTimeout(retryTimeout.current);
           retryTimeout.current = setTimeout(connect, retryDelay);
         } else {
           console.error(`WebSocket connection failed after ${maxRetries} retries.`);
-          // Optionally inform the user that connection failed permanently
         }
       };
 
       socket.onerror = (errorEvent: WebSocket.ErrorEvent) => {
         console.error("WebSocket error observed:", errorEvent.message);
-        // socket.close(); // Often, onerror is followed by onclose. Explicit close might be redundant or helpful.
       };
     };
 
     connect();
 
-    // Cleanup function for useEffect
     return () => {
       if (retryTimeout.current) {
         clearTimeout(retryTimeout.current);
@@ -212,14 +229,12 @@ export function useWebSocketChat({
         socketRef.current = null;
       }
     };
-    // Removed dispatch from dependencies as it's stable.
-    // If other dependencies like getWebSocketUrl can change and require re-connection, they should be added.
-  }, [currentPatientId, isPatientContextEnabled, forceFresh, cacheDebug]);
+  }, [currentPatientId, isPatientContextEnabled, forceFresh, cacheDebug, dispatch]); // Added dispatch to dependency array
 
   return {
     connected,
     messages,
-    streamBuffer,
+    streamBuffer, // Still expose streamBuffer if UI needs to show raw stream before "Bot:" processing
     loading,
     sendMessage,
   };

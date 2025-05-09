@@ -10,41 +10,35 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  selectIsSidePanelExpanded,
+  setSidePanelExpanded,
+  toggleSidePanel,
+} from "@/lib/store/globalStateSlice";
 import Image from "next/image";
 import { useState } from "react";
+// Import Redux hooks and actions/selectors from globalStateSlice
+import { useDispatch, useSelector } from "react-redux";
 import ChatClient from "./chat/ChatClient";
 
 import type { AppDispatch, RootState } from "@/lib/store";
-import {
-  selectIsSidePanelExpanded, // Selector to get the side panel state
-  setSidePanelExpanded, // Action to explicitly set the side panel state
-  toggleSidePanel, // Action to toggle the side panel
-} from "@/lib/store/globalStateSlice"; // Adjust path as needed
-// Import Redux hooks and actions/selectors from globalStateSlice
-import { useDispatch, useSelector } from "react-redux";
 
 // Import icons for the toggle button
 import { PanelLeftClose, PanelRightClose, XIcon } from "lucide-react";
 
 export function DrawerComponent() {
-  // Local state for managing the drawer's own open/close visibility
   const [isOpen, setIsOpen] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
-  // Get isSidePanelExpanded state from the Redux store
   const isSidePanelExpandedGlobal = useSelector(selectIsSidePanelExpanded);
 
-  // Handler to toggle the side panel using the Redux action
   const handleToggleSidePanel = () => {
     dispatch(toggleSidePanel());
   };
 
-  // Handler for when the drawer's open state changes (e.g., closed via overlay click, escape key)
   const handleDrawerOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open && isSidePanelExpandedGlobal) {
-      // If the drawer is being closed AND the side panel was expanded,
-      // dispatch an action to collapse the side panel as well.
       dispatch(setSidePanelExpanded(false));
     }
   };
@@ -59,7 +53,7 @@ export function DrawerComponent() {
           aria-label="Open chat"
         >
           <Image
-            src="/assets/icons/chat.png" // Ensure this path is correct
+            src="/assets/icons/chat.png"
             width={54}
             height={54}
             alt="Tera Chat Button"
@@ -68,80 +62,70 @@ export function DrawerComponent() {
         </Button>
       </DrawerTrigger>
 
-      {/* DrawerContent's width is controlled by the global isSidePanelExpandedGlobal state */}
       <DrawerContent
-        className={`flex flex-col h-full transition-all duration-300 ease-in-out
+        isExpanded={isSidePanelExpandedGlobal}
+        // Added transition classes here explicitly to ensure they apply to width changes.
+        // The base ShadCN component should already have these, but this makes it certain.
+        className={`flex flex-col h-full transition-all duration-300 ease-in-out 
                     ${
                       isSidePanelExpandedGlobal
-                        ? "md:w-[80vw] lg:w-[70vw] xl:w-[1000px]"
-                        : "md:w-[50vw] lg:w-[40vw] xl:w-[450px]"
+                        ? "w-full sm:w-11/12 md:w-5/6 lg:w-3/4 xl:w-[calc(100vw-200px)] max-w-[1200px]"
+                        : "w-full sm:w-1/2 md:w-2/5 lg:w-4/12"
                     }`}
       >
-        <DrawerHeader className="shrink-0 flex justify-between items-start border-b dark:border-gray-700 p-4">
-          {/* Empty div for spacing, pushes content to the right */}
-          <div className="flex-grow"></div>
-          {/* Group for Title, Description, and Action Buttons on the right */}
-          <div className="flex flex-col items-end text-right ml-4">
-            <div className="flex items-center gap-2 mb-1">
-              {/* Expand/Collapse Button for the side panel */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleToggleSidePanel} // Dispatches Redux action
-                aria-label={isSidePanelExpandedGlobal ? "Collapse side panel" : "Expand side panel"}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {isSidePanelExpandedGlobal ? (
-                  <PanelLeftClose className="h-5 w-5" />
-                ) : (
-                  <PanelRightClose className="h-5 w-5" />
-                )}
-              </Button>
-              {/* Drawer Close Button */}
-              <DrawerClose asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Close drawer"
-                  className="text-muted-foreground hover:text-foreground"
-                  // The onOpenChange handler already takes care of collapsing the side panel when drawer closes
-                >
-                  <XIcon className="h-5 w-5" />
-                </Button>
-              </DrawerClose>
-            </div>
-            <DrawerTitle className="text-lg font-semibold">Talk to Tera</DrawerTitle>
-            <DrawerDescription className="text-sm text-muted-foreground">
+        <DrawerHeader className="shrink-0 flex items-center border-b dark:border-gray-700 p-4 flex-row">
+          {/* Group for Title and Description on the left - this will grow */}
+          <div className="flex-grow">
+            <DrawerTitle className="text-lg font-semibold text-left">Talk to Tera</DrawerTitle>
+            <DrawerDescription className="text-sm text-muted-foreground text-left">
               Your smart assistant.
             </DrawerDescription>
           </div>
+
+          {/* Group for Action Buttons on the right - will not grow or shrink, pushed by the left group */}
+          <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleToggleSidePanel}
+              aria-label={isSidePanelExpandedGlobal ? "Collapse side panel" : "Expand side panel"}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {isSidePanelExpandedGlobal ? (
+                <PanelLeftClose className="h-5 w-5" />
+              ) : (
+                <PanelRightClose className="h-5 w-5" />
+              )}
+            </Button>
+            <DrawerClose asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Close drawer"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <XIcon className="h-5 w-5" />
+              </Button>
+            </DrawerClose>
+          </div>
         </DrawerHeader>
 
-        {/* Main content area: flex container for side panel and chat client */}
         <div className="flex flex-1 h-full overflow-hidden">
-          {/* Left Side Panel (DynamicLayoutContainer) - visibility controlled by global state */}
           {isSidePanelExpandedGlobal && (
-            <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 bg-background overflow-hidden">
-              {/* DynamicLayoutContainer is expected to manage its own padding and scrolling */}
+            <div className="w-3/5 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 bg-background overflow-hidden">
               <DynamicLayoutContainer />
             </div>
           )}
-
-          {/* Right Panel (ChatClient) - width adjusts based on global state */}
           <div
             className={`${
-              isSidePanelExpandedGlobal ? "w-1/2" : "w-full"
+              isSidePanelExpandedGlobal ? "w-2/5" : "w-full"
             } h-full bg-background overflow-hidden`}
           >
-            {/* ChatClient should be designed to fill its container and handle internal scrolling */}
             <ChatClient />
           </div>
         </div>
 
-        {/* Footer is hidden as per original code, but kept for structure */}
-        <DrawerFooter className="shrink-0 hidden p-4 border-t dark:border-gray-700">
-          {/* Footer content can go here if needed */}
-        </DrawerFooter>
+        <DrawerFooter className="shrink-0 hidden p-4 border-t dark:border-gray-700"></DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

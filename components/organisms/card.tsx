@@ -1,6 +1,13 @@
 import { cn } from "@/lib/utils";
 import * as React from "react";
 
+export interface CardComponentProps {
+  header?: string;
+  footer?: React.ReactNode;
+  children?: string;
+  className?: string;
+}
+
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -71,4 +78,27 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
+function CardComponent({ header, footer, children, className }: CardComponentProps) {
+  return (
+    <Card className={className}>
+      {header && (
+        <CardHeader>
+          <CardTitle>{header}</CardTitle>
+        </CardHeader>
+      )}
+      {children && <CardContent>{children}</CardContent>}
+      {footer && <CardFooter>{footer}</CardFooter>}
+    </Card>
+  );
+}
+
+export {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardComponent,
+};
