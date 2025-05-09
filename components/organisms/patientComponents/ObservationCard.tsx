@@ -1,0 +1,18 @@
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/organisms/card";
+
+interface ObservationCardProps {
+  notes: string;
+}
+
+export function ObservationCard({ notes }: ObservationCardProps) {
+  return (
+    <Card className="bg-sky-50">
+      <CardHeader>
+        <CardTitle>Patient Observations</CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm text-gray-700">{notes}</CardContent>
+    </Card>
+  );
+}
