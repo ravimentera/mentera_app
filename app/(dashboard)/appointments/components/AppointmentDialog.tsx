@@ -276,10 +276,14 @@ export function AppointmentDialog({
               {appointment && (
                 <div className="space-y-4">
                   <div className="relative">
-                    <div className="absolute -top-3 -right-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-[6px] bg-[#6941C6] text-white text-sm">
-                      <Sparkles className="h-4 w-4" />
-                      Tera Compose
-                    </div>
+                    {/* Only show Tera Compose label for pending notifications */}
+                    {appointment.notificationStatus?.status === "pending" && (
+                      <div className="absolute -top-3 -right-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-[6px] bg-[#6941C6] text-white text-sm">
+                        <Sparkles className="h-4 w-4" />
+                        Tera Compose
+                      </div>
+                    )}
+
                     {appointment.notificationStatus?.status === "approved" ? (
                       <div className="space-y-3">
                         <div className="pt-6 p-4 bg-gray-50 rounded-lg">
@@ -308,21 +312,29 @@ export function AppointmentDialog({
                         </div>
                       </div>
                     ) : appointment.notificationStatus?.status === "disapproved" ? (
-                      <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg text-sm text-red-600">
-                        <svg
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                        Care instructions were declined. Generate new instructions?
+                      <div className="space-y-3">
+                        <div className="pt-6 p-4 bg-gray-50 rounded-lg">
+                          <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                            {appointment.notificationStatus.editedMessage ||
+                              appointment.notificationStatus.message}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg text-sm text-red-600">
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                          Care instructions were declined. Generate new instructions?
+                        </div>
                       </div>
                     ) : (
                       <>
