@@ -5,7 +5,7 @@ import {
 } from "@aws-sdk/client-bedrock-agent-runtime";
 import { NextRequest, NextResponse } from "next/server";
 
-import { layout3 } from "@/mock/layoutData";
+// import { layout3 } from "@/mock/layoutData";
 
 const agentId = process.env.BEDROCK_AGENT_ID;
 const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID;
@@ -49,36 +49,40 @@ export async function POST(req: NextRequest) {
       inputText: `Help me generate the Layout AST JSON structure for the given markdown: ${body.markdown}`,
     };
 
-    // const command = new InvokeAgentCommand(input);
-    // const response = await bedrockAgentClient.send(command);
-    // const typedResponse = response as any;
+    const command = new InvokeAgentCommand(input);
+    const response = await bedrockAgentClient.send(command);
+    const typedResponse = response as any;
 
-    // let content = "";
+    let content = "";
 
-    // for await (const chunkEvent of typedResponse.completion) {
-    //   if (chunkEvent.chunk?.bytes) {
-    //     const byteArray = new Uint8Array(chunkEvent.chunk.bytes);
-    //     const decodedChunk = new TextDecoder("utf-8").decode(byteArray);
-    //     content += decodedChunk;
-    //   }
-    // }
+    for await (const chunkEvent of typedResponse.completion) {
+      if (chunkEvent.chunk?.bytes) {
+        const byteArray = new Uint8Array(chunkEvent.chunk.bytes);
+        const decodedChunk = new TextDecoder("utf-8").decode(byteArray);
+        content += decodedChunk;
+      }
+    }
 
-    // const extractJsonObj = extractJsonBlock(content)
+    console.log({ content });
 
-    // // Check if it's valid JSON before parsing
-    // if (!isValidJson(extractJsonObj!)) {
-    //   return NextResponse.json(
-    //     {
-    //       error: "Agent returned non-JSON output",
-    //       message: content,
-    //     },
-    //     { status: 502 }
-    //   );
-    // }
+    const extractJsonObj = extractJsonBlock(content);
 
-    // const layout = JSON.parse(extractJsonObj!);
-    // return NextResponse.json(layout);
-    return NextResponse.json(layout3);
+    // Check if it's valid JSON before parsing
+    // biome-ignore lint/style/noNonNullAssertion: ignored
+    if (!isValidJson(extractJsonObj!)) {
+      return NextResponse.json(
+        {
+          error: "Agent returned non-JSON output",
+          message: content,
+        },
+        { status: 502 },
+      );
+    }
+
+    // biome-ignore lint/style/noNonNullAssertion: ignored
+    const layout = JSON.parse(extractJsonObj!);
+    return NextResponse.json(layout);
+    // return NextResponse.json(layout3);
   } catch (error: any) {
     console.error("Bedrock Agent Error:", error);
     return NextResponse.json(
