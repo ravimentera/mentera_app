@@ -1,0 +1,18 @@
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/organisms/card";
+
+interface RecommendationCardProps {
+  instructions: string;
+}
+
+export function RecommendationCard({ instructions }: RecommendationCardProps) {
+  return (
+    <Card className="bg-amber-50">
+      <CardHeader>
+        <CardTitle>Provider Recommendations</CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm text-gray-700">{instructions}</CardContent>
+    </Card>
+  );
+}
