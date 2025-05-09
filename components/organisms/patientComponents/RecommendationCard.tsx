@@ -8,7 +8,7 @@ interface RecommendationCardProps {
 
 export function RecommendationCard({ instructions }: RecommendationCardProps) {
   return (
-    <Card className="bg-amber-50">
+    <Card className="bg-amber-50 w-full max-w-sm shadow-md border rounded-lg py-6 gap-6">
       <CardHeader>
         <CardTitle>Provider Recommendations</CardTitle>
       </CardHeader>

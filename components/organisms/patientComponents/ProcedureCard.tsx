@@ -9,7 +9,7 @@ interface ProcedureCardProps {
 
 export function ProcedureCard({ procedure, areasTreated }: ProcedureCardProps) {
   return (
-    <Card className="bg-violet-50">
+    <Card className="bg-violet-50 w-full max-w-sm shadow-md border rounded-lg py-6 gap-6">
       <CardHeader>
         <CardTitle>Procedure Details</CardTitle>
       </CardHeader>
