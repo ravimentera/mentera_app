@@ -2,6 +2,7 @@
 
 import { Button, Input } from "@/components/atoms";
 import { Card, LineChart } from "@/components/organisms";
+import { mockAppointments } from "@/mock/appointments.data";
 import { useEffect, useState } from "react";
 import { AppointmentCalendar } from "./components/AppointmentCalendar";
 
@@ -17,120 +18,75 @@ interface Appointment {
 }
 
 const generateRandomAppointments = (): Appointment[] => {
-  const treatments = [
-    "Facial Treatment",
-    "Laser Therapy",
-    "Body Massage",
-    "Skin Rejuvenation",
-    "Hair Removal",
-    "Botox Injection",
-    "Manicure & Pedicure",
-  ];
-
-  const names = [
-    "Emma Davis",
-    "Michael Wilson",
-    "Sophia Lee",
-    "James Johnson",
-    "Olivia Brown",
-    "William Smith",
-    "Ava Martinez",
-    "Robert Taylor",
-    "Isabella Thomas",
-    "David Rodriguez",
-  ];
-
-  const statuses: Array<"upcoming" | "completed" | "cancelled"> = [
-    "upcoming",
-    "completed",
-    "cancelled",
-  ];
-
-  // Generate 10 random appointments
-  return Array.from({ length: 10 }, (_, i) => {
-    const nameIndex = Math.floor(Math.random() * names.length);
-    const name = names[nameIndex];
-    const email = name.toLowerCase().replace(" ", ".") + "@example.com";
-
-    // Generate a random date within the next 14 days or past 14 days
-    const today = new Date();
-    const dayOffset = Math.floor(Math.random() * 28) - 14; // -14 to +14 days
-    const date = new Date(today);
-    date.setDate(today.getDate() + dayOffset);
-
+  // Convert our mock appointments to the table format
+  return mockAppointments.map((appointment) => {
     // Format the date and time
+    const date = appointment.startTime;
     const formattedDate = date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
 
-    const hour = Math.floor(Math.random() * 10) + 8; // 8 AM to 6 PM
-    const minute = [0, 15, 30, 45][Math.floor(Math.random() * 4)]; // 0, 15, 30, or 45 minutes
-    const formattedTime = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
 
-    // Determine status based on date
-    let status: "upcoming" | "completed" | "cancelled";
-    if (date < today) {
-      status = Math.random() > 0.1 ? "completed" : "cancelled"; // 10% chance of cancellation for past appointments
-    } else {
-      status = Math.random() > 0.05 ? "upcoming" : "cancelled"; // 5% chance of cancellation for future appointments
+    // Calculate duration in hours
+    const durationMs = appointment.endTime.getTime() - appointment.startTime.getTime();
+    const durationHours = Math.round(durationMs / (1000 * 60 * 60));
+    const formattedDuration = `${durationHours} hour${durationHours > 1 ? "s" : ""}`;
+
+    // If the appointment date is in the past, set status to completed
+    const now = new Date();
+    let tableStatus = appointment.status === "scheduled" ? "upcoming" : appointment.status;
+
+    // For past appointments, set status to completed
+    if (date < now) {
+      tableStatus = "completed";
     }
 
+    // Generate email based on patient name
+    const email = `${appointment.patient.firstName.toLowerCase()}.${appointment.patient.lastName.toLowerCase()}@example.com`;
+
     return {
-      id: `APT-${1000 + i}`,
-      customerName: name,
+      id: appointment.patientId,
+      customerName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
       customerEmail: email,
-      treatment: treatments[Math.floor(Math.random() * treatments.length)],
+      treatment: appointment.treatmentNotes.procedure,
       date: formattedDate,
       time: formattedTime,
-      duration: `${Math.floor(Math.random() * 3) + 1} hour${Math.floor(Math.random() * 3) + 1 > 1 ? "s" : ""}`,
-      status,
+      duration: formattedDuration,
+      status: tableStatus as "upcoming" | "completed" | "cancelled",
     };
   });
 };
 
-// Generate data for appointment trend chart
+// Generate data for appointment trend chart based on our mock appointments
 const generateAppointmentTrend = () => {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  // Group appointments by day of week
+  const appointmentsByDay = mockAppointments.reduce(
+    (acc, appointment) => {
+      const dayOfWeek = appointment.startTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to 0 = Monday, ..., 6 = Sunday
+      const day = days[dayIndex];
+
+      acc[day] = (acc[day] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  // Create trend data with counts for each day
   return days.map((day) => ({
     date: day,
-    value: Math.floor(Math.random() * 8) + 1, // 1-9 appointments per day
+    value: appointmentsByDay[day] || 0,
   }));
 };
-
-const mockAppointments = [
-  {
-    id: "1",
-    title: "Focus time",
-    startTime: new Date(2024, 4, 7, 12, 0),
-    endTime: new Date(2024, 4, 7, 14, 0),
-    type: "focus" as const,
-    description: "Deep work session",
-  },
-  {
-    id: "2",
-    title: "Lunch",
-    startTime: new Date(2024, 4, 7, 14, 0),
-    endTime: new Date(2024, 4, 7, 15, 0),
-    type: "lunch" as const,
-  },
-  {
-    id: "3",
-    title: "UI Brainstorming",
-    startTime: new Date(2024, 4, 9, 15, 0),
-    endTime: new Date(2024, 4, 9, 16, 0),
-    type: "meeting" as const,
-    description: "Team brainstorming session for new features",
-  },
-  {
-    id: "4",
-    title: "Busy",
-    startTime: new Date(2024, 4, 7, 22, 0),
-    endTime: new Date(2024, 4, 7, 23, 59),
-    type: "busy" as const,
-  },
-];
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -139,7 +95,7 @@ export default function AppointmentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
-    // Simulate data fetching
+    // Use our processed mock data
     setAppointments(generateRandomAppointments());
     setTrendData(generateAppointmentTrend());
   }, []);

@@ -1,3 +1,4 @@
+import { mockAppointments, updateAppointmentNotificationStatus } from "@/mock/appointments.data";
 import { addDays, addMonths, addWeeks, set, subDays, subMonths, subWeeks } from "date-fns";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -25,7 +26,7 @@ interface AppointmentCalendarProps {
 }
 
 export function AppointmentCalendar({
-  appointments = [],
+  appointments = mockAppointments as Appointment[],
   onAppointmentClick,
   onDateChange,
 }: AppointmentCalendarProps) {
@@ -219,22 +220,18 @@ export function AppointmentCalendar({
   const handleApproveAndSend = () => {
     if (editingAppointment) {
       const instructions = generateCareInstructions(editingAppointment);
-      setCalendarAppointments((prev) =>
-        prev.map((apt) =>
-          apt.id === editingAppointment.id
-            ? {
-                ...apt,
-                notificationStatus: {
-                  status: "approved",
-                  sent: true,
-                  message: editedMessage || instructions.message,
-                  type: instructions.type,
-                  editedMessage: editedMessage,
-                },
-              }
-            : apt,
-        ),
+
+      // Update the appointment both in local state and in the mock data storage
+      const updatedAppointments = updateAppointmentNotificationStatus(
+        editingAppointment.id,
+        "approved",
+        true,
+        editedMessage || undefined,
       );
+
+      // Update the calendar appointments state with our newly updated list
+      setCalendarAppointments(updatedAppointments as Appointment[]);
+
       toast.success("Care instructions have been approved and sent to the patient.");
       setShowEditDialog(false);
       setEditingAppointment(null);
@@ -248,21 +245,17 @@ export function AppointmentCalendar({
       // Simulate message regeneration
       setTimeout(() => {
         const instructions = generateCareInstructions(editingAppointment);
-        setCalendarAppointments((prev) =>
-          prev.map((apt) =>
-            apt.id === editingAppointment.id
-              ? {
-                  ...apt,
-                  notificationStatus: {
-                    status: "pending",
-                    sent: false,
-                    message: instructions.message,
-                    type: instructions.type,
-                  },
-                }
-              : apt,
-          ),
+
+        // Update the appointment both in local state and in the mock data storage
+        const updatedAppointments = updateAppointmentNotificationStatus(
+          editingAppointment.id,
+          "disapproved",
+          false,
         );
+
+        // Update the calendar appointments state with our newly updated list
+        setCalendarAppointments(updatedAppointments as Appointment[]);
+
         setIsGeneratingMessage(false);
         toast.error("Care instructions have been declined.");
         setShowEditDialog(false);

@@ -144,7 +144,7 @@ export function LoginForm() {
             className="w-full relative bg-[#F1F5F9] hover:bg-gray-100"
           >
             <Image src="/google.svg" alt="Google Logo" width={20} height={20} />
-            <span className="text-[#0F172A]">Login with Google</span>
+            <span className="text-[#0F172A] ml-2">Login with Google</span>
           </Button>
         </form>
       </div>
