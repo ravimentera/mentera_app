@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
           />
         </div>
         <h2 className="text-xl font-medium">Check your email</h2>
-        <p className="text-muted-foreground">
+        <p className="text-gray-500">
           We&apos;ve sent you a reset link. Please check your email and follow the instructions.
         </p>
         <Link href={AUTH_ROUTES.LOGIN}>

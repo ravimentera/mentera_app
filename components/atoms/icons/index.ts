@@ -21,7 +21,8 @@ export {
 // Export custom icons
 export { DashboardIcon } from "./DashboardIcon";
 export { GoogleIcon } from "./GoogleIcon";
-export { MenteraIcon } from "./MenteraIcon";
+export { MenteraLogoFull } from "./MenteraLogoFull";
+export { MenteraLogoIcon } from "./MenteraLogoIcon";
 export { RobotIcon } from "./RobotIcon";
 export { ScheduleIcon } from "./ScheduleIcon";
 export { StarIcon } from "./StarIcon";

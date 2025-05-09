@@ -69,7 +69,28 @@ module.exports = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      },
+      borderImage: {
+        "gradient-purple": "linear-gradient(to right, #BD05DD, #111A53)",
+      },
     },
   },
-  plugins: [import("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [
+    import("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+    ({ addUtilities }) => {
+      addUtilities({
+        ".border-gradient-purple": {
+          border: "1px solid transparent",
+          backgroundImage:
+            "linear-gradient(white, white), linear-gradient(to right, #BD05DD, #111A53)",
+          backgroundOrigin: "border-box",
+          backgroundClip: "padding-box, border-box",
+        },
+      });
+    },
+  ],
 };

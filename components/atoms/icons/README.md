@@ -20,7 +20,8 @@ import {
   HomeIcon,
   
   // Custom icons
-  MenteraIcon,
+  MenteraLogoIcon,
+  MenteraLogoFull,
   StarIcon,
   SuccessIcon,
   GoogleIcon
@@ -32,7 +33,7 @@ function MyComponent() {
     <div>
       <HomeIcon className="w-4 h-4" />
       <StarIcon filled={true} className="w-4 h-4 text-yellow-500" />
-      <MenteraIcon className="w-6 h-6 text-primary" />
+      <MenteraLogoIcon className="w-6 h-6 text-primary" />
     </div>
   );
 }
@@ -50,7 +51,8 @@ All Radix icons are exported from `@/components/atoms/icons`.
 
 For specialized icons not available in Radix UI, we maintain custom components with a consistent style:
 
-- `MenteraIcon`: The Mentera-AI logo icon for branding
+- `MenteraLogoIcon`: The Mentera-AI logo icon for branding (collapsed sidebar)
+- `MenteraLogoFull`: The Mentera-AI logo with text for branding (expanded sidebar)
 - `StarIcon`: Star icon for ratings with filled/outline variants
 - `SuccessIcon`: Check icon with circle for success states
 - `GoogleIcon`: Google logo for authentication

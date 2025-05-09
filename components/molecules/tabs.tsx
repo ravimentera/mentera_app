@@ -20,15 +20,33 @@ const TabsContext = createContext<TabsContextValue | undefined>(undefined);
 
 export interface TabsProps extends HTMLAttributes<HTMLDivElement> {
   defaultValue: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
   children: ReactNode;
   className?: string;
 }
 
-export function Tabs({ defaultValue, children, className, ...props }: TabsProps) {
+export function Tabs({
+  defaultValue,
+  value,
+  onValueChange,
+  children,
+  className,
+  ...props
+}: TabsProps) {
   const [selectedTab, setSelectedTab] = useState(defaultValue);
 
+  // Use controlled or uncontrolled state
+  const currentTab = value ?? selectedTab;
+  const setCurrentTab = (newValue: string) => {
+    onValueChange?.(newValue);
+    if (!value) {
+      setSelectedTab(newValue);
+    }
+  };
+
   return (
-    <TabsContext.Provider value={{ selectedTab, setSelectedTab }}>
+    <TabsContext.Provider value={{ selectedTab: currentTab, setSelectedTab: setCurrentTab }}>
       <div className={cn("space-y-2", className)} {...props}>
         {children}
       </div>
@@ -55,7 +73,7 @@ export function TabsList({ children, className, ...props }: TabsListProps) {
   return (
     <div
       className={cn(
-        "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+        "inline-flex h-10 items-center rounded-md bg-muted p-1 text-gray-500",
         className,
       )}
       {...props}
@@ -84,9 +102,7 @@ export function TabsTrigger({ value, children, className, ...props }: TabsTrigge
       onClick={() => setSelectedTab(value)}
       className={cn(
         "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-        isActive
-          ? "bg-background text-foreground shadow-sm"
-          : "hover:bg-background/50 hover:text-foreground",
+        isActive ? "text-foreground shadow-sm" : "hover:bg-background/50 hover:text-foreground",
         className,
       )}
       {...props}
@@ -108,7 +124,6 @@ export function TabsContent({ value, children, className, ...props }: TabsConten
   const isActive = selectedTab === value;
 
   if (!isActive) return null;
-
   return (
     <div
       role="tabpanel"

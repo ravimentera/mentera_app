@@ -121,7 +121,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences.</p>
+        <p className="text-gray-500">Manage your account settings and preferences.</p>
       </div>
 
       <Tabs defaultValue="account" className="space-y-6">
@@ -136,7 +136,7 @@ export default function SettingsPage() {
         <TabsContent value="account">
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Account Information</h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-gray-500 mb-6">
               Update your account details and personal information.
             </p>
 
@@ -198,7 +198,7 @@ export default function SettingsPage() {
 
             <div className="mt-8 pt-6 border-t">
               <h3 className="text-lg font-medium mb-4">Delete Account</h3>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-gray-500 mb-4">
                 Once you delete your account, there is no going back. Please be certain.
               </p>
               <Button variant="destructive">Delete Account</Button>
@@ -210,9 +210,7 @@ export default function SettingsPage() {
         <TabsContent value="notifications">
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Notification Preferences</h2>
-            <p className="text-muted-foreground mb-6">
-              Manage how you receive notifications and updates.
-            </p>
+            <p className="text-gray-500 mb-6">Manage how you receive notifications and updates.</p>
 
             <div className="space-y-6">
               <div>
@@ -273,7 +271,7 @@ export default function SettingsPage() {
         <TabsContent value="preferences">
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Display Preferences</h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-gray-500 mb-6">
               Customize your app experience and regional settings.
             </p>
 
@@ -293,9 +291,7 @@ export default function SettingsPage() {
                     <option value="dark">Dark</option>
                     <option value="system">System Default</option>
                   </select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Select your preferred color theme
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Select your preferred color theme</p>
                 </div>
 
                 <div>
@@ -313,7 +309,7 @@ export default function SettingsPage() {
                     <option value="french">French</option>
                     <option value="german">German</option>
                   </select>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     Select your preferred language for the app
                   </p>
                 </div>
@@ -424,9 +420,7 @@ export default function SettingsPage() {
         <TabsContent value="security">
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Security Settings</h2>
-            <p className="text-muted-foreground mb-6">
-              Update your password and security preferences.
-            </p>
+            <p className="text-gray-500 mb-6">Update your password and security preferences.</p>
 
             <div className="space-y-6">
               <div>
@@ -479,7 +473,7 @@ export default function SettingsPage() {
 
               <div className="pt-6 border-t">
                 <h3 className="text-lg font-medium mb-4">Two-Factor Authentication</h3>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-gray-500 mb-4">
                   Add an extra layer of security to your account by enabling two-factor
                   authentication.
                 </p>
@@ -494,10 +488,8 @@ export default function SettingsPage() {
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-medium">Current Device</p>
-                      <p className="text-sm text-muted-foreground">
-                        Mac • Safari • San Francisco, CA
-                      </p>
-                      <p className="text-xs text-muted-foreground">Last active: Just now</p>
+                      <p className="text-sm text-gray-500">Mac • Safari • San Francisco, CA</p>
+                      <p className="text-xs text-gray-500">Last active: Just now</p>
                     </div>
                     <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">
                       Active
@@ -509,10 +501,8 @@ export default function SettingsPage() {
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-medium">iPhone 13</p>
-                      <p className="text-sm text-muted-foreground">
-                        iOS • Safari • San Francisco, CA
-                      </p>
-                      <p className="text-xs text-muted-foreground">Last active: 2 days ago</p>
+                      <p className="text-sm text-gray-500">iOS • Safari • San Francisco, CA</p>
+                      <p className="text-xs text-gray-500">Last active: 2 days ago</p>
                     </div>
                     <Button type="button" variant="outline" size="sm">
                       Sign Out
