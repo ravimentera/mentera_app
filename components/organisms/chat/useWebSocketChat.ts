@@ -1,11 +1,17 @@
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
+import { addMessage } from "@/lib/store/messagesSlice";
 import { sanitizeMarkdown } from "@/lib/utils";
 import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
 import WebSocket from "isomorphic-ws";
 import { useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 import { v4 as uuid } from "uuid";
 import { ChatMessage, WebSocketResponseMessage } from "./types";
 import { extractChunk, logMetadata } from "./utils";
+
+import type { AppDispatch } from "@/lib/store";
+// Import the async thunk for fetching dynamic layout
+import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
 
 interface UseChatWebSocketProps {
   currentPatientId: keyof typeof patientDatabase;
@@ -14,6 +20,23 @@ interface UseChatWebSocketProps {
   cacheDebug: boolean;
   onMessage?: (messages: ChatMessage[]) => void;
 }
+
+/**
+ * Extracts the actual message content after a "Bot: " marker.
+ * If the marker is not found, returns the original content.
+ * @param rawContent The raw string content from the AI response.
+ * @returns The processed string.
+ */
+const getBotActualResponse = (rawContent: string): string => {
+  const botMarker = "Bot: ";
+  const markerIndex = rawContent.indexOf(botMarker);
+  if (markerIndex !== -1) {
+    return rawContent.substring(markerIndex + botMarker.length).trim();
+  }
+  // Fallback: If "Bot: " isn't found, return the original content,
+  // assuming it might sometimes be directly the message or already processed.
+  return rawContent.trim();
+};
 
 export function useWebSocketChat({
   currentPatientId,
@@ -29,14 +52,18 @@ export function useWebSocketChat({
 
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Typed dispatch for use with thunks
+  const dispatch = useDispatch<AppDispatch>();
   const [streamBuffer, setStreamBuffer] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // This loading is for chat messages, not layout
   const conversationId = useRef(`conv_${Date.now()}`);
 
   const sendMessage = (text: string) => {
     if (!connected || !socketRef.current) return;
     const patient = patientDatabase[currentPatientId];
-    setMessages((prev) => [...prev, { id: uuid(), sender: "user", text }]);
+    const newMessage: ChatMessage = { id: uuid(), sender: "user", text };
+    setMessages((prev) => [...prev, newMessage]);
+    dispatch(addMessage(newMessage));
 
     const payload: any = {
       type: "chat",
@@ -59,20 +86,41 @@ export function useWebSocketChat({
     socketRef.current.send(JSON.stringify(payload));
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ignored
   useEffect(() => {
     const connect = async () => {
-      const { token } = await fetch("/api/token").then((r) => r.json());
+      let token = "";
+      try {
+        const tokenResponse = await fetch("/api/token");
+        if (!tokenResponse.ok) {
+          console.error("Failed to fetch token:", tokenResponse.status, await tokenResponse.text());
+          return;
+        }
+        const tokenData = await tokenResponse.json();
+        token = tokenData.token;
+        if (!token) {
+          console.error("Token not found in response from /api/token");
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching token:", error);
+        return;
+      }
+
       const url = new URL(getWebSocketUrl());
       url.searchParams.set("token", token);
-      url.searchParams.set("medspaId", "MS-1001");
+      url.searchParams.set("medspaId", testMedSpa.medspaId);
 
-      const socket = new WebSocket(url);
+      const socket = new WebSocket(url.toString());
       socketRef.current = socket;
 
       socket.onopen = () => {
         setConnected(true);
         retryCount.current = 0;
+        if (retryTimeout.current) {
+          clearTimeout(retryTimeout.current);
+          retryTimeout.current = null;
+        }
         socket.send(JSON.stringify({ type: "auth", token: token.replace(/^Bearer\s+/, "") }));
       };
 
@@ -84,51 +132,109 @@ export function useWebSocketChat({
             setStreamBuffer("");
             break;
           case "chat_stream_chunk":
+            // For streaming, we assume the "Bot: " prefix would appear at the beginning of the stream.
+            // If it's chunked, the prefix might be in the first chunk.
+            // This logic might need refinement if "Bot: " can appear mid-stream or after some initial non-bot text.
+            // For now, we'll apply getBotActualResponse to the accumulated streamBuffer at chat_stream_complete.
             setStreamBuffer((prev) => prev + extractChunk(msg.chunk));
             break;
-          case "chat_stream_complete":
-            setMessages((prev) => [
-              ...prev,
-              { id: uuid(), sender: "ai", text: sanitizeMarkdown(msg.response?.content || "") },
-            ]);
+          case "chat_stream_complete": {
+            // Process the full accumulated stream buffer
+            const rawAiResponseContent = msg.response?.content || streamBuffer; // Use response.content if available, else accumulated buffer
+            const actualBotMessage = getBotActualResponse(rawAiResponseContent);
+
+            const streamMessage: ChatMessage = {
+              id: uuid(),
+              sender: "ai",
+              text: sanitizeMarkdown(actualBotMessage), // Use processed message for display
+            };
+            setMessages((prev) => [...prev, streamMessage]);
+            dispatch(addMessage(streamMessage));
             setLoading(false);
-            setStreamBuffer("");
+            setStreamBuffer(""); // Clear buffer after processing
             logMetadata(msg.response?.metadata);
+
+            // Dispatch action to fetch dynamic layout with the processed bot message
+            if (actualBotMessage.trim()) {
+              console.log(
+                "Dispatching fetchDynamicLayout from chat_stream_complete with processed markdown:",
+                actualBotMessage,
+              );
+              dispatch(fetchDynamicLayout(actualBotMessage));
+            }
             break;
-          case "chat_response":
-            setMessages((prev) => [
-              ...prev,
-              { id: uuid(), sender: "ai", text: extractChunk(msg.response?.content) },
-            ]);
+          }
+          case "chat_response": {
+            const rawAiResponseContent = msg.response?.content || "";
+            const actualBotMessage = getBotActualResponse(rawAiResponseContent);
+
+            const chatResMessage: ChatMessage = {
+              id: uuid(),
+              sender: "ai",
+              text: extractChunk(actualBotMessage), // Use processed message for display
+            };
+            setMessages((prev) => [...prev, chatResMessage]);
+            dispatch(addMessage(chatResMessage));
             setLoading(false);
             logMetadata(msg.response?.metadata);
+
+            // Dispatch action to fetch dynamic layout with the processed bot message
+            if (actualBotMessage.trim()) {
+              console.log(
+                "Dispatching fetchDynamicLayout from chat_response with processed markdown:",
+                actualBotMessage,
+              );
+              dispatch(fetchDynamicLayout(actualBotMessage));
+            }
             break;
+          }
           case "error":
             setLoading(false);
-            console.error("Error:", msg.error);
+            console.error("WebSocket Server Error:", msg.error);
+            break;
+          default:
+            console.warn("Received unhandled WebSocket message type:", msg.type);
         }
       };
 
-      socket.onclose = () => {
+      socket.onclose = (event: any) => {
         setConnected(false);
+        console.log("WebSocket closed:", event.code, event.reason);
         if (retryCount.current < maxRetries) {
           retryCount.current += 1;
+          console.log(
+            `WebSocket connection closed. Retrying attempt ${retryCount.current}/${maxRetries} in ${retryDelay / 1000}s...`,
+          );
+          if (retryTimeout.current) clearTimeout(retryTimeout.current);
           retryTimeout.current = setTimeout(connect, retryDelay);
+        } else {
+          console.error(`WebSocket connection failed after ${maxRetries} retries.`);
         }
       };
 
-      socket.onerror = (e: any) => {
-        console.error("WebSocket error", e);
+      socket.onerror = (errorEvent: WebSocket.ErrorEvent) => {
+        console.error("WebSocket error observed:", errorEvent.message);
       };
     };
 
     connect();
-  }, [currentPatientId, isPatientContextEnabled, forceFresh, cacheDebug]);
+
+    return () => {
+      if (retryTimeout.current) {
+        clearTimeout(retryTimeout.current);
+      }
+      if (socketRef.current) {
+        console.log("Closing WebSocket connection on component unmount/effect cleanup.");
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+    };
+  }, [currentPatientId, isPatientContextEnabled, forceFresh, cacheDebug, dispatch]); // Added dispatch to dependency array
 
   return {
     connected,
     messages,
-    streamBuffer,
+    streamBuffer, // Still expose streamBuffer if UI needs to show raw stream before "Bot:" processing
     loading,
     sendMessage,
   };
