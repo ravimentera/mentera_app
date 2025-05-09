@@ -308,3 +308,67 @@ useEffect(() => toast.success("Operation completed"), [])
   onEditLink="/medical-summary/edit"
 />
 ```
+
+### ProcedureCard
+
+**Props:**
+
+* `procedure: string` – the name of the procedure performed
+* `areasTreated?: string` – optional info about treated regions
+
+**Description:** Card component to display treatment procedure details such as type and areas involved.
+
+**Example:**
+
+```tsx
+<ProcedureCard procedure="HydraFacial" areasTreated="Full Face" />
+```
+
+---
+
+### ObservationCard
+
+**Props:**
+
+* `notes: string` – patient condition, outcomes, or subjective observations
+
+**Description:** Renders a formatted paragraph of patient-related observations post-treatment.
+
+**Example:**
+
+```tsx
+<ObservationCard notes="Skin appeared hydrated and glowing. Improved texture noted." />
+```
+
+---
+
+### RecommendationCard
+
+**Props:**
+
+* `instructions: string` – provider’s follow-up or care recommendations
+
+**Description:** Displays provider’s recommendations or clinical advice in a readable, styled format.
+
+**Example:**
+
+```tsx
+<RecommendationCard instructions="Incorporate LED therapy weekly for enhanced results." />
+```
+
+---
+
+### TreatmentNoteCard
+
+**Props:**
+
+* `title: string` – label for the insight or note
+* `content: string` – detailed content or instruction
+
+**Description:** A generic reusable card component to hold free-form titled content related to treatments.
+
+**Example:**
+
+```tsx
+<TreatmentNoteCard title="Follow-up Note" content="Patient responded well, continue same protocol." />
+```

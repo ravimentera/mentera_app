@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { v4 as uuid } from "uuid";
 
+import ChatMessageSkeleton from "@/components/skeletons/ChatMessageSkeleton";
 // Import relevant selectors/types from the Redux slice
 import {
   selectAllLayouts,
@@ -56,8 +57,9 @@ export function DynamicLayoutContainer() {
       <div className="flex-1 overflow-y-auto space-y-6 pt-4">
         {/* Show a global loading indicator if isLoading is true and no layouts are yet present */}
         {isLoading && allLayouts.length === 0 && (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex flex-col items-center justify-center h-full">
             <p className="text-muted-foreground">Loading layout data...</p>
+            <ChatMessageSkeleton />
             {/* You could add a spinner component here */}
           </div>
         )}
@@ -70,10 +72,15 @@ export function DynamicLayoutContainer() {
         )}
 
         {/* Map over the layouts from the Redux store and render them */}
-        {allLayouts.length > 0 &&
-          allLayouts.map((layoutEntry: LayoutEntry) => {
-            return <LayoutRenderer key={uuid()} layout={layoutEntry.data} />;
-          })}
+        <LayoutRenderer key={uuid()} layouts={allLayouts} />
+
+        {/* Show a global loading indicator if isLoading is true and layout(s) is present */}
+        {isLoading && allLayouts.length > 0 && (
+          <div className="flex  items-center justify-center min-h-9 min-w-10">
+            <ChatMessageSkeleton />
+            {/* You could add a spinner component here */}
+          </div>
+        )}
       </div>
     </div>
   );
