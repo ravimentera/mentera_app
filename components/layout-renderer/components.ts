@@ -3,7 +3,11 @@ import { ActivePackagesCard } from "@/components/organisms/patientComponents/Act
 import { CampaignsCard } from "@/components/organisms/patientComponents/CampaignsCard";
 import { MedicalSummaryCard } from "@/components/organisms/patientComponents/MedicalSummaryCard";
 import { NextAppointmentCard } from "@/components/organisms/patientComponents/NextAppointmentCard";
+import { ObservationCard } from "@/components/organisms/patientComponents/ObservationCard";
+import { ProcedureCard } from "@/components/organisms/patientComponents/ProcedureCard";
 import { RecentDocumentsCard } from "@/components/organisms/patientComponents/RecentDocumentsCard";
+import { RecommendationCard } from "@/components/organisms/patientComponents/RecommendationCard";
+import { TreatmentNoteCard } from "@/components/organisms/patientComponents/TreatmentNoteCard";
 import { UserHistoryCard } from "@/components/organisms/patientComponents/UserHistoryCard";
 
 export const componentMap: Record<string, React.ComponentType<any>> = {
@@ -13,5 +17,9 @@ export const componentMap: Record<string, React.ComponentType<any>> = {
   CampaignsCard,
   NextAppointmentCard,
   MedicalSummaryCard,
+  ObservationCard,
+  ProcedureCard,
+  RecommendationCard,
+  TreatmentNoteCard,
   Card,
 };
