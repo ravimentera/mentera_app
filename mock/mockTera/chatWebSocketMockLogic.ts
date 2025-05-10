@@ -8,7 +8,7 @@ interface PatientContext {
 
 // Updated default response for a more generic fallback during a demo
 const DEFAULT_MOCK_RESPONSE_MARKDOWN =
-  "Bot: I can help with many common requests. Could you please try rephrasing, or ask about patient history, treatments, or care instructions?";
+  "Bot: I seem to be having a little trouble with that request. Could you please try rephrasing or asking again in a moment?";
 const MIN_KEYWORD_MATCH_SCORE = 2; // Minimum score to consider a match (tune this value)
 
 // Simple list of common stop words to ignore during keyword matching

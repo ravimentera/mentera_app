@@ -8,6 +8,7 @@ export const mockData = [
     layout: {
       // This one was already an object, which is good.
       type: "Layout",
+      title: "Patient Visit Overview",
       layout: [
         {
           type: "Grid",
@@ -63,8 +64,8 @@ Actionable Insights
 * Observations: Skin appeared visibly hydrated and glowing post-treatment. Patient noted improved texture and reduced fine lines. Recommended monthly sessions.
 `,
     layout: {
-      // Converted from string to direct object
       type: "Layout",
+      title: "Treatment History & Insights",
       layout: [
         {
           type: "Grid",
@@ -82,6 +83,11 @@ Actionable Insights
                     areasTreated: "Full Face",
                   },
                 },
+              ],
+            },
+            {
+              type: "Row",
+              components: [
                 {
                   type: "Component",
                   name: "NextAppointmentCard",
@@ -102,18 +108,11 @@ Actionable Insights
               components: [
                 {
                   type: "Component",
-                  name: "TreatmentNoteCard",
+                  name: "ActionableInsightsCard",
                   props: {
-                    title: "Procedure Summary",
-                    // Newlines in props' string values are fine in JS objects
-                    content: "Procedure: HydraFacial\nAreas treated: Full Face",
-                  },
-                },
-                {
-                  type: "Component",
-                  name: "ObservationCard",
-                  props: {
-                    notes:
+                    procedure: "HydraFacial",
+                    areasTreated: "Full Face",
+                    observations:
                       "Skin appeared visibly hydrated and glowing post-treatment. Patient noted improved texture and reduced fine lines. Recommended monthly sessions.",
                   },
                 },
@@ -145,6 +144,7 @@ Precautions
     layout: {
       // Converted from string to direct object
       type: "Layout",
+      title: "Microneedling Care Instructions",
       layout: [
         {
           type: "Grid",
@@ -158,7 +158,7 @@ Precautions
                   type: "Component",
                   name: "TreatmentNoteCard",
                   props: {
-                    title: "Pre-Care Instructions",
+                    title: "Micro Needling Pre-Care Instructions",
                     content:
                       "- Avoid sun exposure and tanning beds for at least one week before the procedure.\n- Avoid alcohol and caffeine for 24-48 hours before the procedure to reduce inflammation.",
                   },
@@ -167,9 +167,67 @@ Precautions
                   type: "Component",
                   name: "TreatmentNoteCard",
                   props: {
-                    title: "Post-Care Instructions",
+                    title: "Micro Needling Post-Care Instructions",
                     content:
                       "- Apply a gentle, fragrance-free moisturizer to the treated area.\n- Avoid sun exposure and use a broad-spectrum sunscreen with an SPF of 30 or higher.\n- Avoid strenuous exercise and sweating for at least 24 hours after the procedure.\n- Avoid using any harsh skincare products or treatments for at least one week after the procedure.",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    query: "I would like to book them for an appointment",
+    markdown:
+      "Sure! I’ve scheduled an appointment for patient PT-1004 on 13 May 2025 at 12:30 PM for Microneedling. Let me know if you’d like to make any changes or add notes for the provider.",
+    layout: {
+      type: "Layout",
+      title: "Micro Needling Appointment",
+      layout: [
+        {
+          type: "Grid",
+          columns: 1,
+          gap: 6,
+          rows: [
+            {
+              type: "Row",
+              components: [
+                {
+                  type: "Component",
+                  name: "AppointmentCalendar",
+                  props: {
+                    appointments: [
+                      {
+                        id: "appt-001",
+                        patientId: "PT-1004",
+                        chartId: "CHT-1004",
+                        patient: {
+                          firstName: "Emily",
+                          lastName: "Johnson",
+                          condition: "N/A",
+                        },
+                        provider: {
+                          providerId: "PRV-001",
+                          firstName: "Megan",
+                          lastName: "Wilson",
+                          specialties: ["Aesthetics"],
+                        },
+                        startTime: "2025-05-13T12:30:00.000Z",
+                        endTime: "2025-05-13T13:30:00.000Z",
+                        status: "scheduled",
+                        notes: "Microneedling session scheduled by assistant.",
+                        type: "therapy",
+                        notificationStatus: {
+                          status: "pending",
+                          sent: false,
+                          type: "pre-care",
+                        },
+                      },
+                    ],
+                    initialView: "month",
                   },
                 },
               ],

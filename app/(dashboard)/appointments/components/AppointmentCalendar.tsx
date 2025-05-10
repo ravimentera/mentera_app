@@ -23,15 +23,17 @@ interface AppointmentCalendarProps {
   appointments?: Appointment[];
   onAppointmentClick?: (appointment: Appointment) => void;
   onDateChange?: (date: Date) => void;
+  initialView?: "day" | "week" | "month";
 }
 
 export function AppointmentCalendar({
   appointments = mockAppointments as Appointment[],
   onAppointmentClick,
   onDateChange,
+  initialView = "week",
 }: AppointmentCalendarProps) {
   const [date, setDate] = useState<Date>(new Date());
-  const [view, setView] = useState<"day" | "week" | "month">("week");
+  const [view, setView] = useState<"day" | "week" | "month">(initialView ?? "week");
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragEnd, setDragEnd] = useState<number | null>(null);
@@ -219,19 +221,29 @@ export function AppointmentCalendar({
 
   const handleApproveAndSend = () => {
     if (editingAppointment) {
-      const instructions = generateCareInstructions(editingAppointment);
-
-      // Update the appointment both in local state and in the mock data storage
-      const updatedAppointments = updateAppointmentNotificationStatus(
-        editingAppointment.id,
-        "approved",
-        true,
-        editedMessage || undefined,
+      // We are updating only the appointment that was being edited.
+      // Instead of using mockAppointments (which accumulates state and causes duplicates),
+      // we directly update the local state (calendarAppointments) to keep things in sync and isolated.
+      const updatedAppointments = calendarAppointments.map(
+        (apt) =>
+          apt.id === editingAppointment.id
+            ? {
+                ...apt,
+                notificationStatus: {
+                  ...apt.notificationStatus,
+                  status: "approved", // Set the status to approved
+                  sent: true, // Mark that the notification was sent
+                  message: editedMessage || apt.notes, // Use the edited message or fall back to notes
+                  type: apt.notificationStatus?.type || "pre-care", // Retain type or default to "pre-care"
+                },
+              }
+            : apt, // No change for other appointments
       );
 
-      // Update the calendar appointments state with our newly updated list
+      // Update the state with the modified appointment list
       setCalendarAppointments(updatedAppointments as Appointment[]);
 
+      // Show success message and reset dialog state
       toast.success("Care instructions have been approved and sent to the patient.");
       setShowEditDialog(false);
       setEditingAppointment(null);
