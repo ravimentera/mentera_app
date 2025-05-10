@@ -392,3 +392,57 @@ useEffect(() => toast.success("Operation completed"), [])
   observations="Skin appeared hydrated and glowing. Patient noted improved texture and reduced fine lines."
 />
 ```
+
+
+### AppointmentCalendar
+
+**Props:**
+
+* `appointments?: Appointment[]`
+* `onAppointmentClick?: (appointment: Appointment) => void`
+* `onDateChange?: (date: Date) => void`
+
+**Types:**
+
+```ts
+interface Appointment {
+  id: string;
+  patientId: string;
+  chartId: string;
+  patient: {
+    firstName: string;
+    lastName: string;
+    condition?: string;
+  };
+  provider: {
+    providerId: string;
+    firstName: string;
+    lastName: string;
+    specialties: string[];
+  };
+  startTime: Date;
+  endTime: Date;
+  status: "scheduled" | "completed" | "cancelled";
+  notes?: string;
+  type: "therapy" | "consultation" | "followup" | "general";
+  notificationStatus?: {
+    status: "pending" | "approved" | "disapproved";
+    sent: boolean;
+    message?: string;
+    type: "pre-care" | "post-care";
+    editedMessage?: string;
+  };
+}
+```
+
+**Description:** Full-featured calendar view component that supports day/week/month views with appointment drag/drop, editing, and creation. Integrated with dialog modals for appointment management.
+
+**Example:**
+
+```tsx
+<AppointmentCalendar
+  appointments={mockAppointments}
+  onAppointmentClick={(appointment) => console.log("Clicked", appointment)}
+  onDateChange={(date) => console.log("Date changed", date)}
+/>
+```

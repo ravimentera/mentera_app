@@ -1,3 +1,4 @@
+import { AppointmentCalendar } from "@/app/(dashboard)/appointments/components/AppointmentCalendar";
 import { CardComponent as Card } from "@/components/organisms/card";
 import { ActionableInsightsCard } from "@/components/organisms/patientComponents/ActionableInsightsCard";
 import { ActivePackagesCard } from "@/components/organisms/patientComponents/ActivePackagesCard";
@@ -23,5 +24,6 @@ export const componentMap: Record<string, React.ComponentType<any>> = {
   RecommendationCard,
   TreatmentNoteCard,
   ActionableInsightsCard,
+  AppointmentCalendar,
   Card,
 };
