@@ -372,3 +372,23 @@ useEffect(() => toast.success("Operation completed"), [])
 ```tsx
 <TreatmentNoteCard title="Follow-up Note" content="Patient responded well, continue same protocol." />
 ```
+
+### ActionableInsightsCard
+
+**Props:**
+
+* `procedure: string` – name of the treatment or service
+* `areasTreated: string` – area(s) where the procedure was applied
+* `observations: string` – follow-up or result-oriented notes post-treatment
+
+**Description:** Displays structured insight including procedure name, treated areas, and follow-up observations in a highlighted layout.
+
+**Example:**
+
+```tsx
+<ActionableInsightsCard
+  procedure="HydraFacial"
+  areasTreated="Full Face"
+  observations="Skin appeared hydrated and glowing. Patient noted improved texture and reduced fine lines."
+/>
+```

@@ -1,4 +1,5 @@
 import { CardComponent as Card } from "@/components/organisms/card";
+import { ActionableInsightsCard } from "@/components/organisms/patientComponents/ActionableInsightsCard";
 import { ActivePackagesCard } from "@/components/organisms/patientComponents/ActivePackagesCard";
 import { CampaignsCard } from "@/components/organisms/patientComponents/CampaignsCard";
 import { MedicalSummaryCard } from "@/components/organisms/patientComponents/MedicalSummaryCard";
@@ -21,5 +22,6 @@ export const componentMap: Record<string, React.ComponentType<any>> = {
   ProcedureCard,
   RecommendationCard,
   TreatmentNoteCard,
+  ActionableInsightsCard,
   Card,
 };
