@@ -147,15 +147,7 @@ export const generateCareInstructions = (appointment: Appointment) => {
     return {
       message: `Hi ${patientName},
 
-We're excited to see you for your upcoming microneedling session on ${appointmentDate}. To help you get the most out of your treatment, here are a few pre-care tips:
-
-• Avoid sun exposure and tanning beds for at least one week before your appointment.  
-• Skip alcohol and caffeine for 24–48 hours before the session to reduce inflammation.  
-• Stay hydrated and ensure you get plenty of rest the night before.  
-• Please arrive 10 minutes early so we can get everything ready for you.  
-• Let us know ahead of time if you have any medical conditions or concerns you'd like to discuss.
-
-Feel free to reach out if you have any questions — we’re here to help. Looking forward to seeing you on ${appointmentDate}!`,
+It’s Meghan here 😊—excited to see you for your microneedling on ${appointmentDate}! A couple quick reminders: try to avoid sun/tanning this week, skip alcohol/caffeine 24–48 hrs before, and stay extra hydrated. Let me know if you have any questions before we start 💖.`,
       type: "pre-care" as const,
     };
   }
