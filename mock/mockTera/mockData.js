@@ -83,14 +83,6 @@ Actionable Insights
                     areasTreated: "Full Face",
                   },
                 },
-                {
-                  type: "Component",
-                  name: "TreatmentNoteCard",
-                  props: {
-                    title: "Procedure Summary",
-                    content: "Procedure: HydraFacial\nAreas treated: Full Face",
-                  },
-                },
               ],
             },
             {
@@ -107,14 +99,6 @@ Actionable Insights
                     },
                     futureAppointments: [],
                     onViewAllLink: "/appointments",
-                  },
-                },
-                {
-                  type: "Component",
-                  name: "ObservationCard",
-                  props: {
-                    notes:
-                      "Skin appeared visibly hydrated and glowing post-treatment. Patient noted improved texture and reduced fine lines. Recommended monthly sessions.",
                   },
                 },
               ],
@@ -221,8 +205,8 @@ Precautions
                         patientId: "PT-1004",
                         chartId: "CHT-1004",
                         patient: {
-                          firstName: "John",
-                          lastName: "Doe",
+                          firstName: "Emily",
+                          lastName: "Johnson",
                           condition: "N/A",
                         },
                         provider: {
