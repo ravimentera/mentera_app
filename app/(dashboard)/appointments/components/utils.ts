@@ -127,7 +127,7 @@ export const getWeekDays = (currentDate: Date) => {
 
 // Function to determine if an appointment is in the future
 export const isFutureAppointment = (appointment: Appointment) => {
-  return appointment.startTime > new Date();
+  return new Date(appointment.startTime) > new Date();
 };
 
 // Function to generate care instructions based on appointment type and timing
@@ -135,22 +135,45 @@ export const generateCareInstructions = (appointment: Appointment) => {
   const isPreCare = isFutureAppointment(appointment);
   const type = isPreCare ? "pre-care" : "post-care";
   const patientName = `${appointment.patient.firstName}`;
+  const appointmentDate = new Date(appointment.startTime).toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  console.log({ isPreCare, appointment });
 
   if (isPreCare) {
     return {
-      message: `Hi ${patientName}! Here are your pre-care instructions for your upcoming ${appointment.type} treatment. Please make sure to:
-1. Avoid any blood thinning medications 24 hours before treatment
-2. Avoid alcohol consumption 24 hours before treatment
-3. Stay hydrated and get plenty of rest
-4. Arrive 10 minutes early for your appointment
-5. Let us know if you have any concerns or questions
+      message: `Hi ${patientName},
 
-Looking forward to seeing you soon!`,
+We're excited to see you for your upcoming microneedling session on ${appointmentDate}. To help you get the most out of your treatment, here are a few pre-care tips:
+
+• Avoid sun exposure and tanning beds for at least one week before your appointment.  
+• Skip alcohol and caffeine for 24–48 hours before the session to reduce inflammation.  
+• Stay hydrated and ensure you get plenty of rest the night before.  
+• Please arrive 10 minutes early so we can get everything ready for you.  
+• Let us know ahead of time if you have any medical conditions or concerns you'd like to discuss.
+
+Feel free to reach out if you have any questions — we’re here to help. Looking forward to seeing you on ${appointmentDate}!`,
       type: "pre-care" as const,
     };
   }
+
   return {
-    message: `Hi ${patientName}! Just wanted to check in and see how you're doing after your ${appointment.type} treatment. I hope everything's feeling great so far. You should start noticing results soon, with full effects showing up in about 7-14 days. Try to take it easy today and avoid any heavy exercise. Let's go ahead and get your follow-up scheduled in two weeks so we can make sure everything's looking perfect. want me to take care of that for you?`,
+    message: `Hi ${patientName},
+
+Just checking in after your microneedling treatment — I hope you're feeling well and your skin is responding beautifully.
+
+You should begin noticing improvements within a few days, with full results becoming visible over the next 7–14 days. To support your recovery:
+
+• Avoid strenuous exercise for the rest of today.  
+• Keep your skin moisturized and avoid harsh products.  
+• Protect your skin from direct sunlight and use a gentle SPF.
+
+We’ve tentatively scheduled your next appointment for 13 May 2025 to follow up and ensure your skin is healing as expected. Let us know if you’d like to confirm or adjust the timing.
+
+Take care, and don’t hesitate to reach out if you need anything in the meantime.`,
     type: "post-care" as const,
   };
 };
