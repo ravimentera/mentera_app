@@ -101,7 +101,7 @@ export function DayView({
         {getOverlappingAppointments(filterAppointmentsByDate(appointments, date)).map((group) =>
           group.map((appointment, index) => {
             const durationInMinutes =
-              (appointment.endTime.getTime() - appointment.startTime.getTime()) / (60 * 1000);
+              (appointment.endTime?.getTime() - appointment.startTime.getTime()) / (60 * 1000);
             const heightInPixels = (durationInMinutes / (24 * 60)) * 1440;
 
             const isCompact = durationInMinutes <= 15;
