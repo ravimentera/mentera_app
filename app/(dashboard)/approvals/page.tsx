@@ -603,7 +603,7 @@ export default function ApprovalsPage() {
                             <h4 className="text-sm font-medium text-[#71717A] mb-2">
                               Previous Conversation
                             </h4>
-                            <div className="border border-gray-200 rounded-lg bg-white h-[220px] overflow-y-auto">
+                            <div className="border border-gray-200 rounded-lg bg-white h-[23em] overflow-y-auto">
                               <ChatMessages messages={cards[currentCardIndex].chatHistory} />
                             </div>
                           </div>

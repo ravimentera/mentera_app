@@ -82,7 +82,7 @@ const generateNotificationMessage = (
     const preTemplates = [
       `Hi ${patient.firstName}! Looking forward to seeing you for your ${treatmentNotes.procedure} appointment tomorrow at ${time}. ${getTreatmentTip()} See you soon!`,
 
-      `${patient.firstName}, this is a reminder about your ${treatmentNotes.procedure} appointment at ${time} tomorrow. Please arrive 15 minutes early to complete any paperwork. Questions? Call us!`,
+      `Hey ${patient.firstName}! Just a quick reminder—your Botox appointment is tomorrow at ${time}. Can you come in 15 minutes early for a little paperwork? Let us know if you have any questions. Can’t wait to see you!`,
 
       `Hello ${patient.firstName}! Just confirming your ${treatmentNotes.procedure} treatment for tomorrow at ${time}. ${
         treatmentNotes.procedure === "Botox" || treatmentNotes.procedure === "Juvederm"
@@ -195,6 +195,112 @@ today.setHours(0, 0, 0, 0);
 
 // Generate 3 weeks of appointments (1 week before, current week, 1 week after)
 const startDate = subDays(today, 7);
+
+// Add today's date with specific pending notifications
+const createTodayAppointmentsPendingApproval = () => {
+  const appointments: AppointmentMock[] = [];
+  const todayDate = new Date();
+  
+  // Create 3 pending approval appointments for today
+  for (let i = 0; i < 3; i++) {
+    const patientIdx = i % patients.length;
+    const patient = patients[patientIdx];
+    const patientName = getRandomPatientName(i);
+    
+    // Create appointment times 
+    const startHour = 10 + i * 2; // 10am, 12pm, 2pm
+    const startTime = createPDTDate(todayDate, startHour);
+    const endTime = addHours(startTime, 1);
+    
+    const appointment: AppointmentMock = {
+      id: `today-approval-${i}`,
+      patientId: patient.patientId,
+      chartId: patient.chartId,
+      patient: {
+        firstName: patientName.firstName,
+        lastName: patientName.lastName,
+      },
+      provider: {
+        providerId: `PROV-${i}`,
+        firstName: patient.provider.split(" ")[0],
+        lastName: patient.provider.split(" ")[1],
+        specialties: [patient.providerSpecialty],
+      },
+      startTime,
+      endTime,
+      status: "scheduled",
+      type: getAppointmentType(patient.treatmentNotes.procedure),
+      notes: patient.treatmentNotes.observations,
+      treatmentNotes: patient.treatmentNotes,
+      notificationStatus: {
+        status: "pending" as const,
+        sent: false,
+        message: generateNotificationMessage(
+          "pre",
+          {
+            id: `today-approval-${i}`,
+            patientId: patient.patientId,
+            chartId: patient.chartId,
+            patient: {
+              firstName: patientName.firstName,
+              lastName: patientName.lastName,
+            },
+            provider: {
+              providerId: `PROV-${i}`,
+              firstName: patient.provider.split(" ")[0],
+              lastName: patient.provider.split(" ")[1],
+              specialties: [patient.providerSpecialty],
+            },
+            startTime,
+            endTime,
+            status: "scheduled",
+            type: getAppointmentType(patient.treatmentNotes.procedure),
+            notes: patient.treatmentNotes.observations,
+            treatmentNotes: patient.treatmentNotes,
+          } as AppointmentMock
+        ),
+        type: "pre-care" as const,
+      },
+    };
+    
+    // Add chat history to the third appointment
+    if (i === 2) {
+      const procedure = patient.treatmentNotes.procedure;
+      const patientName = appointment.patient.firstName;
+      // Create a timestamp for the conversation starting 3 days ago
+      const conversationStart = new Date();
+      conversationStart.setDate(conversationStart.getDate() - 3);
+
+      appointment.chatHistory = [
+        {
+          id: "1",
+          text: `Hi ${patientName}, I noticed you've scheduled a ${procedure} treatment. Is there anything specific you'd like to address during the session?`,
+          sender: "provider",
+          timestamp: new Date(conversationStart.getTime() + 3600000),
+          isOutbound: false,
+        },
+        {
+          id: "2",
+          text: `Yes, I'm mainly concerned about the results from my last treatment. I didn't get the results I expected.`,
+          sender: "patient",
+          timestamp: new Date(conversationStart.getTime() + 4000000),
+          isOutbound: true,
+        },
+        {
+          id: "3",
+          text: `I understand your concerns. I've looked at your record from the previous session. We'll definitely focus on improving upon your previous treatment results.`,
+          sender: "provider",
+          timestamp: new Date(conversationStart.getTime() + 4500000),
+          isOutbound: false,
+        },
+      ];
+    }
+    
+    appointments.push(appointment);
+  }
+  
+  return appointments;
+};
 
 // Helper function to map procedure to appointment type
 const getAppointmentType = (procedure: string): AppointmentMock["type"] => {
@@ -517,6 +623,11 @@ for (let i = 0; i < 21; i++) {
     patientIndex += dayAppointments.length;
   }
 }
+
+// Add today's date with specific pending notifications
+const todayAppointmentsPendingApproval = createTodayAppointmentsPendingApproval();
+mockAppointments.push(...todayAppointmentsPendingApproval);
+patientIndex += todayAppointmentsPendingApproval.length;
 
 // Add specific appointments for coming weekend
 // Helper function to create weekend appointments with specified times
