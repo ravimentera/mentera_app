@@ -8,6 +8,7 @@ export const mockData = [
     layout: {
       // This one was already an object, which is good.
       type: "Layout",
+      title: "Patient Visit Overview",
       layout: [
         {
           type: "Grid",
@@ -63,8 +64,8 @@ Actionable Insights
 * Observations: Skin appeared visibly hydrated and glowing post-treatment. Patient noted improved texture and reduced fine lines. Recommended monthly sessions.
 `,
     layout: {
-      // Converted from string to direct object
       type: "Layout",
+      title: "Treatment History & Insights",
       layout: [
         {
           type: "Grid",
@@ -84,6 +85,19 @@ Actionable Insights
                 },
                 {
                   type: "Component",
+                  name: "TreatmentNoteCard",
+                  props: {
+                    title: "Procedure Summary",
+                    content: "Procedure: HydraFacial\nAreas treated: Full Face",
+                  },
+                },
+              ],
+            },
+            {
+              type: "Row",
+              components: [
+                {
+                  type: "Component",
                   name: "NextAppointmentCard",
                   props: {
                     upcomingAppointment: {
@@ -95,6 +109,14 @@ Actionable Insights
                     onViewAllLink: "/appointments",
                   },
                 },
+                {
+                  type: "Component",
+                  name: "ObservationCard",
+                  props: {
+                    notes:
+                      "Skin appeared visibly hydrated and glowing post-treatment. Patient noted improved texture and reduced fine lines. Recommended monthly sessions.",
+                  },
+                },
               ],
             },
             {
@@ -102,18 +124,11 @@ Actionable Insights
               components: [
                 {
                   type: "Component",
-                  name: "TreatmentNoteCard",
+                  name: "ActionableInsightsCard",
                   props: {
-                    title: "Procedure Summary",
-                    // Newlines in props' string values are fine in JS objects
-                    content: "Procedure: HydraFacial\nAreas treated: Full Face",
-                  },
-                },
-                {
-                  type: "Component",
-                  name: "ObservationCard",
-                  props: {
-                    notes:
+                    procedure: "HydraFacial",
+                    areasTreated: "Full Face",
+                    observations:
                       "Skin appeared visibly hydrated and glowing post-treatment. Patient noted improved texture and reduced fine lines. Recommended monthly sessions.",
                   },
                 },
@@ -145,6 +160,7 @@ Precautions
     layout: {
       // Converted from string to direct object
       type: "Layout",
+      title: "Microneedling Care Instructions",
       layout: [
         {
           type: "Grid",
@@ -158,7 +174,7 @@ Precautions
                   type: "Component",
                   name: "TreatmentNoteCard",
                   props: {
-                    title: "Pre-Care Instructions",
+                    title: "Micro Needling Pre-Care Instructions",
                     content:
                       "- Avoid sun exposure and tanning beds for at least one week before the procedure.\n- Avoid alcohol and caffeine for 24-48 hours before the procedure to reduce inflammation.",
                   },
@@ -167,7 +183,7 @@ Precautions
                   type: "Component",
                   name: "TreatmentNoteCard",
                   props: {
-                    title: "Post-Care Instructions",
+                    title: "Micro Needling Post-Care Instructions",
                     content:
                       "- Apply a gentle, fragrance-free moisturizer to the treated area.\n- Avoid sun exposure and use a broad-spectrum sunscreen with an SPF of 30 or higher.\n- Avoid strenuous exercise and sweating for at least 24 hours after the procedure.\n- Avoid using any harsh skincare products or treatments for at least one week after the procedure.",
                   },
