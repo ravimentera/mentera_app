@@ -195,5 +195,63 @@ Precautions
       ],
     },
   },
+  {
+    query: "I would like to book them for an appointment",
+    markdown:
+      "Sure! I’ve scheduled an appointment for patient PT-1004 on 13 May 2025 at 12:30 PM for Microneedling. Let me know if you’d like to make any changes or add notes for the provider.",
+    layout: {
+      type: "Layout",
+      title: "Micro Needling Appointment",
+      layout: [
+        {
+          type: "Grid",
+          columns: 1,
+          gap: 6,
+          rows: [
+            {
+              type: "Row",
+              components: [
+                {
+                  type: "Component",
+                  name: "AppointmentCalendar",
+                  props: {
+                    appointments: [
+                      {
+                        id: "appt-001",
+                        patientId: "PT-1004",
+                        chartId: "CHT-1004",
+                        patient: {
+                          firstName: "John",
+                          lastName: "Doe",
+                          condition: "N/A",
+                        },
+                        provider: {
+                          providerId: "PRV-001",
+                          firstName: "Megan",
+                          lastName: "Wilson",
+                          specialties: ["Aesthetics"],
+                        },
+                        startTime: "2025-05-13T12:30:00.000Z",
+                        endTime: "2025-05-13T13:30:00.000Z",
+                        status: "scheduled",
+                        notes: "Microneedling session scheduled by assistant.",
+                        type: "therapy",
+                        notificationStatus: {
+                          status: "pending",
+                          sent: false,
+                          type: "pre-care",
+                        },
+                      },
+                    ],
+                    initialView: "month",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Add other mock data entries here, ensuring 'layout' is always an object
 ];
