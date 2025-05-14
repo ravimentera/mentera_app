@@ -441,8 +441,9 @@ interface Appointment {
 
 ```tsx
 <AppointmentCalendar
-  appointments={mockAppointments}
+  appointments={mockAppointments} // Appointment interface
   onAppointmentClick={(appointment) => console.log("Clicked", appointment)}
   onDateChange={(date) => console.log("Date changed", date)}
+  initialView="month"
 />
 ```
