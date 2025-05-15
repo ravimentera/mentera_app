@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
+import appointmentsReducer from "./appointmentsSlice";
 import dynamicLayoutReducer from "./dynamicLayoutSlice";
 import globalStateReducer from "./globalStateSlice";
 import messagesReducer from "./messagesSlice";
@@ -11,6 +12,7 @@ export const store = configureStore({
     messages: messagesReducer,
     dynamicLayout: dynamicLayoutReducer,
     globalState: globalStateReducer,
+    appointments: appointmentsReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(usersApi.middleware),
 });
