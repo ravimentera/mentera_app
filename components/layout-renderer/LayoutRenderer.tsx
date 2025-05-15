@@ -70,7 +70,7 @@ export function LayoutRenderer({
       key={grid.type + "-" + uuid()} // Using a more descriptive key, consider stable IDs if available
       className="grid gap-6" // Using a fixed gap for simplicity, grid.gap can be passed as style
       style={{
-        gridTemplateColumns: `repeat(${grid.columns || 1}, minmax(0, 1fr))`,
+        gridTemplateColumns: `repeat(${grid.rows.length > 1 ? grid.columns : 1}, minmax(0, 1fr))`,
         gap: `${grid.gap || 24}px`,
       }}
     >

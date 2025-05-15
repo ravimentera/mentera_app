@@ -47,11 +47,14 @@ export const getAppointmentStyle = (
   index: number,
   overlappingCount: number,
 ) => {
-  const top = `${((appointment.startTime.getHours() * 60 + appointment.startTime.getMinutes()) / (24 * 60)) * 100}%`;
+  const date = new Date(appointment.startTime);
+  const minutesSinceStartOfDay = date.getHours() * 60 + date.getMinutes();
+  const top = `${(minutesSinceStartOfDay / (24 * 60)) * 100}%`;
+
+  const start = new Date(appointment.startTime);
+  const end = new Date(appointment.endTime);
   const height = `${
-    ((appointment.endTime.getHours() * 60 +
-      appointment.endTime.getMinutes() -
-      (appointment.startTime.getHours() * 60 + appointment.startTime.getMinutes())) /
+    ((end.getHours() * 60 + end.getMinutes() - (start.getHours() * 60 + start.getMinutes())) /
       (24 * 60)) *
     100
   }%`;

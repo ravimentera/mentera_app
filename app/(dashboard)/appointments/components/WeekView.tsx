@@ -144,7 +144,9 @@ export function WeekView({
             {getOverlappingAppointments(filterAppointmentsByDate(appointments, day)).map((group) =>
               group.map((appointment, index) => {
                 const durationInMinutes =
-                  (appointment.endTime?.getTime() - appointment.startTime.getTime()) / (60 * 1000);
+                  (new Date(appointment.endTime).getTime() -
+                    new Date(appointment.startTime).getTime()) /
+                  (60 * 1000);
                 const heightInPixels = (durationInMinutes / (24 * 60)) * 1440;
 
                 const isCompact = durationInMinutes <= 15;

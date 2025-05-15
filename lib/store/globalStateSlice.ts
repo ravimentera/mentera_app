@@ -4,12 +4,14 @@ import type { RootState } from "./index";
 // Define the state structure for this slice
 export interface GlobalState {
   isSidePanelExpanded: boolean;
+  streamingUISessionId: string;
   // You can add other global states here in the future
 }
 
 // Define the initial state
 const initialState: GlobalState = {
   isSidePanelExpanded: false,
+  streamingUISessionId: crypto.randomUUID(),
 };
 
 // Create the slice
@@ -39,6 +41,7 @@ export const { setSidePanelExpanded, toggleSidePanel } = globalStateSlice.action
 // Export selectors to access the state
 export const selectIsSidePanelExpanded = (state: RootState) =>
   state.globalState.isSidePanelExpanded;
+export const getStreamingUISessionId = (state: RootState) => state.globalState.streamingUISessionId;
 
 // Export the reducer - this will be added to your Redux store
 export default globalStateSlice.reducer;
