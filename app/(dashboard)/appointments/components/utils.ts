@@ -1,6 +1,18 @@
 import { addDays, startOfWeek } from "date-fns";
 import { Appointment } from "./types";
 
+// Color mapping functions for Appointment Status
+export const getAppointmentStatusColors = (status: Appointment["status"]) => {
+  switch (status) {
+    case "cancelled":
+      return "bg-red-100 hover:bg-red-200 border-red-300 group-hover:bg-red-200";
+    case "pending":
+      return "bg-yellow-100 hover:bg-yellow-200 border-yellow-300 group-hover:bg-yellow-200";
+    default:
+      return "";
+  }
+};
+
 // Color mapping functions
 export const getAppointmentColors = (type: Appointment["type"]) => {
   switch (type) {

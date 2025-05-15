@@ -422,7 +422,7 @@ interface Appointment {
   };
   startTime: Date;
   endTime: Date;
-  status: "scheduled" | "completed" | "cancelled";
+  status: "scheduled" | "completed" | "cancelled" | "pending";
   notes?: string;
   type: "therapy" | "consultation" | "followup" | "general";
   notificationStatus?: {

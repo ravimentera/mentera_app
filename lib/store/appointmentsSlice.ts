@@ -20,7 +20,7 @@ export interface Appointment {
   };
   startTime: Date; // Strictly Date
   endTime: Date; // Strictly Date
-  status: "scheduled" | "completed" | "cancelled";
+  status: "scheduled" | "completed" | "cancelled" | "pending";
   notes?: string;
   type: "therapy" | "consultation" | "followup" | "general";
   notificationStatus?: {
@@ -57,7 +57,7 @@ interface StoredAppointment {
   };
   startTime: string; // Stored as ISO string
   endTime: string; // Stored as ISO string
-  status: "scheduled" | "completed" | "cancelled";
+  status: "scheduled" | "completed" | "cancelled" | "pending";
   notes?: string;
   type: "therapy" | "consultation" | "followup" | "general";
   notificationStatus?: {

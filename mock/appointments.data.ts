@@ -228,7 +228,10 @@ const createTodayAppointmentsPendingApproval = () => {
       },
       startTime,
       endTime,
-      status: "scheduled",
+      // status: "scheduled",
+      status: (["scheduled", "completed", "cancelled", "pending"] as const)[
+        Math.floor(Math.random() * 4)
+      ],
       type: getAppointmentType(patient.treatmentNotes.procedure),
       notes: patient.treatmentNotes.observations,
       treatmentNotes: patient.treatmentNotes,
@@ -832,7 +835,7 @@ export interface AppointmentMock {
   };
   startTime: Date;
   endTime: Date;
-  status: "scheduled" | "completed" | "cancelled";
+  status: "scheduled" | "completed" | "cancelled" | "pending";
   type: "therapy" | "consultation" | "followup" | "general";
   notes: string;
   treatmentNotes: any;
