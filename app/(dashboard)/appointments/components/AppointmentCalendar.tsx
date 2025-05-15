@@ -1,14 +1,37 @@
-import { mockAppointments, updateAppointmentNotificationStatus } from "@/mock/appointments.data";
-import { addDays, addMonths, addWeeks, set, subDays, subMonths, subWeeks } from "date-fns";
+"use client";
+
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  parseISO,
+  set,
+  subDays,
+  subMonths,
+  subWeeks,
+} from "date-fns";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAppointmentForm } from "../hooks/useAppointmentForm";
+
+import type { AppDispatch, RootState } from "@/lib/store";
+import {
+  Appointment,
+  addAppointment,
+  deleteAppointment,
+  selectAllAppointments,
+  updateAppointment,
+  updateAppointmentNotification,
+} from "@/lib/store/appointmentsSlice";
+// Redux imports
+import { useDispatch, useSelector } from "react-redux";
+
+// Component and utility imports
+import { useAppointmentForm } from "../hooks/useAppointmentForm"; // Path to your hook
 import { AppointmentDialog } from "./AppointmentDialog";
 import { CalendarHeader } from "./CalendarHeader";
 import { DayView } from "./DayView";
 import { MonthView } from "./MonthView";
 import { WeekView } from "./WeekView";
-import { Appointment } from "./types";
 import {
   filterAppointmentsByDate,
   generateCareInstructions,
@@ -20,31 +43,35 @@ import {
 } from "./utils";
 
 interface AppointmentCalendarProps {
-  appointments?: Appointment[];
+  appointments?: Appointment[]; // Prop to provide additional appointments to append
   onAppointmentClick?: (appointment: Appointment) => void;
   onDateChange?: (date: Date) => void;
   initialView?: "day" | "week" | "month";
 }
 
 export function AppointmentCalendar({
-  appointments = mockAppointments as Appointment[],
+  appointments: appointmentsProp,
   onAppointmentClick,
   onDateChange,
   initialView = "week",
 }: AppointmentCalendarProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const calendarAppointments = useSelector(selectAllAppointments);
+
   const [date, setDate] = useState<Date>(new Date());
-  const [view, setView] = useState<"day" | "week" | "month">(initialView ?? "week");
+  const [view, setView] = useState<"day" | "week" | "month">(initialView);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragEnd, setDragEnd] = useState<number | null>(null);
   const [showNewAppointmentDialog, setShowNewAppointmentDialog] = useState(false);
-  const [calendarAppointments, setCalendarAppointments] = useState<Appointment[]>(appointments);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState("edit");
   const [isGeneratingMessage, setIsGeneratingMessage] = useState(false);
   const [editedMessage, setEditedMessage] = useState<string>("");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
+  // Ref to track the last processed appointmentsProp instance
+  const processedAppointmentsPropRef = useRef<Appointment[] | undefined>();
 
   const {
     formData,
@@ -52,12 +79,12 @@ export function AppointmentCalendar({
     editFormData,
     setEditFormData,
     formError,
-    setFormError,
+    validateForm,
     resetForm,
-    createAppointment,
-    updateAppointment,
+    createAppointment: createAppointmentFromHook,
+    updateAppointment: updateAppointmentFromHook,
   } = useAppointmentForm({
-    mode: showNewAppointmentDialog ? "new" : "edit",
+    mode: showNewAppointmentDialog ? "new" : showEditDialog ? "edit" : "new",
     appointment: editingAppointment,
     dragStart,
     dragEnd,
@@ -65,43 +92,70 @@ export function AppointmentCalendar({
 
   const titleInputRef = useRef<HTMLInputElement>(null);
 
+  // Effect to append appointments from props to the Redux store
   useEffect(() => {
-    if (showNewAppointmentDialog) {
+    // Only process if appointmentsProp is new and different from the last one processed
+    if (
+      appointmentsProp &&
+      appointmentsProp !== processedAppointmentsPropRef.current &&
+      appointmentsProp.length > 0
+    ) {
+      console.log(
+        "AppointmentCalendar: New appointmentsProp instance detected, dispatching addAppointment for each.",
+      );
+      appointmentsProp.forEach((aptProp) => {
+        const processedApt = {
+          ...aptProp,
+          startTime:
+            typeof aptProp.startTime === "string" ? parseISO(aptProp.startTime) : aptProp.startTime,
+          endTime:
+            typeof aptProp.endTime === "string" ? parseISO(aptProp.endTime) : aptProp.endTime,
+          chatHistory: aptProp.chatHistory?.map((chat) => ({
+            ...chat,
+            timestamp:
+              typeof chat.timestamp === "string" ? parseISO(chat.timestamp) : chat.timestamp,
+          })),
+        };
+        dispatch(addAppointment(processedApt as Appointment));
+      });
+      // Mark this instance of appointmentsProp as processed
+      processedAppointmentsPropRef.current = appointmentsProp;
+    } else if (appointmentsProp && appointmentsProp === processedAppointmentsPropRef.current) {
+      console.log(
+        "AppointmentCalendar: appointmentsProp is the same instance, already processed by this effect.",
+      );
+    }
+  }, [appointmentsProp, dispatch]);
+
+  useEffect(() => {
+    if (showNewAppointmentDialog && titleInputRef.current) {
       setTimeout(() => {
         titleInputRef.current?.focus();
       }, 0);
     }
   }, [showNewAppointmentDialog]);
 
-  // Convert mouse position to time
   const getTimeFromMousePosition = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
       const rect = event.currentTarget.getBoundingClientRect();
       const y = event.clientY - rect.top;
       const totalMinutes = Math.floor((y / rect.height) * 24 * 60);
       const hours = Math.floor(totalMinutes / 60);
-      const minutes = Math.floor((totalMinutes % 60) / 15) * 15; // Round to nearest 15 minutes
+      const minutes = Math.floor((totalMinutes % 60) / 15) * 15;
       return set(date, { hours, minutes });
     },
     [date],
   );
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>, selectedDay?: Date) => {
-    // Check if clicking on an appointment
     const target = event.target as HTMLElement;
-    if (target.closest('[data-appointment="true"]')) {
-      return; // Don't start drag if clicking on an appointment
-    }
-
-    // Update the selected date if provided (for week view)
-    if (selectedDay) {
-      setDate(selectedDay);
-    }
-
+    if (target.closest('[data-appointment="true"]')) return;
+    if (selectedDay) setDate(selectedDay);
     const startTime = getTimeFromMousePosition(event);
     setIsDragging(true);
-    setDragStart(startTime.getTime());
-    setDragEnd(startTime.getTime() + 15 * 60 * 1000); // Add 15 minutes by default
+    const startTimestamp = startTime.getTime();
+    setDragStart(startTimestamp);
+    setDragEnd(startTimestamp + 15 * 60 * 1000);
   };
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -124,84 +178,104 @@ export function AppointmentCalendar({
     setIsDragging(false);
   };
 
-  // Calculate selection styles
   const getSelectionStyles = () => {
     if (!dragStart || !dragEnd) return undefined;
-
-    const startPercent =
-      ((new Date(dragStart).getHours() * 60 + new Date(dragStart).getMinutes()) / (24 * 60)) * 100;
-    const endPercent =
-      ((new Date(dragEnd).getHours() * 60 + new Date(dragEnd).getMinutes()) / (24 * 60)) * 100;
+    const start = new Date(dragStart);
+    const end = new Date(dragEnd);
+    const startPercent = ((start.getHours() * 60 + start.getMinutes()) / (24 * 60)) * 100;
+    const endPercent = ((end.getHours() * 60 + end.getMinutes()) / (24 * 60)) * 100;
     const top = Math.min(startPercent, endPercent);
     const height = Math.abs(endPercent - startPercent);
-
-    return {
-      top: `${top}%`,
-      height: `${height}%`,
-    } as const;
+    return { top: `${top}%`, height: `${height}%` } as const;
   };
 
-  const handleCreateAppointment = () => {
-    const newAppointment = createAppointment();
-    if (newAppointment) {
-      setCalendarAppointments((prev) => [...prev, newAppointment]);
-      setShowNewAppointmentDialog(false);
-      resetDragSelection();
-      resetForm();
+  const handleSaveAppointment = () => {
+    if (showNewAppointmentDialog) {
+      const newAppointmentPayload = createAppointmentFromHook();
+      if (newAppointmentPayload) {
+        dispatch(addAppointment(newAppointmentPayload));
+        toast.success("Appointment created successfully!");
+        setShowNewAppointmentDialog(false);
+        resetDragSelection();
+        resetForm();
+      } else {
+        // Form error is handled by useAppointmentForm and should be displayed in AppointmentDialog
+        toast.error("Failed to create appointment. Please check form data.");
+      }
+    } else if (showEditDialog && editingAppointment) {
+      const updatedAppointmentPayload = updateAppointmentFromHook();
+      if (updatedAppointmentPayload) {
+        // updateAppointment action expects { id, changes }
+        // updateAppointmentFromHook returns the entire updated appointment
+        const { id, ...changes } = updatedAppointmentPayload;
+        dispatch(updateAppointment({ id, changes }));
+        toast.success("Appointment updated successfully!");
+        setShowEditDialog(false);
+        setEditingAppointment(null);
+        resetForm();
+      } else {
+        // Form error is handled by useAppointmentForm and should be displayed in AppointmentDialog
+        toast.error("Failed to update appointment. Please check form data.");
+      }
     }
   };
 
-  const handleAppointmentClick = (appointment: Appointment) => {
-    setEditingAppointment(appointment);
+  const handleCalendarAppointmentClick = (appointment: Appointment) => {
+    // Ensure dates are Date objects for the form hook and dialog
+    const appointmentWithDateObjects = {
+      ...appointment,
+      startTime: new Date(appointment.startTime),
+      endTime: new Date(appointment.endTime),
+    };
+    setEditingAppointment(appointmentWithDateObjects); // This will trigger useAppointmentForm's effect
     setShowEditDialog(true);
+    onAppointmentClick?.(appointmentWithDateObjects); // Call prop callback
   };
 
-  const handleSaveAppointment = (appointmentData: Partial<Appointment>) => {
-    if (!appointmentData.id) {
-      // Create new appointment
-      const newAppointment: Appointment = {
-        id: Math.random().toString(36).substr(2, 9),
-        patientId: "temp-patient-id",
-        chartId: "temp-chart-id",
-        patient: {
-          firstName: appointmentData.patient?.firstName || "",
-          lastName: appointmentData.patient?.lastName || "",
-        },
-        provider: {
-          providerId: "temp-provider-id",
-          firstName: "Doctor",
-          lastName: "Name",
-          specialties: [],
-        },
-        startTime: appointmentData.startTime || new Date(),
-        endTime: appointmentData.endTime || new Date(),
-        status: "scheduled",
-        notes: appointmentData.notes,
-        type: appointmentData.type || "general",
-      };
-      setCalendarAppointments((prev) => [...prev, newAppointment]);
-    } else {
-      // Update existing appointment
-      setCalendarAppointments((prev) =>
-        prev.map((apt) => (apt.id === appointmentData.id ? { ...apt, ...appointmentData } : apt)),
-      );
-    }
-  };
-
-  const handleDeleteAppointment = (appointment: Appointment) => {
-    setCalendarAppointments((prev) => prev.filter((apt) => apt.id !== appointment.id));
-    toast.error("Appointment deleted");
-  };
-
-  const handleUpdateAppointment = () => {
-    const updatedAppointment = updateAppointment();
-    if (updatedAppointment) {
-      setCalendarAppointments((prev) =>
-        prev.map((apt) => (apt.id === updatedAppointment.id ? updatedAppointment : apt)),
-      );
+  const handleDeleteAppointmentDialog = (appointmentToDelete: Appointment) => {
+    if (appointmentToDelete?.id) {
+      dispatch(deleteAppointment(appointmentToDelete.id));
+      toast.error("Appointment deleted");
       setShowEditDialog(false);
       setEditingAppointment(null);
-      resetForm();
+    }
+  };
+
+  const handleApproveAndSendDialog = (appointment: Appointment, message: string) => {
+    if (appointment?.id) {
+      dispatch(
+        updateAppointmentNotification({
+          appointmentId: appointment.id,
+          status: "approved",
+          sent: true,
+          editedMessage: message,
+        }),
+      );
+      toast.success("Care instructions approved and sent.");
+      setShowEditDialog(false);
+      setEditingAppointment(null);
+      setEditedMessage(""); // Reset local state for edited message
+    }
+  };
+
+  const handleDeclineAndRegenerateDialog = (appointment: Appointment) => {
+    if (appointment?.id) {
+      setIsGeneratingMessage(true);
+      // Simulate message regeneration
+      setTimeout(() => {
+        // const newInstructions = generateCareInstructions(appointment); // Ensure this is pure
+        dispatch(
+          updateAppointmentNotification({
+            appointmentId: appointment.id,
+            status: "disapproved",
+            sent: false,
+            // editedMessage: newInstructions.message, // If pre-filling
+          }),
+        );
+        setIsGeneratingMessage(false);
+        toast.error("Care instructions declined.");
+        setEditedMessage(""); // Reset local state
+      }, 1000);
     }
   };
 
@@ -219,66 +293,8 @@ export function AppointmentCalendar({
     onDateChange?.(newDate);
   };
 
-  const handleApproveAndSend = () => {
-    if (editingAppointment) {
-      // We are updating only the appointment that was being edited.
-      // Instead of using mockAppointments (which accumulates state and causes duplicates),
-      // we directly update the local state (calendarAppointments) to keep things in sync and isolated.
-      const updatedAppointments = calendarAppointments.map(
-        (apt) =>
-          apt.id === editingAppointment.id
-            ? {
-                ...apt,
-                notificationStatus: {
-                  ...apt.notificationStatus,
-                  status: "approved", // Set the status to approved
-                  sent: true, // Mark that the notification was sent
-                  message: editedMessage || apt.notes, // Use the edited message or fall back to notes
-                  type: apt.notificationStatus?.type || "pre-care", // Retain type or default to "pre-care"
-                },
-              }
-            : apt, // No change for other appointments
-      );
-
-      // Update the state with the modified appointment list
-      setCalendarAppointments(updatedAppointments as Appointment[]);
-
-      // Show success message and reset dialog state
-      toast.success("Care instructions have been approved and sent to the patient.");
-      setShowEditDialog(false);
-      setEditingAppointment(null);
-      setEditedMessage("");
-    }
-  };
-
-  const handleDeclineAndRegenerate = () => {
-    if (editingAppointment) {
-      setIsGeneratingMessage(true);
-      // Simulate message regeneration
-      setTimeout(() => {
-        const instructions = generateCareInstructions(editingAppointment);
-
-        // Update the appointment both in local state and in the mock data storage
-        const updatedAppointments = updateAppointmentNotificationStatus(
-          editingAppointment.id,
-          "disapproved",
-          false,
-        );
-
-        // Update the calendar appointments state with our newly updated list
-        setCalendarAppointments(updatedAppointments as Appointment[]);
-
-        setIsGeneratingMessage(false);
-        toast.error("Care instructions have been declined.");
-        setShowEditDialog(false);
-        setEditingAppointment(null);
-        setEditedMessage("");
-      }, 1000);
-    }
-  };
-
   return (
-    <div className="bg-white rounded-lg border flex flex-col h-[calc(100vh-8rem)]">
+    <div className="bg-card text-card-foreground rounded-lg border flex flex-col h-[calc(100vh-8rem)]">
       <CalendarHeader
         date={date}
         view={view}
@@ -293,10 +309,9 @@ export function AppointmentCalendar({
         setIsDatePickerOpen={setIsDatePickerOpen}
       />
 
-      {/* Day View - Scrollable Container */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto">
-          {view === "day" ? (
+          {view === "day" && (
             <DayView
               date={date}
               appointments={calendarAppointments}
@@ -314,9 +329,10 @@ export function AppointmentCalendar({
               getAppointmentColors={getAppointmentColors}
               getAvatarColors={getAvatarColors}
               getAppointmentTextColor={getAppointmentTextColor}
-              onAppointmentClick={handleAppointmentClick}
+              onAppointmentClick={handleCalendarAppointmentClick}
             />
-          ) : view === "week" ? (
+          )}
+          {view === "week" && (
             <WeekView
               date={date}
               appointments={calendarAppointments}
@@ -334,9 +350,10 @@ export function AppointmentCalendar({
               getAppointmentColors={getAppointmentColors}
               getAvatarColors={getAvatarColors}
               getAppointmentTextColor={getAppointmentTextColor}
-              onAppointmentClick={handleAppointmentClick}
+              onAppointmentClick={handleCalendarAppointmentClick}
             />
-          ) : view === "month" ? (
+          )}
+          {view === "month" && (
             <MonthView
               date={date}
               appointments={calendarAppointments}
@@ -344,23 +361,34 @@ export function AppointmentCalendar({
                 setDate(selectedDate);
                 setView("day");
               }}
-              onAppointmentClick={handleAppointmentClick}
+              onAppointmentClick={handleCalendarAppointmentClick}
               getAppointmentColors={getAppointmentColors}
               filterAppointmentsByDate={filterAppointmentsByDate}
             />
-          ) : null}
+          )}
         </div>
       </div>
 
-      {/* Appointment Dialogs */}
+      {/*
+        AppointmentDialog needs to be passed the relevant state and setters from useAppointmentForm.
+        For "new" mode: formData, setFormData, formError, validateForm.
+        For "edit" mode: editFormData, setEditFormData, formError, validateForm.
+        The onSave prop will now call handleSaveAppointment which relies on the hook's internal state.
+      */}
       <AppointmentDialog
         mode="new"
         open={showNewAppointmentDialog}
         onOpenChange={setShowNewAppointmentDialog}
         dragStart={dragStart}
         dragEnd={dragEnd}
-        onSave={handleSaveAppointment}
+        onSave={handleSaveAppointment} // This now calls the calendar's save handler
         resetDragSelection={resetDragSelection}
+        // Props to pass from useAppointmentForm for "new" mode:
+        // initialFormData={formData}
+        // onFormDataChange={setFormData}
+        // formError={formError}
+        // validateForm={validateForm}
+        // titleInputRef={titleInputRef} // If dialog uses it
       />
 
       <AppointmentDialog
@@ -368,11 +396,16 @@ export function AppointmentCalendar({
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
         appointment={editingAppointment}
-        onSave={handleSaveAppointment}
-        onDelete={handleDeleteAppointment}
-        onApproveAndSend={handleApproveAndSend}
-        onDeclineAndRegenerate={handleDeclineAndRegenerate}
+        onSave={handleSaveAppointment} // This now calls the calendar's save handler
+        onDelete={handleDeleteAppointmentDialog}
+        onApproveAndSend={handleApproveAndSendDialog}
+        onDeclineAndRegenerate={handleDeclineAndRegenerateDialog}
         generateCareInstructions={generateCareInstructions}
+        // Props to pass from useAppointmentForm for "edit" mode:
+        // initialFormData={editFormData} // Or pass `appointment` and let dialog sync with hook's effect
+        // onFormDataChange={setEditFormData}
+        // formError={formError}
+        // validateForm={validateForm}
       />
     </div>
   );
