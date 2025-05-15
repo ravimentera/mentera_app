@@ -1,5 +1,5 @@
+import { Appointment } from "@/lib/store/appointmentsSlice";
 import { useState } from "react";
-import { Appointment } from "../components/types";
 
 interface NewAppointmentForm {
   title: string;

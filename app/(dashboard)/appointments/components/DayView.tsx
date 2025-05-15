@@ -29,6 +29,7 @@ interface DayViewProps {
     zIndex: number;
   };
   getAppointmentColors: (type: Appointment["type"]) => string;
+  getAppointmentStatusColors: (type: Appointment["status"]) => string;
   getAvatarColors: (type: Appointment["type"]) => string;
   getAppointmentTextColor: (type: Appointment["type"]) => string;
   onAppointmentClick: (appointment: Appointment) => void;
@@ -49,6 +50,7 @@ export function DayView({
   filterAppointmentsByDate,
   getAppointmentStyle,
   getAppointmentColors,
+  getAppointmentStatusColors,
   getAvatarColors,
   getAppointmentTextColor,
   onAppointmentClick,
@@ -118,6 +120,7 @@ export function DayView({
                   "absolute rounded-lg border cursor-pointer overflow-hidden group transition-colors hover:shadow-md",
                   isCompact ? "px-0.5 py-0.5" : isMedium ? "px-1 py-1" : "px-2 py-1.5",
                   getAppointmentColors(appointment.type),
+                  getAppointmentStatusColors(appointment.status),
                 )}
                 style={getAppointmentStyle(appointment, index, group.length)}
                 onClick={(e) => {

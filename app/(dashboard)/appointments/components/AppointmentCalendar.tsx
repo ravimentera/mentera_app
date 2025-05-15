@@ -36,6 +36,7 @@ import {
   filterAppointmentsByDate,
   generateCareInstructions,
   getAppointmentColors,
+  getAppointmentStatusColors,
   getAppointmentStyle,
   getAppointmentTextColor,
   getAvatarColors,
@@ -327,6 +328,7 @@ export function AppointmentCalendar({
               filterAppointmentsByDate={filterAppointmentsByDate}
               getAppointmentStyle={getAppointmentStyle}
               getAppointmentColors={getAppointmentColors}
+              getAppointmentStatusColors={getAppointmentStatusColors}
               getAvatarColors={getAvatarColors}
               getAppointmentTextColor={getAppointmentTextColor}
               onAppointmentClick={handleCalendarAppointmentClick}
@@ -348,6 +350,7 @@ export function AppointmentCalendar({
               filterAppointmentsByDate={filterAppointmentsByDate}
               getAppointmentStyle={getAppointmentStyle}
               getAppointmentColors={getAppointmentColors}
+              getAppointmentStatusColors={getAppointmentStatusColors}
               getAvatarColors={getAvatarColors}
               getAppointmentTextColor={getAppointmentTextColor}
               onAppointmentClick={handleCalendarAppointmentClick}
@@ -363,6 +366,7 @@ export function AppointmentCalendar({
               }}
               onAppointmentClick={handleCalendarAppointmentClick}
               getAppointmentColors={getAppointmentColors}
+              getAppointmentStatusColors={getAppointmentStatusColors}
               filterAppointmentsByDate={filterAppointmentsByDate}
             />
           )}
