@@ -17,6 +17,7 @@ interface MonthViewProps {
   onDateSelect: (date: Date) => void;
   onAppointmentClick: (appointment: Appointment) => void;
   getAppointmentColors: (type: Appointment["type"]) => string;
+  getAppointmentStatusColors: (type: Appointment["status"]) => string;
   filterAppointmentsByDate: (appointments: Appointment[], date: Date) => Appointment[];
 }
 
@@ -26,6 +27,7 @@ export function MonthView({
   onDateSelect,
   onAppointmentClick,
   getAppointmentColors,
+  getAppointmentStatusColors,
   filterAppointmentsByDate,
 }: MonthViewProps) {
   return (
@@ -82,6 +84,7 @@ export function MonthView({
                       "w-full text-left text-xs px-2 py-1 rounded-md truncate",
                       !isSameMonth(day, date) ? "opacity-50" : "",
                       getAppointmentColors(appointment.type),
+                      getAppointmentStatusColors(appointment.status),
                     )}
                     onClick={(e) => {
                       e.stopPropagation();

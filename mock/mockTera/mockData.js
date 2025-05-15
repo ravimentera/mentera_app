@@ -182,7 +182,7 @@ Precautions
   {
     query: "I would like to book them for an appointment",
     markdown:
-      "Sure! I’ve scheduled an appointment for patient PT-1004 on 13 May 2025 at 12:30 PM for Microneedling. Let me know if you’d like to make any changes or add notes for the provider.",
+      "Sure! I’ve scheduled an appointment for patient PT-1004 on 13 May 2025 at 12:30 PM to 1:30 PM for Microneedling. Let me know if you’d like to make any changes or add notes for the provider.",
     layout: {
       type: "Layout",
       title: "Micro Needling Appointment",

@@ -422,7 +422,7 @@ interface Appointment {
   };
   startTime: Date;
   endTime: Date;
-  status: "scheduled" | "completed" | "cancelled";
+  status: "scheduled" | "completed" | "cancelled" | "pending";
   notes?: string;
   type: "therapy" | "consultation" | "followup" | "general";
   notificationStatus?: {
@@ -441,8 +441,9 @@ interface Appointment {
 
 ```tsx
 <AppointmentCalendar
-  appointments={mockAppointments}
+  appointments={mockAppointments} // Appointment interface
   onAppointmentClick={(appointment) => console.log("Clicked", appointment)}
   onDateChange={(date) => console.log("Date changed", date)}
+  initialView="month"
 />
 ```

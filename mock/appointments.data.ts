@@ -200,18 +200,18 @@ const startDate = subDays(today, 7);
 const createTodayAppointmentsPendingApproval = () => {
   const appointments: AppointmentMock[] = [];
   const todayDate = new Date();
-  
+
   // Create 3 pending approval appointments for today
   for (let i = 0; i < 3; i++) {
     const patientIdx = i % patients.length;
     const patient = patients[patientIdx];
     const patientName = getRandomPatientName(i);
-    
-    // Create appointment times 
+
+    // Create appointment times
     const startHour = 10 + i * 2; // 10am, 12pm, 2pm
     const startTime = createPDTDate(todayDate, startHour);
     const endTime = addHours(startTime, 1);
-    
+
     const appointment: AppointmentMock = {
       id: `today-approval-${i}`,
       patientId: patient.patientId,
@@ -228,41 +228,41 @@ const createTodayAppointmentsPendingApproval = () => {
       },
       startTime,
       endTime,
-      status: "scheduled",
+      // status: "scheduled",
+      status: (["scheduled", "completed", "cancelled", "pending"] as const)[
+        Math.floor(Math.random() * 4)
+      ],
       type: getAppointmentType(patient.treatmentNotes.procedure),
       notes: patient.treatmentNotes.observations,
       treatmentNotes: patient.treatmentNotes,
       notificationStatus: {
         status: "pending" as const,
         sent: false,
-        message: generateNotificationMessage(
-          "pre",
-          {
-            id: `today-approval-${i}`,
-            patientId: patient.patientId,
-            chartId: patient.chartId,
-            patient: {
-              firstName: patientName.firstName,
-              lastName: patientName.lastName,
-            },
-            provider: {
-              providerId: `PROV-${i}`,
-              firstName: patient.provider.split(" ")[0],
-              lastName: patient.provider.split(" ")[1],
-              specialties: [patient.providerSpecialty],
-            },
-            startTime,
-            endTime,
-            status: "scheduled",
-            type: getAppointmentType(patient.treatmentNotes.procedure),
-            notes: patient.treatmentNotes.observations,
-            treatmentNotes: patient.treatmentNotes,
-          } as AppointmentMock
-        ),
+        message: generateNotificationMessage("pre", {
+          id: `today-approval-${i}`,
+          patientId: patient.patientId,
+          chartId: patient.chartId,
+          patient: {
+            firstName: patientName.firstName,
+            lastName: patientName.lastName,
+          },
+          provider: {
+            providerId: `PROV-${i}`,
+            firstName: patient.provider.split(" ")[0],
+            lastName: patient.provider.split(" ")[1],
+            specialties: [patient.providerSpecialty],
+          },
+          startTime,
+          endTime,
+          status: "scheduled",
+          type: getAppointmentType(patient.treatmentNotes.procedure),
+          notes: patient.treatmentNotes.observations,
+          treatmentNotes: patient.treatmentNotes,
+        } as AppointmentMock),
         type: "pre-care" as const,
       },
     };
-    
+
     // Add chat history to the third appointment
     if (i === 2) {
       const procedure = patient.treatmentNotes.procedure;
@@ -295,10 +295,10 @@ const createTodayAppointmentsPendingApproval = () => {
         },
       ];
     }
-    
+
     appointments.push(appointment);
   }
-  
+
   return appointments;
 };
 
@@ -835,7 +835,7 @@ export interface AppointmentMock {
   };
   startTime: Date;
   endTime: Date;
-  status: "scheduled" | "completed" | "cancelled";
+  status: "scheduled" | "completed" | "cancelled" | "pending";
   type: "therapy" | "consultation" | "followup" | "general";
   notes: string;
   treatmentNotes: any;

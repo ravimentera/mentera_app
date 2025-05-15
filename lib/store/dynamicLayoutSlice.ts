@@ -1,6 +1,6 @@
 import { PayloadAction, SerializedError, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import { setSidePanelExpanded } from "./globalStateSlice";
+import { getStreamingUISessionId, setSidePanelExpanded } from "./globalStateSlice";
 import type { AppDispatch, RootState } from "./index";
 
 interface LayoutComponent {
@@ -57,15 +57,17 @@ export const fetchDynamicLayout = createAsyncThunk<
   LayoutEntry, // Return type of the payload creator
   string, // First argument to the payload creator (markdownKey)
   ThunkApiConfig // Type for thunkAPI
->("dynamicLayout/fetchLayout", async (markdownKey, { dispatch, rejectWithValue }) => {
+>("dynamicLayout/fetchLayout", async (markdownKey, thunkAPI) => {
   try {
+    const { dispatch, getState, rejectWithValue } = thunkAPI;
+    const sessionId = getStreamingUISessionId(getState());
     dispatch(setSidePanelExpanded(true));
     const response = await fetch("/api/layout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ markdown: markdownKey.trim() }),
+      body: JSON.stringify({ markdown: markdownKey.trim(), sessionId }),
     });
 
     if (!response.ok) {
@@ -85,6 +87,7 @@ export const fetchDynamicLayout = createAsyncThunk<
 
     return { key: markdownKey, data };
   } catch (error: any) {
+    const { dispatch, rejectWithValue } = thunkAPI;
     dispatch(setSidePanelExpanded(false));
     // For other unexpected errors, ensure a string is returned
     return rejectWithValue(error.message || "An unknown error occurred while fetching layout");

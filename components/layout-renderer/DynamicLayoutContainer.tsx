@@ -36,23 +36,19 @@ export function DynamicLayoutContainer() {
       const latestLayoutEntry = allLayouts[allLayouts.length - 1];
       if (latestLayoutEntry?.key) {
         setOpenAccordionItemKey(latestLayoutEntry.key);
-        console.log(
-          "DynamicLayoutContainer: Setting open accordion item to latest layout key:",
-          latestLayoutEntry.key.substring(0, 50) + "...",
-        );
       }
     } else {
       setOpenAccordionItemKey(undefined); // No layouts, so no item is open
     }
   }, [allLayouts]); // Re-run this effect when the allLayouts array changes
 
-  useEffect(() => {
-    console.log("DynamicLayoutContainer: All layouts from Redux store:", allLayouts);
-  }, [allLayouts]);
+  // useEffect(() => {
+  //   console.log("DynamicLayoutContainer: All layouts from Redux store:", allLayouts);
+  // }, [allLayouts]);
 
-  useEffect(() => {
-    console.log("DynamicLayoutContainer: isLoading:", isLoading, "Error:", error);
-  }, [isLoading, error]);
+  // useEffect(() => {
+  //   console.log("DynamicLayoutContainer: isLoading:", isLoading, "Error:", error);
+  // }, [isLoading, error]);
 
   return (
     <div className="flex flex-col h-full p-4 space-y-4 bg-background text-foreground">

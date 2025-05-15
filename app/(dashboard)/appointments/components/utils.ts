@@ -1,6 +1,18 @@
 import { addDays, startOfWeek } from "date-fns";
 import { Appointment } from "./types";
 
+// Color mapping functions for Appointment Status
+export const getAppointmentStatusColors = (status: Appointment["status"]) => {
+  switch (status) {
+    case "cancelled":
+      return "bg-red-100 hover:bg-red-200 border-red-300 group-hover:bg-red-200";
+    case "pending":
+      return "bg-yellow-100 hover:bg-yellow-200 border-yellow-300 group-hover:bg-yellow-200";
+    default:
+      return "";
+  }
+};
+
 // Color mapping functions
 export const getAppointmentColors = (type: Appointment["type"]) => {
   switch (type) {
@@ -47,11 +59,14 @@ export const getAppointmentStyle = (
   index: number,
   overlappingCount: number,
 ) => {
-  const top = `${((appointment.startTime.getHours() * 60 + appointment.startTime.getMinutes()) / (24 * 60)) * 100}%`;
+  const date = new Date(appointment.startTime);
+  const minutesSinceStartOfDay = date.getHours() * 60 + date.getMinutes();
+  const top = `${(minutesSinceStartOfDay / (24 * 60)) * 100}%`;
+
+  const start = new Date(appointment.startTime);
+  const end = new Date(appointment.endTime);
   const height = `${
-    ((appointment.endTime.getHours() * 60 +
-      appointment.endTime.getMinutes() -
-      (appointment.startTime.getHours() * 60 + appointment.startTime.getMinutes())) /
+    ((end.getHours() * 60 + end.getMinutes() - (start.getHours() * 60 + start.getMinutes())) /
       (24 * 60)) *
     100
   }%`;
