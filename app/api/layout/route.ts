@@ -1,21 +1,24 @@
-import { mockData } from "@/mock/mockTera/mockData";
+// app/api/layout/route.ts
 import {
   BedrockAgentRuntimeClient,
   InvokeAgentCommand,
   InvokeAgentCommandInput,
   InvokeAgentCommandOutput,
+  TracePart,
 } from "@aws-sdk/client-bedrock-agent-runtime";
 import { NextRequest, NextResponse } from "next/server";
+import { handleMockLayoutRequest } from "./mockLayoutHandler";
 
 // Environment variables
-const agentId = process.env.BEDROCK_AGENT_ID;
-const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID;
-const region = process.env.AWS_REGION;
+const agentId = process.env.BEDROCK_AGENT_ID || "YLGT5ZEQ0Q";
+const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID || "NDFYU3FQOQ";
+const region = process.env.AWS_REGION || "us-east-1";
 
 // Determine if mocking is enabled for the API route
-// const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 // @TODO: make it false after demo
-const ENABLE_MOCK_LAYOUT_API = true; // IS_DEVELOPMENT && process.env.NEXT_PUBLIC_ENABLE_MOCK_CHAT === 'true';
+const ENABLE_MOCK_LAYOUT_API =
+  IS_DEVELOPMENT && process.env.NEXT_PUBLIC_ENABLE_MOCK_CHAT === "true";
 
 if (!ENABLE_MOCK_LAYOUT_API && (!agentId || !agentAliasId || !region)) {
   console.error(
@@ -23,42 +26,62 @@ if (!ENABLE_MOCK_LAYOUT_API && (!agentId || !agentAliasId || !region)) {
   );
 }
 
-const bedrockAgentClient = new BedrockAgentRuntimeClient({ region });
+const bedrockAgentClient = new BedrockAgentRuntimeClient({
+  region: region,
+});
 
 interface LayoutRequestBody {
   markdown: string;
+  sessionId: string;
 }
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
 function isValidJson(text: string | null): boolean {
-  if (text === null || typeof text !== "string" || text.trim() === "") {
-    return false;
-  }
+  if (text === null || typeof text !== "string" || text.trim() === "") return false;
   try {
     JSON.parse(text);
     return true;
-  } catch (e: any) {
+  } catch (e) {
     return false;
   }
 }
 
 function extractJsonBlock(rawAgentResponse: string): string | null {
   if (!rawAgentResponse || typeof rawAgentResponse !== "string") {
+    console.warn("extractJsonBlock: Input is null or not a string.");
     return null;
   }
+  // console.log("extractJsonBlock: Attempting to extract JSON from raw response (length:", rawAgentResponse.length, ")");
   const fencedBlockRegex = /```json\s*([\s\S]*?)\s*```/;
-  const match = rawAgentResponse.match(fencedBlockRegex);
-  if (match?.[1]) {
-    const extracted = match[1].trim();
-    if (isValidJson(extracted)) return extracted;
-    return null;
+  const fencedMatch = rawAgentResponse.match(fencedBlockRegex);
+  if (fencedMatch?.[1]) {
+    const extractedFenced = fencedMatch[1].trim();
+    if (isValidJson(extractedFenced)) return extractedFenced;
+    console.warn("extractJsonBlock: Fenced block found, but its content is not valid JSON.");
+  } else {
+    /* console.log("extractJsonBlock: No fenced JSON block found."); */
   }
+
+  const firstBrace = rawAgentResponse.indexOf("{");
+  const lastBrace = rawAgentResponse.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    const potentialJson = rawAgentResponse.substring(firstBrace, lastBrace + 1).trim();
+    if (isValidJson(potentialJson)) return potentialJson;
+    console.warn("extractJsonBlock: Substring between first '{' and last '}' is not valid JSON.");
+  } else {
+    /* console.log("extractJsonBlock: Could not find plausible JSON structure (based on '{' and '}')."); */
+  }
+
   const trimmedAgentResponse = rawAgentResponse.trim();
   if (trimmedAgentResponse.startsWith("{") && trimmedAgentResponse.endsWith("}")) {
     if (isValidJson(trimmedAgentResponse)) return trimmedAgentResponse;
+    console.warn(
+      "extractJsonBlock: Entire trimmed response looked like JSON but failed validation (last resort check).",
+    );
   }
+  // console.log("extractJsonBlock: No extractable and valid JSON found after all attempts.");
   return null;
 }
 
@@ -69,7 +92,6 @@ function delay(ms: number) {
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as LayoutRequestBody;
-
     if (!body?.markdown || typeof body.markdown !== "string" || body.markdown.trim() === "") {
       return NextResponse.json(
         { error: "Invalid request: 'markdown' (non-empty string) is required" },
@@ -77,87 +99,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Mocking Logic ---
     if (ENABLE_MOCK_LAYOUT_API) {
-      console.log(
-        "[Mock API /api/layout] Mocking enabled. Searching for markdown in mockData.js...",
-      );
-      const incomingMarkdownTrimmed = body.markdown.trim();
-
-      const matchedEntry = mockData.find(
-        (entry) => entry.markdown.trim() === incomingMarkdownTrimmed,
-      );
-
-      if (matchedEntry) {
-        console.log(
-          "[Mock API /api/layout] Found matching markdown in mockData.js. Query:",
-          matchedEntry.query,
-        );
-        let layoutPayload: any = matchedEntry.layout;
-
-        if (typeof layoutPayload === "string") {
-          console.log(
-            "[Mock API /api/layout] Layout from mockData is a string. Attempting to parse. String starts with:",
-            layoutPayload.substring(0, 100) + "...",
-          );
-          try {
-            layoutPayload = JSON.parse(layoutPayload);
-          } catch (e: any) {
-            // Catch specific error 'e'
-            console.error(
-              "[Mock API /api/layout] Failed to parse layout string from mockData.js. Error:",
-              e.message,
-            );
-            console.error(
-              "[Mock API /api/layout] Problematic layout string (for query: '" +
-                matchedEntry.query +
-                "'):\n",
-              matchedEntry.layout,
-            ); // Log the problematic string
-            return NextResponse.json(
-              {
-                error:
-                  "Mock data for layout is malformed and could not be parsed as JSON. Please check for unescaped newlines or special characters within string values if your layout is a string in mockData.js. It's recommended to use direct JavaScript objects for layouts.",
-                details: e.message, // Include the specific parsing error
-                mockQuery: matchedEntry.query,
-              },
-              { status: 500 },
-            );
-          }
-        }
-
-        if (typeof layoutPayload === "object" && layoutPayload !== null) {
-          console.log("[Mock API /api/layout] Returning mock layout object.");
-          return NextResponse.json(layoutPayload);
-          // biome-ignore lint/style/noUselessElse: reason for ignoring
-        } else {
-          console.error(
-            "[Mock API /api/layout] Mock layout data is not a valid object after potential parse for query:",
-            matchedEntry.query,
-          );
-          return NextResponse.json(
-            { error: "Mock data for layout is not a valid object.", mockQuery: matchedEntry.query },
-            { status: 500 },
-          );
-        }
-        // biome-ignore lint/style/noUselessElse: ignored
-      } else {
-        console.warn(
-          "[Mock API /api/layout] No exact markdown match found in mockData.js for the provided input:",
-          incomingMarkdownTrimmed.substring(0, 100) + "...",
-        );
-        return NextResponse.json(
-          {
-            error:
-              "Mock mode enabled, but no matching markdown found in mockData.js for the provided input.",
-          },
-          { status: 404 },
-        );
-      }
+      const mockResponse = await handleMockLayoutRequest(body.markdown);
+      if (mockResponse) return mockResponse;
     }
-    // --- End Mocking Logic ---
 
-    // If mocking is not enabled, proceed with Bedrock Agent
     if (!agentId || !agentAliasId || !region) {
       console.error("Bedrock Agent configuration is incomplete for this request.");
       return NextResponse.json(
@@ -166,25 +112,49 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const inputText = `You are an expert AI assistant tasked with generating UI Layout Abstract Syntax Trees (ASTs) in JSON format.
-You have access to a Knowledge Base containing metadata about prebuilt frontend UI components (including their names and available props).
+    const inputText = `You are an expert AI assistant embedded in a multi-agent medical spa system. Your role is to convert the given markdown content into a UI Layout Abstract Syntax Tree (AST) JSON object.
 
-Your goal is to:
-1. Analyze the provided markdown content.
-2. Consult your Knowledge Base to identify the most suitable prebuilt frontend components that correspond to the information and intent described in the markdown.
-3. Construct a Layout AST JSON object using these components and their appropriate props, as defined in your Knowledge Base and relevant to the markdown.
-4. The response MUST be ONLY the raw JSON object representing this Layout AST.
+You must:
+1. Parse the markdown content to understand its semantic structure.
+2. Reference the \`components.md\` metadata for available UI components, their prop types, and intended usage.
+3. Follow domain-specific workflows typical of a medical spa environment (e.g., scheduling, procedures, care instructions).
+4. Select components that best match the content and populate them with accurate props derived from the markdown.
 
-Strict Output Requirements:
+Additional Instructions for Components:
+- Always match the **exact shape and required fields** as defined in the component metadata for each component.
+- For **AppointmentCalendar**, each appointment object must:
+  - Include all required fields:
+    - \`id\`: string
+    - \`chartId\`: string
+    - \`patient\`: { firstName, lastName, condition? }
+    - \`provider\`: { providerId, firstName, lastName, specialties }
+    - \`startTime\` and \`endTime\`: ISO 8601 format (e.g., "2025-05-13T12:30:00Z")
+    - \`type\`: "therapy" | "consultation" | "followup" | "general"
+  - Default \`status\` should be set to \`"pending"\` unless explicitly provided.
+  - Avoid creating simplified or custom structures like { date, procedure }.
+
+- Do not omit any prop that is required or semantically relevant in \`components.md\`.
+- You may infer values such as \`procedure\`, \`doctor\`, or \`title\` when logically implied in the markdown.
+
+Strict Output Policy:
 - Your entire response must be a single, valid JSON object.
-- DO NOT include any explanatory text, introductory phrases, apologies, summaries, or any characters whatsoever before or after the JSON object.
-- DO NOT use markdown fences (like \`\`\`json or \`\`\`) around the JSON output. Return only the pure JSON.
+- Do NOT include:
+  - Markdown fences (like \`\`\`json)
+  - Explanatory or planning text
+  - Natural language summaries or descriptions
+  - Anything before or after the JSON block
+
+Your output must adhere to the Layout AST structure with:
+- Root object must include: \`type: "Layout"\`, a \`title\`, and a \`layout: []\` array.
+- Each layout item must be a \`Grid\` with \`columns\`, \`gap\`, and \`rows\`.
+- Rows must contain \`Component\` entries with a \`name\` and fully populated \`props\`.
 
 Markdown Content to Process:
 ---
 ${body.markdown}
 ---
 `;
+
     let lastError: any = null;
     let lastRawContent: string | null = null;
 
@@ -196,47 +166,93 @@ ${body.markdown}
         const inputCmd: InvokeAgentCommandInput = {
           agentId,
           agentAliasId,
-          sessionId: crypto.randomUUID(),
+          sessionId: body.sessionId,
           inputText,
-          enableTrace: false,
+          enableTrace: true,
         };
         const command = new InvokeAgentCommand(inputCmd);
         const response: InvokeAgentCommandOutput = await bedrockAgentClient.send(command);
+
         let rawAgentContent = "";
+        const traceParts: TracePart[] = []; // To store trace parts
+
         if (response.completion) {
-          for await (const chunkEvent of response.completion) {
-            if (chunkEvent.chunk?.bytes) {
-              rawAgentContent += new TextDecoder("utf-8").decode(
-                new Uint8Array(chunkEvent.chunk.bytes),
+          for await (const event of response.completion) {
+            // Renamed chunkEvent to event for clarity
+            if (event.chunk?.bytes) {
+              // This is a PayloadPart
+              const decodedChunk = new TextDecoder("utf-8").decode(
+                new Uint8Array(event.chunk.bytes),
               );
+              rawAgentContent += decodedChunk;
+              // console.log("[Bedrock Stream Chunk]:", decodedChunk); // Log individual chunks if needed
+            } else if (event.trace?.trace) {
+              // This is a TracePart
+              // console.log("[Bedrock Stream Trace]:", JSON.stringify(event.trace.trace, null, 2));
+              traceParts.push(event.trace.trace as TracePart); // Collect trace parts
             }
           }
         } else {
           lastError = new Error("Agent response empty/no completion stream.");
-          lastRawContent = rawAgentContent;
+          lastRawContent = rawAgentContent; // Store even if empty
           if (attempt < MAX_RETRIES) {
             await delay(RETRY_DELAY_MS);
             continue;
           }
           break;
         }
-        lastRawContent = rawAgentContent;
+
+        lastRawContent = rawAgentContent; // Store the latest full raw content
         console.log(
-          `[Bedrock API /api/layout Attempt ${attempt}/${MAX_RETRIES}] Raw content:`,
+          `[Bedrock API /api/layout Attempt ${attempt}/${MAX_RETRIES}] Full raw content from agent:`,
           rawAgentContent,
         );
+
+        if (traceParts.length > 0) {
+          console.log(
+            `[Bedrock API /api/layout Attempt ${attempt}/${MAX_RETRIES}] Collected Trace Parts:`,
+          );
+          traceParts.forEach((trace, index) => {
+            console.log(`--- Trace Part ${index + 1} ---`);
+            console.log(JSON.stringify(trace, null, 2));
+            // You can inspect specific parts of the trace, e.g., trace.orchestration, trace.invocationInput etc.
+          });
+        }
+
+        if (rawAgentContent.trim() === "") {
+          console.warn(
+            `[Bedrock API /api/layout Attempt ${attempt}/${MAX_RETRIES}] Agent returned empty content after stream completion.`,
+          );
+          lastError = new Error("Agent returned empty content.");
+          if (attempt < MAX_RETRIES) {
+            await delay(RETRY_DELAY_MS);
+            continue;
+          }
+          break;
+        }
+
         const extractedJsonString = extractJsonBlock(rawAgentContent);
         if (extractedJsonString) {
           const layout = JSON.parse(extractedJsonString);
+          console.log(
+            `[Bedrock API /api/layout Attempt ${attempt}/${MAX_RETRIES}] Successfully parsed JSON layout.`,
+          );
           return NextResponse.json(layout);
         }
-        lastError = new Error("Agent did not return recognizable/valid JSON.");
+
+        lastError = new Error(
+          "Agent did not return recognizable/valid JSON after extraction attempts. Check trace logs for details.",
+        );
         if (attempt < MAX_RETRIES) {
           await delay(RETRY_DELAY_MS);
           continue;
         }
         break;
       } catch (error: any) {
+        console.error(
+          `[Bedrock API /api/layout Attempt ${attempt}/${MAX_RETRIES}] Error during Bedrock Agent interaction:`,
+          error,
+        );
         lastError = error;
         if (attempt < MAX_RETRIES) {
           await delay(RETRY_DELAY_MS);
