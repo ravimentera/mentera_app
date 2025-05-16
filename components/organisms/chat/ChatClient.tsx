@@ -1,30 +1,16 @@
 "use client";
 
+import { Thread } from "@/components/assistant-ui/thread";
 import { patientDatabase } from "@/mock/chat.data";
-import { useEffect, useRef, useState } from "react";
-import { ChatInput } from "./ChatInput";
-import { ChatMessageList } from "./ChatMessageList";
+import { useState } from "react";
 import { ChatTopbar } from "./ChatTopbar";
-import { useWebSocketChat } from "./useWebSocketChat";
+import { TeraRuntimeProvider } from "./TeraRuntimeProvider";
 
 export default function ChatClient() {
-  const chatContainerRef = useRef<HTMLDivElement | null>(null);
-  const [currentPatientId, setCurrentPatientId] = useState<keyof typeof patientDatabase>("PT-1003");
+  const [currentPatientId, setCurrentPatientId] = useState<keyof typeof patientDatabase>("PT-1004");
   const [isPatientContextEnabled, setIsPatientContextEnabled] = useState(true);
   const [forceFresh, setForceFresh] = useState(false);
   const [cacheDebug, setCacheDebug] = useState(false);
-
-  const { messages, streamBuffer, loading, sendMessage } = useWebSocketChat({
-    currentPatientId,
-    isPatientContextEnabled,
-    forceFresh,
-    cacheDebug,
-  });
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
-  useEffect(() => {
-    chatContainerRef.current?.scrollTo(0, chatContainerRef.current.scrollHeight);
-  }, [messages, streamBuffer]);
 
   return (
     <div className="flex flex-col h-full w-full bg-white">
@@ -39,16 +25,14 @@ export default function ChatClient() {
         setCacheDebug={setCacheDebug}
       />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <ChatMessageList
-          messages={messages}
-          streamBuffer={streamBuffer}
-          loading={loading}
-          chatContainerRef={chatContainerRef}
-        />
-
-        <div className="shrink-0">
-          <ChatInput onSend={sendMessage} />
-        </div>
+        <TeraRuntimeProvider
+          currentPatientId={currentPatientId}
+          isPatientContextEnabled={isPatientContextEnabled}
+          forceFresh={forceFresh}
+          cacheDebug={cacheDebug}
+        >
+          <Thread />
+        </TeraRuntimeProvider>
       </div>
     </div>
   );
