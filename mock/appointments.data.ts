@@ -1,3 +1,5 @@
+// mock/appointments.data.ts
+
 import { addDays, addHours, setHours, setMinutes, subDays } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { patients } from "./patients.data";

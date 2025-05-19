@@ -19,6 +19,8 @@
     "clean-dev": "pnpm clean && pnpm dev"
   },
   "dependencies": {
+    "@assistant-ui/react": "^0.10.7",
+    "@assistant-ui/react-markdown": "^0.10.3",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.804.0",
     "@hookform/resolvers": "^3.3.4",
     "@radix-ui/react-accordion": "^1.2.10",
