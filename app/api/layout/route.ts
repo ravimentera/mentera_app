@@ -18,7 +18,8 @@ const region = process.env.AWS_REGION || "us-east-1";
 const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 // @TODO: make it false after demo
 const ENABLE_MOCK_LAYOUT_API = true;
-// IS_DEVELOPMENT && process.env.NEXT_PUBLIC_ENABLE_MOCK_CHAT === "true";
+// const ENABLE_MOCK_LAYOUT_API =
+//   IS_DEVELOPMENT && process.env.NEXT_PUBLIC_ENABLE_MOCK_CHAT === "true";
 
 if (!ENABLE_MOCK_LAYOUT_API && (!agentId || !agentAliasId || !region)) {
   console.error(

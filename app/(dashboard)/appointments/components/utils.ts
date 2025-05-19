@@ -162,7 +162,7 @@ export const generateCareInstructions = (appointment: Appointment) => {
     return {
       message: `Hi ${patientName},
 
-It’s Meghan here 😊—excited to see you for your microneedling on ${appointmentDate}! A couple quick reminders: try to avoid sun/tanning this week, skip alcohol/caffeine 24–48 hrs before, and stay extra hydrated. Let me know if you have any questions before we start 💖.`,
+It’s Meghan here 😊—excited to see you for your ${patientName !== "Emiley" && patientName !== "Erica" ? "Botox" : "microneedling"} on ${appointmentDate}! A couple quick reminders: try to avoid sun/tanning this week, skip alcohol/caffeine 24–48 hrs before, and stay extra hydrated. Let me know if you have any questions before we start 💖.`,
       type: "pre-care" as const,
     };
   }
