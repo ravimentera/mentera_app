@@ -3,25 +3,25 @@
 import { Button } from "@/components/atoms/button";
 import type { AppDispatch, RootState } from "@/lib/store";
 import {
+  ApprovalCardData,
   addChatMessageToApproval,
   cycleMessageVariant,
   navigateToApproval,
   processAndDispatchApproval,
   selectAllApprovalCards,
-  selectCurrentApprovalCard,
-  selectCurrentApprovalCardIndex,
+  selectCurrentApprovalCard as selectCurrentApprovalCardFromRedux,
+  selectCurrentApprovalCardIndex as selectCurrentApprovalCardIndexFromRedux,
   setShowTeraComposeForCard,
   updateApprovalCardMessage,
-} from "@/lib/store/approvalsSlice";
+} from "@/lib/store/approvalsSlice"; // Adjust path as needed
 import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { ApprovalCardComponent } from "./ApprovalCard";
 
-// Define alternative messages here or import from a shared constants file
 const alternativeMessages = [
   "Would you like me to suggest some alternative times that might work better with your schedule?",
   "I can also provide more information about our new treatment options if you're interested.",
@@ -29,37 +29,116 @@ const alternativeMessages = [
   "I'd be happy to discuss any concerns or questions you might have about the treatment.",
 ];
 
-export function ApprovalsContainer() {
+interface ApprovalsContainerProps {
+  cards?: ApprovalCardData[];
+  onCardAction?: (cardId: string, actionType: "approved" | "disapproved") => void;
+}
+
+export function ApprovalsContainer({ cards: cardsProp, onCardAction }: ApprovalsContainerProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const allCards = useSelector(selectAllApprovalCards);
-  const currentCard = useSelector(selectCurrentApprovalCard);
-  const currentIndex = useSelector(selectCurrentApprovalCardIndex);
 
-  // Local state for toasts, as it's purely UI and doesn't need to be global
-  const [toasts, setToasts] = useState<
-    { id: number; title: string; description: string; status: "success" | "error" }[]
-  >([]);
+  const isPropDriven = cardsProp !== undefined;
 
+  // State for cards displayed when prop-driven
+  const [displayedPropCards, setDisplayedPropCards] = useState<ApprovalCardData[]>([]);
+  const prevDisplayedPropCardsLengthRef = useRef<number>(0); // To track when displayedPropCards becomes empty
+
+  // Ref to track if the cardsProp array reference itself has changed
+  const prevCardsPropRef = useRef<ApprovalCardData[] | undefined>();
+
+  const cardsFromRedux = useSelector(selectAllApprovalCards);
+  // Determine the source of cards for display
+  const cardsToDisplay = isPropDriven ? displayedPropCards : cardsFromRedux;
+
+  const reduxCurrentIndex = useSelector(selectCurrentApprovalCardIndexFromRedux);
+  const [localCurrentIndex, setLocalCurrentIndex] = useState(0);
+
+  const currentIndex = isPropDriven ? localCurrentIndex : reduxCurrentIndex;
+  const currentCard =
+    cardsToDisplay && cardsToDisplay.length > 0 && currentIndex < cardsToDisplay.length
+      ? cardsToDisplay[currentIndex]
+      : null;
+
+  // Effect to synchronize displayedPropCards with cardsProp when cardsProp changes
   useEffect(() => {
-    // Logic to show Tera Compose on the 2nd card initially (index 1)
-    // This should ideally be driven by the card's own state in Redux if it's complex,
-    // or handled when navigating.
-    if (allCards.length > 0 && currentCard) {
-      // Example: Show for 2nd card, if it's the current one
-      // This logic might need refinement based on how you want TeraCompose to appear.
-      // The slice now handles resetting showTeraCompose on navigation.
-      // We might want to set it true for specific cards upon loading them.
-      if (currentIndex === 1 && !currentCard.showTeraCompose) {
-        dispatch(setShowTeraComposeForCard({ cardId: currentCard.id, show: true }));
-      } else if (currentIndex !== 1 && currentCard.showTeraCompose) {
-        // Optional: hide if navigating away from the 2nd card
-        // dispatch(setShowTeraComposeForCard({ cardId: currentCard.id, show: false }));
+    if (isPropDriven) {
+      // Only update if the prop array reference has actually changed
+      if (cardsProp !== prevCardsPropRef.current) {
+        const newCards = cardsProp || [];
+        console.log(
+          "ApprovalsContainer: cardsProp instance changed. Syncing displayedPropCards.",
+          newCards,
+        );
+        setDisplayedPropCards(newCards);
+        setLocalCurrentIndex(0); // Reset index when the parent provides a new list
+
+        // Check for confetti if the new prop list is empty and the previous wasn't
+        if (newCards.length === 0 && (prevCardsPropRef.current?.length || 0) > 0) {
+          console.log("Prop-driven approval cards list became empty due to prop update!");
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+        prevCardsPropRef.current = cardsProp; // Store the current prop reference
       }
     }
-  }, [currentIndex, allCards, dispatch, currentCard]);
+  }, [isPropDriven, cardsProp]);
+
+  // Effect to adjust localCurrentIndex and trigger confetti if displayedPropCards (local state) changes
+  useEffect(() => {
+    if (isPropDriven) {
+      const currentLength = displayedPropCards.length;
+
+      if (currentLength === 0 && prevDisplayedPropCardsLengthRef.current > 0) {
+        console.log(
+          "Prop-driven approval cards list (displayedPropCards) is now empty after local action!",
+        );
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      }
+
+      if (localCurrentIndex >= currentLength && currentLength > 0) {
+        setLocalCurrentIndex(currentLength - 1);
+      } else if (currentLength === 0) {
+        setLocalCurrentIndex(0);
+      }
+      prevDisplayedPropCardsLengthRef.current = currentLength;
+    }
+  }, [isPropDriven, displayedPropCards, localCurrentIndex]); // localCurrentIndex added back as it might need to re-validate
+
+  // Effect for TeraCompose visibility (remains largely the same)
+  useEffect(() => {
+    if (cardsToDisplay.length > 0 && currentCard) {
+      const targetIndexForTeraCompose = 1;
+      const shouldShowTeraCompose =
+        currentIndex === targetIndexForTeraCompose &&
+        cardsToDisplay.length > targetIndexForTeraCompose;
+      if (currentCard.showTeraCompose !== shouldShowTeraCompose) {
+        dispatch(
+          setShowTeraComposeForCard({ cardId: currentCard.id, show: shouldShowTeraCompose }),
+        );
+      }
+    }
+  }, [currentIndex, cardsToDisplay, dispatch, currentCard]);
 
   const handleNavigate = (direction: "up" | "down") => {
-    dispatch(navigateToApproval(direction));
+    let newIndex = currentIndex;
+    if (isPropDriven) {
+      if (direction === "up" && localCurrentIndex > 0) {
+        newIndex = localCurrentIndex - 1;
+      } else if (direction === "down" && localCurrentIndex < displayedPropCards.length - 1) {
+        newIndex = localCurrentIndex + 1;
+      }
+      setLocalCurrentIndex(newIndex);
+    } else {
+      dispatch(navigateToApproval(direction));
+      newIndex =
+        direction === "up"
+          ? Math.max(0, reduxCurrentIndex - 1)
+          : Math.min(cardsFromRedux.length - 1, reduxCurrentIndex + 1);
+    }
+
+    if (newIndex >= 0 && newIndex < cardsToDisplay.length) {
+      const nextCardId = cardsToDisplay[newIndex].id;
+      dispatch(setShowTeraComposeForCard({ cardId: nextCardId, show: false }));
+    }
   };
 
   const handleAction = async (
@@ -68,31 +147,26 @@ export function ApprovalsContainer() {
     messageContent?: string,
   ) => {
     dispatch(processAndDispatchApproval(cardId, actionType, messageContent));
-
     toast[actionType === "approved" ? "success" : "error"](
-      `Message ${actionType === "approved" ? "approved" : "disapproved"} successfully`,
+      `Message ${actionType === "approved" ? "approved" : "declined"} successfully`,
     );
 
-    // Check if it was the last card after processing
-    // The state update for allCards will trigger re-render.
-    // We need to access the state *after* the dispatch has potentially removed an item.
-    // This confetti logic is tricky here because Redux updates are async.
-    // It might be better to check `allCards.length` in a `useEffect` that depends on `allCards`.
+    if (isPropDriven) {
+      onCardAction?.(cardId, actionType); // Notify parent
+      // Immediately update the local display list for instant UI feedback
+      setDisplayedPropCards((prev) => prev.filter((card) => card.id !== cardId));
+      // The useEffect watching displayedPropCards will handle index adjustment and confetti
+    }
   };
 
   useEffect(() => {
-    if (allCards.length === 0 && currentIndex === 0) {
-      // Check if list became empty
-      console.log("All approval cards processed!");
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
+    if (!isPropDriven && cardsToDisplay.length === 0 && currentIndex === 0 && !currentCard) {
+      console.log("All Redux approval cards processed!");
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
     }
-  }, [allCards, currentIndex]);
+  }, [cardsToDisplay, currentIndex, currentCard, isPropDriven]);
 
-  if (allCards.length === 0) {
+  if (cardsToDisplay.length === 0) {
     return (
       <div className="p-6 max-w-[1206px] mx-auto flex flex-col items-center justify-center h-[calc(100vh-8rem)] text-center">
         <h1 className="text-2xl font-semibold text-[#111827] mb-1">Approvals</h1>
@@ -104,9 +178,38 @@ export function ApprovalsContainer() {
   }
 
   if (!currentCard) {
-    // This case should ideally not happen if allCards.length > 0 and currentIndex is managed correctly
-    return <div className="p-6">Loading approval card...</div>;
+    return <div className="p-6 text-center">Loading or adjusting view...</div>;
   }
+
+  const commonCardProps = (cardId: string) => ({
+    alternativeMessages: alternativeMessages,
+    onAction: (actionType: "approved" | "disapproved", messageContent?: string) =>
+      handleAction(cardId, actionType, messageContent),
+    onRegenerate: () =>
+      dispatch(
+        cycleMessageVariant({
+          cardId: cardId,
+          alternativeMessagesCount: alternativeMessages.length,
+        }),
+      ),
+    onUseCopy: (newMessage: string) =>
+      dispatch(updateApprovalCardMessage({ cardId: cardId, newMessage })),
+    onShowTeraCompose: (show: boolean) =>
+      dispatch(setShowTeraComposeForCard({ cardId: cardId, show })),
+    onSendChatMessage: (chatMessageText: string) =>
+      dispatch(
+        addChatMessageToApproval({
+          cardId: cardId,
+          message: {
+            id: `msg-${Date.now()}`,
+            text: chatMessageText,
+            sender: "provider",
+            timestamp: new Date().toISOString(),
+            isOutbound: false,
+          },
+        }),
+      ),
+  });
 
   return (
     <div className="p-6 max-w-[1206px] mx-auto">
@@ -116,13 +219,13 @@ export function ApprovalsContainer() {
           <p className="text-sm text-[#6B7280]">Review and Approve Daily Patient Interactions</p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-base text-[#71717A]">{allCards.length} records</span>
+          <span className="text-base text-[#71717A]">{cardsToDisplay.length} records</span>
           <div className="flex gap-4">
             <Button
-              variant="outline" // Using ShadCN variants
+              variant="outline"
               size="icon"
               onClick={() => handleNavigate("up")}
-              disabled={currentIndex === 0 || allCards.length === 0}
+              disabled={currentIndex === 0 || cardsToDisplay.length === 0}
               className="w-10 h-10 disabled:opacity-50"
             >
               <ChevronUp size={20} />
@@ -131,7 +234,7 @@ export function ApprovalsContainer() {
               variant="outline"
               size="icon"
               onClick={() => handleNavigate("down")}
-              disabled={currentIndex === allCards.length - 1 || allCards.length === 0}
+              disabled={currentIndex === cardsToDisplay.length - 1 || cardsToDisplay.length === 0}
               className="w-10 h-10 disabled:opacity-50"
             >
               <ChevronDown size={20} />
@@ -140,52 +243,16 @@ export function ApprovalsContainer() {
         </div>
       </div>
 
-      {/* Toast notifications can be handled by <Toaster /> from sonner at a higher level in your app */}
-
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentCard.id} // Ensure key changes for animation
+          key={currentCard.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
           className="bg-white shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)]"
         >
-          <ApprovalCardComponent
-            cardData={currentCard}
-            alternativeMessages={alternativeMessages}
-            onAction={(actionType, messageContent) =>
-              handleAction(currentCard.id, actionType, messageContent)
-            }
-            onRegenerate={() =>
-              dispatch(
-                cycleMessageVariant({
-                  cardId: currentCard.id,
-                  alternativeMessagesCount: alternativeMessages.length,
-                }),
-              )
-            }
-            onUseCopy={(newMessage) =>
-              dispatch(updateApprovalCardMessage({ cardId: currentCard.id, newMessage }))
-            }
-            onShowTeraCompose={(show) =>
-              dispatch(setShowTeraComposeForCard({ cardId: currentCard.id, show }))
-            }
-            onSendChatMessage={(chatMessageText) =>
-              dispatch(
-                addChatMessageToApproval({
-                  cardId: currentCard.id,
-                  message: {
-                    id: `msg-${Date.now()}`,
-                    text: chatMessageText,
-                    sender: "provider", // Assuming provider is sending
-                    timestamp: new Date().toISOString(),
-                    isOutbound: false,
-                  },
-                }),
-              )
-            }
-          />
+          <ApprovalCardComponent cardData={currentCard} {...commonCardProps(currentCard.id)} />
         </motion.div>
       </AnimatePresence>
     </div>

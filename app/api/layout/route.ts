@@ -11,15 +11,15 @@ import { handleMockLayoutRequest } from "./mockLayoutHandler";
 
 // Environment variables
 const agentId = process.env.BEDROCK_AGENT_ID || "YLGT5ZEQ0Q";
-const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID || "NDFYU3FQOQ";
+const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID || "MIOIB6QJTI";
 const region = process.env.AWS_REGION || "us-east-1";
 
 // Determine if mocking is enabled for the API route
 const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 // @TODO: make it false after demo
-const ENABLE_MOCK_LAYOUT_API = true;
-// const ENABLE_MOCK_LAYOUT_API =
-//   IS_DEVELOPMENT && process.env.NEXT_PUBLIC_ENABLE_MOCK_CHAT === "true";
+// const ENABLE_MOCK_LAYOUT_API = true;
+const ENABLE_MOCK_LAYOUT_API =
+  IS_DEVELOPMENT && process.env.NEXT_PUBLIC_ENABLE_MOCK_CHAT === "true";
 
 if (!ENABLE_MOCK_LAYOUT_API && (!agentId || !agentAliasId || !region)) {
   console.error(
@@ -133,6 +133,24 @@ Additional Instructions for Components:
     - \`type\`: "therapy" | "consultation" | "followup" | "general"
   - Default \`status\` should be set to \`"pending"\` unless explicitly provided.
   - Avoid creating simplified or custom structures like { date, procedure }.
+- For **ApprovalsContainer**, each \`ApprovalCardData\` object must:
+  - Include all required fields:
+    - \`id\`: string  // Corresponds to Appointment ID
+    - \`appointmentId\`: string
+    - \`patientName\`: string
+    - \`patientId\`: string
+    - \`isVip\`: boolean
+    - \`time\`: string  // Formatted time string e.g., "Today, 10:00 AM"
+    - \`subject\`: string
+    - \`message\`: string  // The current message to be sent/approved
+    - \`originalMessage\`: string  // The original message from notificationStatus
+    - \`notificationType\`: "pre-care" | "post-care"
+  - Optional fields (if applicable):
+    - \`aiGeneratedMessage?\`: string  // AI's suggested alternative
+    - \`chatHistory?\`: ApprovalChatMessage[]
+    - \`messageVariant?\`: number  // 0 for original/current, 1 for AI, 2+ for alternatives
+    - \`showTeraCompose?\`: boolean
+    - \`editedMessage?\`: string  // If user edits the message directly in the approval card
 
 - Do not omit any prop that is required or semantically relevant in \`components.md\`.
 - You may infer values such as \`procedure\`, \`doctor\`, or \`title\` when logically implied in the markdown.

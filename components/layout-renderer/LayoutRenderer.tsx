@@ -55,7 +55,7 @@ const UnknownComponentFallback = ({
 
 // Define which components should span the full width (both columns)
 // Add the names of your components that need to span full width.
-const FULL_WIDTH_COMPONENTS = new Set(["AppointmentCalendar"]);
+const FULL_WIDTH_COMPONENTS = new Set(["AppointmentCalendar", "ApprovalsContainer"]);
 
 export function LayoutRenderer({
   layout,

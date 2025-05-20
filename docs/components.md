@@ -447,3 +447,66 @@ interface Appointment {
   initialView="month"
 />
 ```
+
+---
+
+### FallbackCard
+
+**Props:**
+
+* `title?: string` – optional label for the section (default: "Details")
+* `content: string` – raw markdown or plain text content to render
+
+**Description:** A neutral UI container for rendering unmatched or unclassified markdown content from StreamingUI. Useful for catching anything the parser doesn't semantically map.
+
+**Example:**
+
+```tsx
+<FallbackCard
+  title="Additional Information"
+  content="Patient reported mild redness. Will check in via phone in 48 hours."
+/>
+```
+
+---
+
+### ApprovalsContainer
+
+**Props:**
+
+* `cards?: ApprovalCardData[]` – Optional array of approval message data to inject
+
+**Types:**
+
+```ts
+interface ApprovalCardData {
+  id: string;
+  appointmentId: string;
+  patientName: string;
+  patientId: string;
+  isVip: boolean;
+  time: string;
+  subject: string;
+  message: string;
+  originalMessage: string;
+  notificationType: "pre-care" | "post-care";
+  aiGeneratedMessage: string;
+  messageVariant: number;
+  showTeraCompose: boolean;
+  chatHistory?: {
+    id: string;
+    text: string;
+    sender: "provider" | "patient";
+    timestamp: string;
+    isOutbound: boolean;
+  }[];
+}
+```
+
+**Description:** Stateful container for managing AI-generated messages that require provider approval. Includes navigation between cards, toast alerts, message regeneration, in-context chat memory, and Tera Compose fallback.
+
+**Example:**
+
+```tsx
+<ApprovalsContainer cards={mockApprovals} />
+```
