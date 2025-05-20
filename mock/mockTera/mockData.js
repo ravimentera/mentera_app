@@ -578,7 +578,7 @@ Precautions
       "Hi Emiley, this is Nurse Kelly checking in 😊 How are you feeling after your filler treatment on Tuesday? If you have any swelling or questions, I’m here for you. Can’t wait to see your results!",
     layout: {
       type: "Layout",
-      title: "Follow-up SMS – Filler Treatment with Nurse Kelly",
+      title: "Follow-up Message",
       layout: [
         {
           type: "Grid",
@@ -594,22 +594,18 @@ Precautions
                   props: {
                     cards: [
                       {
-                        id: "followup-2025-05-24-emiley",
-                        appointmentId: "apt-2025-05-21-emiley-1",
+                        id: "1",
+                        appointmentId: "12345",
                         patientName: "Emiley",
                         patientId: "PT-1004",
                         isVip: false,
-                        time: "2025-05-24T10:00:00.000Z",
-                        subject: "3-Day Filler Follow-Up – Message from Nurse Kelly",
+                        time: "Today, 12:00 PM",
+                        subject: "Follow-up after filler treatment",
                         message:
                           "Hi Emiley, this is Nurse Kelly checking in 😊 How are you feeling after your filler treatment on Tuesday? If you have any swelling or questions, I’m here for you. Can’t wait to see your results!",
                         originalMessage:
                           "Hi Emiley, this is Nurse Kelly checking in 😊 How are you feeling after your filler treatment on Tuesday? If you have any swelling or questions, I’m here for you. Can’t wait to see your results!",
                         notificationType: "post-care",
-                        aiGeneratedMessage:
-                          "Follow-up message from Nurse Kelly: 'How are you feeling post-treatment? I'm here if you have concerns!'",
-                        messageVariant: 1,
-                        showTeraCompose: false,
                       },
                     ],
                   },
