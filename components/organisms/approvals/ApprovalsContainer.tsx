@@ -3,6 +3,8 @@
 import { Button } from "@/components/atoms/button";
 import type { AppDispatch, RootState } from "@/lib/store";
 import {
+  ApprovalCardData,
+  addApprovals,
   addChatMessageToApproval,
   cycleMessageVariant,
   navigateToApproval,
@@ -16,12 +18,11 @@ import {
 import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { ApprovalCardComponent } from "./ApprovalCard";
 
-// Define alternative messages here or import from a shared constants file
 const alternativeMessages = [
   "Would you like me to suggest some alternative times that might work better with your schedule?",
   "I can also provide more information about our new treatment options if you're interested.",
@@ -29,32 +30,48 @@ const alternativeMessages = [
   "I'd be happy to discuss any concerns or questions you might have about the treatment.",
 ];
 
-export function ApprovalsContainer() {
+interface ApprovalsContainerProps {
+  cards?: ApprovalCardData[]; // Optional prop to pass in new approval cards
+}
+
+export function ApprovalsContainer({ cards: cardsProp }: ApprovalsContainerProps) {
+  // Destructure cards as cardsProp
   const dispatch = useDispatch<AppDispatch>();
   const allCards = useSelector(selectAllApprovalCards);
+
   const currentCard = useSelector(selectCurrentApprovalCard);
   const currentIndex = useSelector(selectCurrentApprovalCardIndex);
 
-  // Local state for toasts, as it's purely UI and doesn't need to be global
   const [toasts, setToasts] = useState<
     { id: number; title: string; description: string; status: "success" | "error" }[]
   >([]);
 
+  // Ref to track the last processed cardsProp instance to avoid duplicate processing
+  const processedCardsPropRef = useRef<ApprovalCardData[] | undefined>();
+
+  // Effect to append cards from props to the Redux store
   useEffect(() => {
-    // Logic to show Tera Compose on the 2nd card initially (index 1)
-    // This should ideally be driven by the card's own state in Redux if it's complex,
-    // or handled when navigating.
+    // Only process if cardsProp is new and different from the last one processed
+    if (cardsProp && cardsProp !== processedCardsPropRef.current && cardsProp.length > 0) {
+      console.log("ApprovalsContainer: New cardsProp instance detected, dispatching addApprovals.");
+      dispatch(addApprovals(cardsProp));
+      // Mark this instance of cardsProp as processed
+      processedCardsPropRef.current = cardsProp;
+    } else if (cardsProp && cardsProp === processedCardsPropRef.current) {
+      console.log(
+        "ApprovalsContainer: cardsProp is the same instance, already processed by this effect.",
+      );
+    }
+  }, [cardsProp, dispatch]);
+
+  useEffect(() => {
     if (allCards.length > 0 && currentCard) {
-      // Example: Show for 2nd card, if it's the current one
-      // This logic might need refinement based on how you want TeraCompose to appear.
-      // The slice now handles resetting showTeraCompose on navigation.
-      // We might want to set it true for specific cards upon loading them.
-      if (currentIndex === 1 && !currentCard.showTeraCompose) {
+      if (currentIndex === 1 && !currentCard.showTeraCompose && allCards.length > 1) {
+        // Ensure there's actually a second card
         dispatch(setShowTeraComposeForCard({ cardId: currentCard.id, show: true }));
-      } else if (currentIndex !== 1 && currentCard.showTeraCompose) {
-        // Optional: hide if navigating away from the 2nd card
-        // dispatch(setShowTeraComposeForCard({ cardId: currentCard.id, show: false }));
       }
+      // Removed the else-if to prevent hiding TeraCompose when navigating away from the 2nd card.
+      // TeraCompose visibility will now be explicitly managed by other actions (e.g., onUseCopy, cycleMessageVariant).
     }
   }, [currentIndex, allCards, dispatch, currentCard]);
 
@@ -64,25 +81,20 @@ export function ApprovalsContainer() {
 
   const handleAction = async (
     cardId: string,
-    actionType: "approved" | "disapproved",
+    actionType: "approved" | "disapproved", // Corrected type to match thunk
     messageContent?: string,
   ) => {
     dispatch(processAndDispatchApproval(cardId, actionType, messageContent));
 
     toast[actionType === "approved" ? "success" : "error"](
-      `Message ${actionType === "approved" ? "approved" : "disapproved"} successfully`,
+      `Message ${actionType === "approved" ? "approved" : "declined"} successfully`,
     );
-
-    // Check if it was the last card after processing
-    // The state update for allCards will trigger re-render.
-    // We need to access the state *after* the dispatch has potentially removed an item.
-    // This confetti logic is tricky here because Redux updates are async.
-    // It might be better to check `allCards.length` in a `useEffect` that depends on `allCards`.
   };
 
   useEffect(() => {
-    if (allCards.length === 0 && currentIndex === 0) {
-      // Check if list became empty
+    // Check if the list became empty *after* an action might have removed the last card.
+    // This relies on `allCards` being updated from Redux.
+    if (allCards.length === 0 && currentIndex === 0 && !currentCard) {
       console.log("All approval cards processed!");
       confetti({
         particleCount: 100,
@@ -90,7 +102,7 @@ export function ApprovalsContainer() {
         origin: { y: 0.6 },
       });
     }
-  }, [allCards, currentIndex]);
+  }, [allCards, currentIndex, currentCard]); // Add currentCard to dependency
 
   if (allCards.length === 0) {
     return (
@@ -104,8 +116,9 @@ export function ApprovalsContainer() {
   }
 
   if (!currentCard) {
-    // This case should ideally not happen if allCards.length > 0 and currentIndex is managed correctly
-    return <div className="p-6">Loading approval card...</div>;
+    // This might happen briefly if allCards is not empty but currentIndex is out of bounds
+    // or if the selector returns null before state is fully updated.
+    return <div className="p-6 text-center">Loading current approval card...</div>;
   }
 
   return (
@@ -119,7 +132,7 @@ export function ApprovalsContainer() {
           <span className="text-base text-[#71717A]">{allCards.length} records</span>
           <div className="flex gap-4">
             <Button
-              variant="outline" // Using ShadCN variants
+              variant="outline"
               size="icon"
               onClick={() => handleNavigate("up")}
               disabled={currentIndex === 0 || allCards.length === 0}
@@ -140,11 +153,11 @@ export function ApprovalsContainer() {
         </div>
       </div>
 
-      {/* Toast notifications can be handled by <Toaster /> from sonner at a higher level in your app */}
+      {/* Toast notifications can be handled by <Toaster /> from sonner at a higher level */}
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentCard.id} // Ensure key changes for animation
+          key={currentCard.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
@@ -178,7 +191,7 @@ export function ApprovalsContainer() {
                   message: {
                     id: `msg-${Date.now()}`,
                     text: chatMessageText,
-                    sender: "provider", // Assuming provider is sending
+                    sender: "provider",
                     timestamp: new Date().toISOString(),
                     isOutbound: false,
                   },

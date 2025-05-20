@@ -575,22 +575,198 @@ Precautions
   {
     query: "Generate a follow-up SMS for a patient 3 days after filler treatment.",
     markdown:
-      "Hi [Patient Name], hope you're feeling great after your filler treatment! We'd love to hear how you're doing. Let us know if you have any questions or concerns.",
+      "Hi Emiley, hope you're feeling great after your filler treatment! We'd love to hear how you're doing. Let us know if you have any questions or concerns.",
+    layout: {
+      type: "Layout",
+      title: "Follow-up SMS for Emiley – Filler Treatment",
+      layout: [
+        {
+          type: "Grid",
+          columns: 1,
+          gap: 6,
+          rows: [
+            {
+              type: "Row",
+              components: [
+                {
+                  type: "Component",
+                  name: "ApprovalsContainer",
+                  props: {
+                    cards: [
+                      {
+                        id: "apt-2025-05-21-emiley-1",
+                        appointmentId: "apt-2025-05-21-emiley-1",
+                        patientName: "Emiley",
+                        patientId: "PT-1010",
+                        isVip: false,
+                        time: "2025-05-21T10:00:00.000Z",
+                        subject: "Follow-up for filler treatment",
+                        message:
+                          "Hi Emiley, hope you're feeling great after your filler treatment! We'd love to hear how you're doing. Let us know if you have any questions or concerns.",
+                        originalMessage:
+                          "Hi Emiley, hope you're feeling great after your filler treatment! We'd love to hear how you're doing. Let us know if you have any questions or concerns.",
+                        notificationType: "post-care",
+                        aiGeneratedMessage:
+                          "Hi Emiley! Just checking in after your filler treatment. Let us know if you have questions about results or aftercare.",
+                        messageVariant: 0,
+                        showTeraCompose: false,
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     query: "Create a pre-care email for a PRP session.",
     markdown:
       "Subject: Your Upcoming PRP Treatment – Pre-Care Instructions\n\nHi [Patient Name],\n\nWe’re looking forward to your upcoming PRP session. To ensure optimal results, please:\n- Avoid NSAIDs and alcohol 48 hours before the session\n- Stay well hydrated\n- Avoid intense sun exposure\n\nPlease reach out if you have any questions. See you soon!",
+    layout: {
+      type: "Layout",
+      title: "Pre-Care Email for PRP – Emiley",
+      layout: [
+        {
+          type: "Grid",
+          columns: 1,
+          gap: 6,
+          rows: [
+            {
+              type: "Row",
+              components: [
+                {
+                  type: "Component",
+                  name: "ApprovalsContainer",
+                  props: {
+                    cards: [
+                      {
+                        id: "apt-2025-05-21-emiley-prp",
+                        appointmentId: "apt-2025-05-21-emiley-prp",
+                        patientName: "Emiley",
+                        patientId: "PT-1010",
+                        isVip: false,
+                        time: "2025-05-21T09:00:00.000Z",
+                        subject: "Your Upcoming PRP Treatment – Pre-Care Instructions",
+                        message:
+                          "Hi Emiley,\n\nWe’re looking forward to your upcoming PRP session. To ensure optimal results, please:\n- Avoid NSAIDs and alcohol 48 hours before the session\n- Stay well hydrated\n- Avoid intense sun exposure\n\nPlease reach out if you have any questions. See you soon!",
+                        originalMessage:
+                          "Hi Emiley,\n\nWe’re looking forward to your upcoming PRP session. To ensure optimal results, please:\n- Avoid NSAIDs and alcohol 48 hours before the session\n- Stay well hydrated\n- Avoid intense sun exposure\n\nPlease reach out if you have any questions. See you soon!",
+                        notificationType: "pre-care",
+                        aiGeneratedMessage:
+                          "Pre-care tips for Emiley's PRP session: Avoid NSAIDs, hydrate, and limit sun exposure before arrival.",
+                        messageVariant: 0,
+                        showTeraCompose: false,
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     query: "Write a promotional email for a spring skincare sale.",
     markdown:
-      "Subject: Spring Glow-Up Sale – Limited Time!\n\nHi [Patient Name],\n\nSpring is here, and so are our exclusive skincare discounts! 🌸\n\nEnjoy 20% off facials, microneedling, and PRP treatments this month only.\n\nBook now and treat your skin to the glow it deserves!\n\n— Your MedSpa Team",
+      "Subject: Spring Glow-Up Sale – Limited Time!\n\nHi Emiley,\n\nSpring is here, and so are our exclusive skincare discounts! 🌸\n\nEnjoy 20% off facials, microneedling, and PRP treatments this month only.\n\nBook now and treat your skin to the glow it deserves!\n\n— Your MedSpa Team",
+    layout: {
+      type: "Layout",
+      title: "Spring Skincare Sale – Promotional Email",
+      layout: [
+        {
+          type: "Grid",
+          columns: 1,
+          gap: 6,
+          rows: [
+            {
+              type: "Row",
+              components: [
+                {
+                  type: "Component",
+                  name: "ApprovalsContainer",
+                  props: {
+                    cards: [
+                      {
+                        id: "promo-2025-05-21-spring-sale",
+                        appointmentId: "promo-2025-05-21-spring-sale",
+                        patientName: "Emiley",
+                        patientId: "PT-0000",
+                        isVip: false,
+                        time: "2025-05-21T08:00:00.000Z",
+                        subject: "Spring Glow-Up Sale – Limited Time!",
+                        message:
+                          "Hi Emiley,\n\nSpring is here, and so are our exclusive skincare discounts! 🌸\n\nEnjoy 20% off facials, microneedling, and PRP treatments this month only.\n\nBook now and treat your skin to the glow it deserves!\n\n— Your MedSpa Team",
+                        originalMessage:
+                          "Hi Emiley,\n\nSpring is here, and so are our exclusive skincare discounts! 🌸\n\nEnjoy 20% off facials, microneedling, and PRP treatments this month only.\n\nBook now and treat your skin to the glow it deserves!\n\n— Your MedSpa Team",
+                        notificationType: "pre-care",
+                        aiGeneratedMessage:
+                          "Spring Skincare Promo: 20% off facials, PRP, and microneedling. Book now and glow up all season!",
+                        messageVariant: 0,
+                        showTeraCompose: false,
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     query: "Send a thank you SMS after today’s appointment.",
     markdown:
-      "Thank you for visiting us today, [Patient Name]! We hope you loved your treatment. Let us know if you have any questions. Looking forward to seeing you again soon!",
+      "Thank you for visiting us today, Emiley! We hope you loved your treatment. Let us know if you have any questions. Looking forward to seeing you again soon!",
+    layout: {
+      type: "Layout",
+      title: "Thank You SMS – Post Appointment",
+      layout: [
+        {
+          type: "Grid",
+          columns: 1,
+          gap: 6,
+          rows: [
+            {
+              type: "Row",
+              components: [
+                {
+                  type: "Component",
+                  name: "ApprovalsContainer",
+                  props: {
+                    cards: [
+                      {
+                        id: "thankyou-2025-05-21",
+                        appointmentId: "thankyou-2025-05-21",
+                        patientName: "Emiley",
+                        patientId: "PT-0000",
+                        isVip: false,
+                        time: "2025-05-21T17:00:00.000Z",
+                        subject: "Thank You for Visiting Today!",
+                        message:
+                          "Thank you for visiting us today, Emiley! We hope you loved your treatment. Let us know if you have any questions. Looking forward to seeing you again soon!",
+                        originalMessage:
+                          "Thank you for visiting us today, Emiley! We hope you loved your treatment. Let us know if you have any questions. Looking forward to seeing you again soon!",
+                        notificationType: "post-care",
+                        aiGeneratedMessage:
+                          "Thanks for stopping by today! Let us know if we can support you with anything. See you again soon!",
+                        messageVariant: 0,
+                        showTeraCompose: false,
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   },
 
   // 👩‍⚕️ Provider Conversations / Expertise

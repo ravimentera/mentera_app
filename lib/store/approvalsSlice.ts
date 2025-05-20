@@ -132,7 +132,7 @@ export const approvalsSlice = createSlice({
     addApprovals: (state, action: PayloadAction<ApprovalCardData[]>) => {
       action.payload.forEach((newApproval) => {
         if (!state.items.find((item) => item.id === newApproval.id)) {
-          state.items.push(newApproval);
+          state.items.unshift(newApproval);
         }
       });
     },
