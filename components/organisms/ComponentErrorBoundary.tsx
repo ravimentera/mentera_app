@@ -1,6 +1,6 @@
 "use client"; // Assuming this might be needed if it's part of a client-side rendering tree
 
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ErrorInfo, ReactNode } from "react";
 
 // Props for the ErrorBoundary component
 interface Props {
@@ -19,7 +19,9 @@ interface State {
 const UserFriendlyErrorDisplay = ({ componentName }: { componentName?: string }) => (
   <div className="p-4 my-2 bg-orange-100 border border-orange-300 text-orange-700 rounded-md shadow-sm w-full text-center">
     <h3 className="font-semibold text-md mb-1">Something Went Wrong</h3>
-    <p className="text-sm">We're sorry, but a part of this page encountered a temporary issue.</p>
+    <p className="text-sm">
+      We&apos;re sorry, but a part of this page encountered a temporary issue.
+    </p>
     <p className="text-xs mt-2">
       Please try refreshing the page. If the problem persists, our team has been notified.
     </p>
@@ -36,7 +38,7 @@ const UserFriendlyErrorDisplay = ({ componentName }: { componentName?: string })
       </button>
     */}
     {/* {componentName && process.env.NODE_ENV === 'development' && (
-      <p className="text-xs mt-2 text-gray-500">(Developer info: Error in component "{componentName}")</p>
+      <p className="text-xs mt-2 text-gray-500">(Developer info: Error in component &quot;{componentName}&quot;)</p>
     )} */}
   </div>
 );
