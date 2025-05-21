@@ -2,7 +2,8 @@
 
 import { REGISTRATION_ROUTES } from "@/app/constants/route-constants";
 import { GRADIENTS } from "@/app/constants/theme-constants";
-import { FormStepper, Step } from "@/components/molecules/form-stepper";
+import { FormStepper } from "@/components/molecules";
+import type { Step } from "@/components/molecules/form-stepper";
 import { GradientBackground } from "@/components/templates";
 import Image from "next/image";
 import { usePathname } from "next/navigation";

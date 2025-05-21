@@ -1,8 +1,18 @@
 import { Button, Input, Label, Textarea } from "@/components/atoms";
-import { Calendar } from "@/components/molecules/Calendar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/molecules/Dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/molecules/Popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/molecules/Tabs";
+import {
+  Calendar,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/molecules";
 import { cn } from "@/lib/utils";
 import { format, set } from "date-fns";
 import { Calendar as CalendarIcon, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";

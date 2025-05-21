@@ -1,6 +1,6 @@
 import { AUTH_ROUTES, REDIRECT_PATHS } from "@/app/constants/route-constants";
 import { Button, Input, Label, PasswordInput } from "@/components/atoms";
-import { GoogleSignInButton } from "@/components/molecules/GoogleSignInButton";
+import { GoogleSignInButton } from "@/components/molecules";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
