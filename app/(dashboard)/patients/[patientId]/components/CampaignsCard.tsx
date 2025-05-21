@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/atoms/Button";
+import { Button } from "@/components/atoms";
 import { ChevronRight, Mail, MessageSquare } from "lucide-react";
 import { Campaign } from "../types";
 

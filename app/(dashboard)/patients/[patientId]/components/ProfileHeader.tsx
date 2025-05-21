@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/atoms/Button";
+import { Button } from "@/components/atoms";
 import { ArrowLeft, Calendar, FileText } from "lucide-react";
 import Link from "next/link";
 import { Patient } from "../types";

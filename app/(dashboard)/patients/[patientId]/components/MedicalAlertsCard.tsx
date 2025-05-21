@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/atoms/Button";
+import { Button } from "@/components/atoms";
 import { AlertCircle } from "lucide-react";
 import { MedicalAlert } from "../types";
 
