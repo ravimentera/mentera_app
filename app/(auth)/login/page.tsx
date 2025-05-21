@@ -1,6 +1,6 @@
 "use client";
 
-import { AuthMarketingSection } from "@/components/organisms/AuthMarketingSection";
+import { AuthMarketingSection } from "@/components/organisms/auth-marketing-section";
 import { LoginForm } from "./components/LoginForm";
 
 export default function LoginPage() {

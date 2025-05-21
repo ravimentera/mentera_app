@@ -63,7 +63,7 @@ export function ThemeToggle() {
 
     setIsChanging(true);
     // Apply CSS class to body during transition
-    document.body.classList.add("theme-transitioning");
+    document.body.classList.add("theme-base-transition");
 
     // Small delay to allow the animation to complete
     setTimeout(() => {
@@ -71,7 +71,7 @@ export function ThemeToggle() {
 
       // Remove transition class after theme has changed
       setTimeout(() => {
-        document.body.classList.remove("theme-transitioning");
+        document.body.classList.remove("theme-base-transition");
         setIsChanging(false);
       }, 500);
     }, 200);

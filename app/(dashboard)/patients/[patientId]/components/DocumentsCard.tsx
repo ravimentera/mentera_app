@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/atoms/button";
+import { Button } from "@/components/atoms/Button";
 import { ChevronRight, FileText } from "lucide-react";
 import { Document } from "../types";
 

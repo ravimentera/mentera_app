@@ -1,7 +1,7 @@
 "use client";
 
 import { REGISTRATION_ROUTES } from "@/app/constants/route-constants";
-import { DynamicForm } from "@/components/organisms/DynamicForm";
+import { DynamicForm } from "@/components/organisms/dynamic-form";
 import { FormikHelpers } from "formik";
 import { toast } from "sonner";
 import { useRegistration } from "../../context/RegistrationContext";

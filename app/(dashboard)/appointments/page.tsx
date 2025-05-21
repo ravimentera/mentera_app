@@ -2,7 +2,6 @@
 
 import { Button, Input } from "@/components/atoms";
 import { Card, LineChart } from "@/components/organisms";
-import { mockAppointments } from "@/mock/appointments.data";
 import { useEffect, useState } from "react";
 import { AppointmentCalendar } from "./components/AppointmentCalendar";
 
@@ -17,87 +16,147 @@ interface Appointment {
   status: "upcoming" | "completed" | "cancelled";
 }
 
-const generateRandomAppointments = (): Appointment[] => {
-  // Convert our mock appointments to the table format
-  return mockAppointments.map((appointment) => {
-    // Format the date and time
-    const date = appointment.startTime;
-    const formattedDate = date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+// Update to fetch from API
+const fetchAppointmentsForTable = async (): Promise<Appointment[]> => {
+  try {
+    // Fetch a month's worth of appointments for the table view
+    const params = new URLSearchParams({
+      date: new Date().toISOString(),
+      view: "month",
+      page: "0",
+      pageSize: "50",
     });
 
-    const formattedTime = date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    const response = await fetch(`/api/appointments?${params}`);
 
-    // Calculate duration in hours
-    const durationMs = appointment.endTime.getTime() - appointment.startTime.getTime();
-    const durationHours = Math.round(durationMs / (1000 * 60 * 60));
-    const formattedDuration = `${durationHours} hour${durationHours > 1 ? "s" : ""}`;
-
-    // If the appointment date is in the past, set status to completed
-    const now = new Date();
-    let tableStatus = appointment.status === "scheduled" ? "upcoming" : appointment.status;
-
-    // For past appointments, set status to completed
-    if (date < now) {
-      tableStatus = "completed";
+    if (!response.ok) {
+      throw new Error("Failed to fetch appointments");
     }
 
-    // Generate email based on patient name
-    const email = `${appointment.patient.firstName.toLowerCase()}.${appointment.patient.lastName.toLowerCase()}@example.com`;
+    const data = await response.json();
 
-    return {
-      id: appointment.patientId,
-      customerName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
-      customerEmail: email,
-      treatment: appointment.treatmentNotes.procedure,
-      date: formattedDate,
-      time: formattedTime,
-      duration: formattedDuration,
-      status: tableStatus as "upcoming" | "completed" | "cancelled",
-    };
-  });
+    // Convert the API appointments to the table format
+    return data.appointments.map((appointment: any) => {
+      // Format the date and time
+      const date = new Date(appointment.startTime);
+      const formattedDate = date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+
+      const formattedTime = date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+
+      // Calculate duration in hours
+      const endTime = new Date(appointment.endTime);
+      const durationMs = endTime.getTime() - date.getTime();
+      const durationHours = Math.round(durationMs / (1000 * 60 * 60));
+      const formattedDuration = `${durationHours} hour${durationHours > 1 ? "s" : ""}`;
+
+      // If the appointment date is in the past, set status to completed
+      const now = new Date();
+      let tableStatus = appointment.status === "scheduled" ? "upcoming" : appointment.status;
+
+      // For past appointments, set status to completed
+      if (date < now) {
+        tableStatus = "completed";
+      }
+
+      // Generate email based on patient name
+      const email = `${appointment.patient.firstName.toLowerCase()}.${appointment.patient.lastName.toLowerCase()}@example.com`;
+
+      return {
+        id: appointment.patientId,
+        customerName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
+        customerEmail: email,
+        treatment: appointment.patient.condition || "General Consultation",
+        date: formattedDate,
+        time: formattedTime,
+        duration: formattedDuration,
+        status: tableStatus as "upcoming" | "completed" | "cancelled",
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    return [];
+  }
 };
 
-// Generate data for appointment trend chart based on our mock appointments
-const generateAppointmentTrend = () => {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+// Update to fetch trends from the API
+const fetchAppointmentTrend = async () => {
+  try {
+    // Fetch all appointments for the month to generate trends
+    const params = new URLSearchParams({
+      date: new Date().toISOString(),
+      view: "month",
+    });
 
-  // Group appointments by day of week
-  const appointmentsByDay = mockAppointments.reduce(
-    (acc, appointment) => {
-      const dayOfWeek = appointment.startTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to 0 = Monday, ..., 6 = Sunday
-      const day = days[dayIndex];
+    const response = await fetch(`/api/appointments?${params}`);
 
-      acc[day] = (acc[day] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
+    if (!response.ok) {
+      throw new Error("Failed to fetch appointments for trends");
+    }
 
-  // Create trend data with counts for each day
-  return days.map((day) => ({
-    date: day,
-    value: appointmentsByDay[day] || 0,
-  }));
+    const data = await response.json();
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    // Group appointments by day of week
+    const appointmentsByDay = data.appointments.reduce(
+      (acc: Record<string, number>, appointment: any) => {
+        const dayOfWeek = new Date(appointment.startTime).getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to 0 = Monday, ..., 6 = Sunday
+        const day = days[dayIndex];
+
+        acc[day] = (acc[day] || 0) + 1;
+        return acc;
+      },
+      {},
+    );
+
+    // Create trend data with counts for each day
+    return days.map((day) => ({
+      date: day,
+      value: appointmentsByDay[day] || 0,
+    }));
+  } catch (error) {
+    console.error("Error fetching appointment trends:", error);
+    // Return empty trend data if fetch fails
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    return days.map((day) => ({ date: day, value: 0 }));
+  }
 };
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [trendData, setTrendData] = useState(generateAppointmentTrend());
+  const [trendData, setTrendData] = useState<{ date: string; value: number }[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Use our processed mock data
-    setAppointments(generateRandomAppointments());
-    setTrendData(generateAppointmentTrend());
+    // Fetch data from our API
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [appointmentsData, trendsData] = await Promise.all([
+          fetchAppointmentsForTable(),
+          fetchAppointmentTrend(),
+        ]);
+
+        setAppointments(appointmentsData);
+        setTrendData(trendsData);
+      } catch (error) {
+        console.error("Error loading appointment data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
   // Filter appointments based on search term and status
@@ -146,35 +205,47 @@ export default function AppointmentsPage() {
               This Week
             </Button>
           </div>
-          <LineChart data={trendData} title="Daily Appointments" height={200} />
+          {isLoading ? (
+            <div className="flex justify-center items-center h-[200px]">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-purple"></div>
+            </div>
+          ) : (
+            <LineChart data={trendData} title="Daily Appointments" height={200} />
+          )}
         </Card>
 
         <Card className="p-6">
           <h3 className="text-lg font-medium mb-4">Appointment Stats</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-500">Total Appointments</p>
-              <p className="text-2xl font-bold">{appointments.length}</p>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-[200px]">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-purple"></div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Upcoming</p>
-              <p className="text-2xl font-bold">
-                {appointments.filter((a) => a.status === "upcoming").length}
-              </p>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Total Appointments</p>
+                <p className="text-2xl font-bold">{appointments.length}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Upcoming</p>
+                <p className="text-2xl font-bold">
+                  {appointments.filter((a) => a.status === "upcoming").length}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Completed</p>
+                <p className="text-2xl font-bold">
+                  {appointments.filter((a) => a.status === "completed").length}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Cancelled</p>
+                <p className="text-2xl font-bold">
+                  {appointments.filter((a) => a.status === "cancelled").length}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Completed</p>
-              <p className="text-2xl font-bold">
-                {appointments.filter((a) => a.status === "completed").length}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Cancelled</p>
-              <p className="text-2xl font-bold">
-                {appointments.filter((a) => a.status === "cancelled").length}
-              </p>
-            </div>
-          </div>
+          )}
         </Card>
       </div>
 
@@ -227,7 +298,16 @@ export default function AppointmentsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filteredAppointments.length > 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="py-20 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-brand-purple"></div>
+                        <p className="mt-4 text-gray-500">Loading appointments...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredAppointments.length > 0 ? (
                   filteredAppointments.map((appointment) => (
                     <tr key={appointment.id} className="hover:bg-muted/50">
                       <td className="py-3 px-4">{appointment.id}</td>

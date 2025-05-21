@@ -1,9 +1,9 @@
 "use client";
 
 import ChatMessages from "@/app/components/ChatMessages";
-import { Button } from "@/components/atoms/button";
-import { Input } from "@/components/atoms/input";
-import { Textarea } from "@/components/atoms/textarea";
+import { Button } from "@/components/atoms/Button";
+import { Input } from "@/components/atoms/Input";
+import { Textarea } from "@/components/atoms/Textarea";
 import { ApprovalCardData, ApprovalChatMessage } from "@/lib/store/approvalsSlice";
 import { RefreshCw, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
 import React, { useState, useEffect } from "react";

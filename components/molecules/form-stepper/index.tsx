@@ -44,16 +44,16 @@ export function FormStepper({
             <div
               className={cn(
                 "flex items-center",
-                isActive && "py-2.5 px-5 rounded-full bg-[#FAE8FF]",
+                isActive && "py-2.5 px-5 rounded-full bg-brand-purple-light",
               )}
             >
               <div
                 className={cn(
                   "flex items-center justify-center w-8 h-8 text-sm font-medium rounded-full",
                   isActive
-                    ? "bg-[#C026D3] text-white"
+                    ? "bg-brand-purple text-white"
                     : isCompleted
-                      ? "bg-[#F1F5F9] text-[#C026D3]"
+                      ? "bg-secondary text-brand-purple"
                       : "bg-gray-100 text-gray-500",
                   !isNavigable && "opacity-50 cursor-not-allowed",
                 )}
@@ -75,7 +75,7 @@ export function FormStepper({
                     className={cn(
                       "text-base font-medium",
                       isActive
-                        ? "bg-gradient-to-r from-[#111A53] to-[#BD05DD] bg-clip-text text-transparent font-semibold text-xl"
+                        ? "bg-gradient-brand bg-clip-text text-transparent font-semibold text-xl"
                         : "text-gray-500",
                     )}
                   >
@@ -91,7 +91,7 @@ export function FormStepper({
 
             {!isLastStep && (
               <div className="flex items-center mx-4">
-                <hr className="w-16 border-0 h-[1px] bg-[#9CA3AF]" />
+                <hr className="w-16 border-0 h-[1px] bg-text-gray-400" />
               </div>
             )}
           </React.Fragment>

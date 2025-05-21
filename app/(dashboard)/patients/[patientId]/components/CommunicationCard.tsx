@@ -1,6 +1,6 @@
 "use client";
 
-import { Switch } from "@/components/atoms/switch";
+import { Switch } from "@/components/atoms/Switch";
 import { Mail, MessageSquare } from "lucide-react";
 import { CommunicationPreferences } from "../types";
 

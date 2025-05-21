@@ -1,7 +1,7 @@
 import { AUTH_ROUTES, REDIRECT_PATHS } from "@/app/constants/route-constants";
-import { Button } from "@/components/atoms/button";
-import { Input, PasswordInput } from "@/components/atoms/input";
-import { Label } from "@/components/atoms/label";
+import { Button } from "@/components/atoms/Button";
+import { Input, PasswordInput } from "@/components/atoms/Input";
+import { Label } from "@/components/atoms/Label";
 import { GoogleSignInButton } from "@/components/molecules/GoogleSignInButton";
 import { cn } from "@/lib/utils";
 import Link from "next/link";

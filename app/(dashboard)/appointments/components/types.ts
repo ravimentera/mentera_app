@@ -26,3 +26,12 @@ export interface Appointment {
     editedMessage?: string;
   };
 }
+
+export interface DropIndicator {
+  isVisible: boolean;
+  date: Date;
+  top: string;
+  left?: string;
+  width?: string;
+  height?: string;
+}

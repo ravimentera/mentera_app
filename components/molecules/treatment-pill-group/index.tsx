@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { TreatmentPill } from "../TreatmentPill";
+import { TreatmentPill } from "../treatment-pill";
 
 export interface TreatmentOption {
   label: string;
@@ -35,7 +35,7 @@ export function TreatmentPillGroup({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <h3 className="text-xl font-semibold text-[#1F2937]">{title}</h3>
+      <h3 className="text-xl font-semibold text-text-gray-900">{title}</h3>
       <div className="flex flex-wrap gap-4">
         {options.map((option) => (
           <TreatmentPill

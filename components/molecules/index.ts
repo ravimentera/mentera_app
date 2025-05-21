@@ -14,7 +14,7 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "./dropdown-menu";
+} from "./DropdownMenu";
 
 export {
   Form,
@@ -25,13 +25,13 @@ export {
   FormLabel,
   FormMessage,
   useFormField,
-} from "./form";
+} from "./Form";
 
 export {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "./tabs";
+} from "./Tabs";
 
-export { Toggle } from "./toggle";
+export { Toggle } from "./Toggle";

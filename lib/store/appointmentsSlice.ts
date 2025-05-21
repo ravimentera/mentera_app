@@ -1,6 +1,5 @@
-import { mockAppointments as initialMockAppointments } from "@/mock/appointments.data";
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import type { AppDispatch, RootState } from "./index"; // Assuming AppDispatch is exported for thunks if any
+import { PayloadAction, createEntityAdapter, createSlice } from "@reduxjs/toolkit";
+import type { RootState } from "./index"; // Assuming AppDispatch is exported for thunks if any
 
 // Component-facing Appointment type (dates are Date objects)
 export interface Appointment {
@@ -22,6 +21,7 @@ export interface Appointment {
   endTime: Date; // Strictly Date
   status: "scheduled" | "completed" | "cancelled" | "pending";
   notes?: string;
+  location?: string;
   type: "therapy" | "consultation" | "followup" | "general";
   notificationStatus?: {
     status: "pending" | "approved" | "disapproved";
@@ -76,9 +76,18 @@ interface StoredAppointment {
   }[];
 }
 
-export interface AppointmentsState {
-  items: StoredAppointment[];
+// Create the adapter for our appointments
+const appointmentsAdapter = createEntityAdapter<Appointment>();
+
+interface NotificationUpdate {
+  appointmentId: string;
+  status: "pending" | "approved" | "disapproved";
+  sent: boolean;
+  editedMessage?: string;
 }
+
+// Define initial state with some default appointments
+const initialState = appointmentsAdapter.getInitialState();
 
 // Parameter is now strictly Appointment. Non-null assertions are removed.
 const serializeAppointmentDates = (appointment: Appointment): StoredAppointment => {
@@ -128,106 +137,48 @@ const deserializeAppointmentDates = (storedAppointment: StoredAppointment): Appo
   };
 };
 
-const initialState: AppointmentsState = {
-  // Ensure initialMockAppointments conform to the Appointment type (with Date objects)
-  // before serialization. Your mock data utility already creates Date objects.
-  items: initialMockAppointments.map((apt) => serializeAppointmentDates(apt as Appointment)),
-};
-
+// Create the appointments slice
 export const appointmentsSlice = createSlice({
   name: "appointments",
   initialState,
   reducers: {
+    addAppointment: appointmentsAdapter.addOne,
+    updateAppointment: appointmentsAdapter.updateOne,
+    deleteAppointment: appointmentsAdapter.removeOne,
+    clearAllAppointments: appointmentsAdapter.removeAll,
+    // Add a new action to clear appointments and set new ones
     setAppointments: (state, action: PayloadAction<Appointment[]>) => {
-      state.items = action.payload.map(serializeAppointmentDates);
+      appointmentsAdapter.removeAll(state);
+      appointmentsAdapter.addMany(state, action.payload);
     },
-    addAppointment: (state, action: PayloadAction<Appointment>) => {
-      const newAppointment = serializeAppointmentDates(action.payload);
-      const existingIndex = state.items.findIndex((item) => item.id === newAppointment.id);
-      if (existingIndex === -1) {
-        state.items.push(newAppointment);
-      } else {
-        console.warn(
-          `Appointment with ID ${newAppointment.id} already exists. Not adding duplicate.`,
-        );
-      }
-    },
-    updateAppointment: (
-      state,
-      action: PayloadAction<{ id: string; changes: Partial<Appointment> }>,
-    ) => {
-      const { id, changes } = action.payload;
-      const index = state.items.findIndex((apt) => apt.id === id);
-      if (index !== -1) {
-        const existingAppointmentWithDates = deserializeAppointmentDates(state.items[index]);
-        const updatedAppointmentData: Appointment = {
-          ...existingAppointmentWithDates,
-          ...changes,
-          ...(changes.startTime && { startTime: new Date(changes.startTime) }),
-          ...(changes.endTime && { endTime: new Date(changes.endTime) }),
-          ...(changes.chatHistory && {
-            chatHistory: changes.chatHistory.map((chat) => ({
-              ...chat,
-              timestamp: new Date(chat.timestamp),
-            })),
-          }),
-        };
-        state.items[index] = serializeAppointmentDates(updatedAppointmentData);
-      }
-    },
-    deleteAppointment: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter((apt) => apt.id !== action.payload);
-    },
-    updateAppointmentNotification: (
-      state,
-      action: PayloadAction<{
-        appointmentId: string;
-        status: "pending" | "approved" | "disapproved";
-        sent: boolean;
-        editedMessage?: string;
-      }>,
-    ) => {
+    updateAppointmentNotification: (state, action: PayloadAction<NotificationUpdate>) => {
       const { appointmentId, status, sent, editedMessage } = action.payload;
-      const index = state.items.findIndex((apt) => apt.id === appointmentId);
-      if (index !== -1) {
-        const currentAppointment = state.items[index];
-        if (!currentAppointment.notificationStatus) {
-          currentAppointment.notificationStatus = {
-            status,
-            sent,
-            editedMessage: editedMessage || "",
-            type: "pre-care",
-            message: "",
-          };
-        } else {
-          currentAppointment.notificationStatus.status = status;
-          currentAppointment.notificationStatus.sent = sent;
-          if (editedMessage !== undefined) {
-            currentAppointment.notificationStatus.editedMessage = editedMessage;
-          }
+      const appointment = state.entities[appointmentId];
+
+      if (appointment?.notificationStatus) {
+        appointment.notificationStatus.status = status;
+        appointment.notificationStatus.sent = sent;
+
+        if (editedMessage) {
+          appointment.notificationStatus.editedMessage = editedMessage;
         }
       }
     },
   },
 });
 
+// Export actions
 export const {
-  setAppointments,
   addAppointment,
   updateAppointment,
   deleteAppointment,
+  clearAllAppointments,
+  setAppointments,
   updateAppointmentNotification,
 } = appointmentsSlice.actions;
 
-export const selectAllAppointments = (state: RootState): Appointment[] =>
-  state.appointments.items.map(deserializeAppointmentDates);
-
-export const selectAppointmentById = (
-  state: RootState,
-  appointmentId: string,
-): Appointment | undefined => {
-  const appointment = state.appointments.items.find((apt) => apt.id === appointmentId);
-  return appointment ? deserializeAppointmentDates(appointment) : undefined;
-};
+// Export selectors
+export const { selectAll: selectAllAppointments, selectById: selectAppointmentById } =
+  appointmentsAdapter.getSelectors<RootState>((state) => state.appointments);
 
 export default appointmentsSlice.reducer;

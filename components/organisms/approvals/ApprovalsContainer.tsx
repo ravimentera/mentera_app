@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/atoms/button";
-import type { AppDispatch, RootState } from "@/lib/store";
+import { Button } from "@/components/atoms/Button";
+import type { AppDispatch } from "@/lib/store";
 import {
   ApprovalCardData,
   addChatMessageToApproval,
@@ -9,7 +9,6 @@ import {
   navigateToApproval,
   processAndDispatchApproval,
   selectAllApprovalCards,
-  selectCurrentApprovalCard as selectCurrentApprovalCardFromRedux,
   selectCurrentApprovalCardIndex as selectCurrentApprovalCardIndexFromRedux,
   setShowTeraComposeForCard,
   updateApprovalCardMessage,
@@ -17,7 +16,7 @@ import {
 import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { ApprovalCardComponent } from "./ApprovalCard";

@@ -1,8 +1,8 @@
 "use client";
 
 import { AUTH_ROUTES } from "@/app/constants/route-constants";
-import { Button } from "@/components/atoms/button";
-import { TreatmentOption, TreatmentPillGroup } from "@/components/molecules/TreatmentPillGroup";
+import { Button } from "@/components/atoms/Button";
+import { TreatmentOption, TreatmentPillGroup } from "@/components/molecules/treatment-pill-group";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";

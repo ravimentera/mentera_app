@@ -1,6 +1,6 @@
-import { Button } from "@/components/atoms/button";
-import { Calendar } from "@/components/molecules/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/molecules/popover";
+import { Button } from "@/components/atoms/Button";
+import { Calendar } from "@/components/molecules/Calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/molecules/Popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
