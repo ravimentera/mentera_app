@@ -1,7 +1,4 @@
-import { Button } from "@/components/atoms/Button";
-import { Input } from "@/components/atoms/Input";
-import { Label } from "@/components/atoms/Label";
-import { Textarea } from "@/components/atoms/Textarea";
+import { Button, Input, Label, Textarea } from "@/components/atoms";
 import { Calendar } from "@/components/molecules/Calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/molecules/Dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/molecules/Popover";

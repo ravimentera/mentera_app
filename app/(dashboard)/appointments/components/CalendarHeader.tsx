@@ -1,4 +1,4 @@
-import { Button } from "@/components/atoms/Button";
+import { Button } from "@/components/atoms";
 import { Calendar } from "@/components/molecules/Calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/molecules/Popover";
 import { cn } from "@/lib/utils";

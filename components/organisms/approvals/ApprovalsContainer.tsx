@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/atoms/Button";
+import { Button } from "@/components/atoms";
 import type { AppDispatch } from "@/lib/store";
 import {
   ApprovalCardData,

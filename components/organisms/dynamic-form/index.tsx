@@ -1,7 +1,5 @@
 import { FormField } from "@/app/(auth)/register/config/formConfig";
-import { Button } from "@/components/atoms/Button";
-import { Input } from "@/components/atoms/Input";
-import { Label } from "@/components/atoms/Label";
+import { Button, Input, Label } from "@/components/atoms";
 import { cn } from "@/lib/utils";
 import { Field, Form, Formik, FormikHelpers } from "formik";
 import { ChevronDown } from "lucide-react";
