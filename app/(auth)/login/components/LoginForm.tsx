@@ -1,8 +1,6 @@
 import { LOGIN_INITIAL_VALUES } from "@/app/constants/auth-constants";
 import { AUTH_ROUTES, REDIRECT_PATHS } from "@/app/constants/route-constants";
-import { Button } from "@/components/atoms/button";
-import { Input, PasswordInput } from "@/components/atoms/input";
-import { Label } from "@/components/atoms/label";
+import { Button, Input, Label, PasswordInput } from "@/components/atoms";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";

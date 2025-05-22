@@ -1,7 +1,5 @@
 import { FormField } from "@/app/(auth)/register/config/formConfig";
-import { Button } from "@/components/atoms/button";
-import { Input } from "@/components/atoms/input";
-import { Label } from "@/components/atoms/label";
+import { Button, Input, Label } from "@/components/atoms";
 import { cn } from "@/lib/utils";
 import { Field, Form, Formik, FormikHelpers } from "formik";
 import { ChevronDown } from "lucide-react";
@@ -57,7 +55,7 @@ export function DynamicForm({
                   key={field.id}
                   className={cn(field.width === "half" ? "" : "md:col-span-2", "space-y-2")}
                 >
-                  <Label htmlFor={field.id} className="text-[#374151] font-medium text-sm">
+                  <Label htmlFor={field.id} className="text-text-gray-700 font-medium text-sm">
                     {field.label}
                     {field.required && <span className="text-red-600 ml-0.5">*</span>}
                   </Label>
@@ -70,7 +68,7 @@ export function DynamicForm({
                             id={field.id}
                             {...formikField}
                             className={cn(
-                              "w-full h-10 rounded-md border border-[#CBD5E1] px-3 py-2 text-sm text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C026D3] focus:border-transparent appearance-none",
+                              "w-full h-10 rounded-md border border-ui-border-muted px-3 py-2 text-sm text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent appearance-none",
                               errors[field.id] && touched[field.id] && "border-red-500",
                             )}
                           >
@@ -82,7 +80,7 @@ export function DynamicForm({
                             ))}
                           </select>
                           <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                            <ChevronDown size={16} className="text-[#94A3B8]" />
+                            <ChevronDown size={16} className="text-ui-icon" />
                           </div>
                         </div>
                       )}
@@ -96,7 +94,7 @@ export function DynamicForm({
                             id={`${field.id}.${option.value}`}
                             name={field.id}
                             value={option.value}
-                            className="h-4 w-4 rounded border-gray-300 text-[#C026D3] focus:ring-[#C026D3]"
+                            className="h-4 w-4 rounded border-gray-300 text-brand-purple focus:ring-brand-purple"
                           />
                           <label
                             htmlFor={`${field.id}.${option.value}`}
@@ -116,7 +114,7 @@ export function DynamicForm({
                           placeholder={field.placeholder}
                           {...formikField}
                           className={cn(
-                            "h-10 border-[#CBD5E1] focus:ring-[#C026D3] focus:border-transparent",
+                            "h-10 border-ui-border-muted focus:ring-brand-purple focus:border-transparent",
                             errors[field.id] && touched[field.id] && "border-red-500",
                           )}
                         />
@@ -137,7 +135,7 @@ export function DynamicForm({
                   <Button
                     type="button"
                     variant="outline"
-                    className="border border-[#E2E8F0] text-[#0F172A] font-medium text-base rounded-lg px-4 py-2"
+                    className="border border-ui-border text-foreground font-medium text-base rounded-lg px-4 py-2"
                   >
                     Previous
                   </Button>
@@ -149,7 +147,7 @@ export function DynamicForm({
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-[#C026D3] hover:bg-[#BD05DD] text-white font-medium text-base rounded-lg px-4 py-2"
+                className="bg-brand-purple hover:bg-brand-purple-hover text-white font-medium text-base rounded-lg px-4 py-2"
               >
                 {isLastStep ? "Complete" : "Next"}
               </Button>

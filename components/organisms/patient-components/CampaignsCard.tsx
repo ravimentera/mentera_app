@@ -3,7 +3,7 @@
 import { Bell, Mail, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { v4 as uuid } from "uuid";
-import { Card, CardContent } from "../card";
+import { Card, CardContent } from "../Card";
 
 type CampaignItem = {
   channel: "email" | "sms";

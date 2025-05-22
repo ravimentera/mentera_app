@@ -13,12 +13,13 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import type { AppDispatch, RootState } from "@/lib/store";
+import type { AppDispatch } from "@/lib/store";
 import {
   Appointment,
   addAppointment,
   deleteAppointment,
   selectAllAppointments,
+  setAppointments,
   updateAppointment,
   updateAppointmentNotification,
 } from "@/lib/store/appointmentsSlice";
@@ -32,6 +33,7 @@ import { CalendarHeader } from "./CalendarHeader";
 import { DayView } from "./DayView";
 import { MonthView } from "./MonthView";
 import { WeekView } from "./WeekView";
+import { DropIndicator } from "./types";
 import {
   filterAppointmentsByDate,
   generateCareInstructions,
@@ -43,11 +45,17 @@ import {
   getOverlappingAppointments,
 } from "./utils";
 
+// Replace the import for our appointment generator utility
+import { getAppointmentsByView } from "@/lib/utils/appointment-generator";
+
+// Add a new import for fetching data
+
 interface AppointmentCalendarProps {
   appointments?: Appointment[]; // Prop to provide additional appointments to append
   onAppointmentClick?: (appointment: Appointment) => void;
   onDateChange?: (date: Date) => void;
   initialView?: "day" | "week" | "month";
+  loadMockData?: boolean; // Flag to determine if we should load mock data dynamically
 }
 
 export function AppointmentCalendar({
@@ -55,6 +63,7 @@ export function AppointmentCalendar({
   onAppointmentClick,
   onDateChange,
   initialView = "week",
+  loadMockData = true, // Default to loading mock data
 }: AppointmentCalendarProps) {
   const dispatch = useDispatch<AppDispatch>();
   const calendarAppointments = useSelector(selectAllAppointments);
@@ -70,9 +79,31 @@ export function AppointmentCalendar({
   const [isGeneratingMessage, setIsGeneratingMessage] = useState(false);
   const [editedMessage, setEditedMessage] = useState<string>("");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // State for appointment dragging
+  const [draggingAppointment, setDraggingAppointment] = useState<Appointment | null>(null);
+  const [dropIndicator, setDropIndicator] = useState<DropIndicator>({
+    isVisible: false,
+    date: new Date(),
+    top: "0%",
+    left: "0%",
+    width: "100%",
+    height: "0%",
+  });
+  const [appointmentDuration, setAppointmentDuration] = useState<number>(0);
 
   // Ref to track the last processed appointmentsProp instance
   const processedAppointmentsPropRef = useRef<Appointment[] | undefined>();
+
+  // Add a ref to track previously loaded states
+  const loadedDataRef = useRef<{ date?: string; view?: string }>({});
+
+  // At component initialization, clear cache
+  useEffect(() => {
+    // Reset loaded data ref to force fresh data load
+    loadedDataRef.current = {};
+  }, []);
 
   const {
     formData,
@@ -294,8 +325,194 @@ export function AppointmentCalendar({
     onDateChange?.(newDate);
   };
 
+  // New methods for appointment drag and drop
+  const handleAppointmentDragStart = (appointment: Appointment, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setDraggingAppointment(appointment);
+
+    // Calculate duration in ms for the appointment being dragged
+    const duration = appointment.endTime.getTime() - appointment.startTime.getTime();
+    setAppointmentDuration(duration);
+
+    // Add grabbing cursor class to body
+    document.body.classList.add("cursor-grabbing");
+
+    // Prevent creating new appointments while dragging
+    setIsDragging(false);
+  };
+
+  const handleAppointmentDragOver = (event: React.MouseEvent<HTMLDivElement>, dayDate?: Date) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!draggingAppointment) return;
+
+    const currentDate = dayDate || date;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const y = event.clientY - rect.top;
+    const totalMinutes = Math.floor((y / rect.height) * 24 * 60);
+
+    // Round to nearest 15 min interval
+    const roundedMinutes = Math.floor(totalMinutes / 15) * 15;
+    const hours = Math.floor(roundedMinutes / 60);
+    const minutes = roundedMinutes % 60;
+
+    // Create potential drop time
+    const dropTime = new Date(currentDate);
+    dropTime.setHours(hours, minutes, 0, 0);
+
+    // Calculate height percentage for one minute
+    const minutePercentage = 100 / (24 * 60);
+
+    // Calculate duration in minutes and the corresponding height percentage
+    const durationMinutes = appointmentDuration / (60 * 1000);
+    const heightPercentage = durationMinutes * minutePercentage;
+
+    // Calculate top position as percentage
+    const topPercentage = (hours * 60 + minutes) * minutePercentage;
+
+    // Set drop indicator
+    setDropIndicator({
+      isVisible: true,
+      date: dropTime,
+      top: `${topPercentage}%`,
+      height: `${heightPercentage}%`,
+      left: view === "week" ? "0" : undefined,
+      width: view === "week" ? "100%" : undefined,
+    });
+  };
+
+  const handleAppointmentDragEnd = () => {
+    if (!draggingAppointment || !dropIndicator.isVisible) {
+      setDraggingAppointment(null);
+      setDropIndicator((prev) => ({ ...prev, isVisible: false }));
+      document.body.classList.remove("cursor-grabbing");
+      return;
+    }
+
+    // Calculate new start and end times
+    const newStartTime = new Date(dropIndicator.date);
+    const newEndTime = new Date(newStartTime.getTime() + appointmentDuration);
+
+    // Create updated appointment
+    const updatedAppointment = {
+      ...draggingAppointment,
+      startTime: newStartTime,
+      endTime: newEndTime,
+    };
+
+    // Dispatch update to store
+    dispatch(
+      updateAppointment({
+        id: draggingAppointment.id,
+        changes: {
+          startTime: newStartTime,
+          endTime: newEndTime,
+        },
+      }),
+    );
+
+    toast.success("Appointment moved successfully!");
+
+    // Reset drag state
+    setDraggingAppointment(null);
+    setDropIndicator((prev) => ({ ...prev, isVisible: false }));
+    document.body.classList.remove("cursor-grabbing");
+  };
+
+  // Add this mouseLeaveHandler to handle when mouse leaves the entire calendar
+  const handleCalendarMouseLeave = () => {
+    // Only end drag operations when mouse leaves the entire calendar
+    if (draggingAppointment) {
+      handleAppointmentDragEnd();
+    }
+    resetDragSelection();
+  };
+
+  // Add handleToday function that was referenced but not defined
+  const handleToday = () => {
+    setDate(new Date());
+    onDateChange?.(new Date());
+  };
+
+  // Add handleDateSelect function that was referenced but not defined
+  const handleDateSelect = (newDate: Date) => {
+    setDate(newDate);
+    onDateChange?.(newDate);
+  };
+
+  // Update the useEffect that loads data
+  useEffect(() => {
+    if (loadMockData) {
+      // Check if we've already loaded this date and view combination
+      const dateKey = date.toISOString().split("T")[0]; // Get just the date part
+      const viewKey = view;
+
+      // Skip if we've already loaded this exact combination
+      if (loadedDataRef.current.date === dateKey && loadedDataRef.current.view === viewKey) {
+        return;
+      }
+
+      // Set loading state
+      setIsLoading(true);
+
+      const fetchAppointments = async () => {
+        try {
+          // Create URL with query parameters
+          const params = new URLSearchParams({
+            date: date.toISOString(),
+            view: view,
+          });
+
+          // Fetch appointments from our API endpoint
+          const response = await fetch(`/api/appointments?${params}`);
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch appointments");
+          }
+
+          const data = await response.json();
+
+          // Process each appointment to ensure dates are proper Date objects
+          const processedAppointments = data.appointments.map((appointment: any) => ({
+            ...appointment,
+            startTime: new Date(appointment.startTime),
+            endTime: new Date(appointment.endTime),
+          }));
+
+          // Use setAppointments to add all appointments at once
+          dispatch(setAppointments(processedAppointments));
+
+          // Update our ref to remember we've loaded this date/view
+          loadedDataRef.current = {
+            date: dateKey,
+            view: viewKey,
+          };
+        } catch (error) {
+          console.error("Error fetching appointments:", error);
+          // Fallback to direct generation if API fails
+          const generatedAppointments = getAppointmentsByView(date, view);
+
+          // Use setAppointments for generated appointments too
+          dispatch(setAppointments(generatedAppointments));
+
+          // Update our ref to remember we've loaded this date/view
+          loadedDataRef.current = {
+            date: dateKey,
+            view: viewKey,
+          };
+        } finally {
+          // Set loading state to false when done
+          setIsLoading(false);
+        }
+      };
+
+      fetchAppointments();
+    }
+  }, [view, date, loadMockData, dispatch]); // Remove calendarAppointments from dependencies
+
   return (
-    <div className="bg-card text-card-foreground rounded-lg border flex flex-col h-[calc(100vh-8rem)]">
+    <div className="border rounded-lg bg-white" onMouseLeave={handleCalendarMouseLeave}>
       <CalendarHeader
         date={date}
         view={view}
@@ -310,67 +527,81 @@ export function AppointmentCalendar({
         setIsDatePickerOpen={setIsDatePickerOpen}
       />
 
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          {view === "day" && (
-            <DayView
-              date={date}
-              appointments={calendarAppointments}
-              isDragging={isDragging}
-              dragStart={dragStart}
-              dragEnd={dragEnd}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={() => setIsDragging(false)}
-              getSelectionStyles={getSelectionStyles}
-              getOverlappingAppointments={getOverlappingAppointments}
-              filterAppointmentsByDate={filterAppointmentsByDate}
-              getAppointmentStyle={getAppointmentStyle}
-              getAppointmentColors={getAppointmentColors}
-              getAppointmentStatusColors={getAppointmentStatusColors}
-              getAvatarColors={getAvatarColors}
-              getAppointmentTextColor={getAppointmentTextColor}
-              onAppointmentClick={handleCalendarAppointmentClick}
-            />
-          )}
-          {view === "week" && (
-            <WeekView
-              date={date}
-              appointments={calendarAppointments}
-              isDragging={isDragging}
-              dragStart={dragStart}
-              dragEnd={dragEnd}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={() => setIsDragging(false)}
-              getSelectionStyles={getSelectionStyles}
-              getOverlappingAppointments={getOverlappingAppointments}
-              filterAppointmentsByDate={filterAppointmentsByDate}
-              getAppointmentStyle={getAppointmentStyle}
-              getAppointmentColors={getAppointmentColors}
-              getAppointmentStatusColors={getAppointmentStatusColors}
-              getAvatarColors={getAvatarColors}
-              getAppointmentTextColor={getAppointmentTextColor}
-              onAppointmentClick={handleCalendarAppointmentClick}
-            />
-          )}
-          {view === "month" && (
-            <MonthView
-              date={date}
-              appointments={calendarAppointments}
-              onDateSelect={(selectedDate) => {
-                setDate(selectedDate);
-                setView("day");
-              }}
-              onAppointmentClick={handleCalendarAppointmentClick}
-              getAppointmentColors={getAppointmentColors}
-              getAppointmentStatusColors={getAppointmentStatusColors}
-              filterAppointmentsByDate={filterAppointmentsByDate}
-            />
-          )}
-        </div>
+      <div className="overflow-auto max-h-[calc(100vh-16rem)] relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-purple"></div>
+          </div>
+        )}
+
+        {view === "day" && (
+          <DayView
+            date={date}
+            appointments={calendarAppointments}
+            isDragging={isDragging}
+            dragStart={dragStart}
+            dragEnd={dragEnd}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={() => setIsDragging(false)}
+            getSelectionStyles={getSelectionStyles}
+            getOverlappingAppointments={getOverlappingAppointments}
+            filterAppointmentsByDate={filterAppointmentsByDate}
+            getAppointmentStyle={getAppointmentStyle}
+            getAppointmentColors={getAppointmentColors}
+            getAppointmentStatusColors={getAppointmentStatusColors}
+            getAvatarColors={getAvatarColors}
+            getAppointmentTextColor={getAppointmentTextColor}
+            onAppointmentClick={handleCalendarAppointmentClick}
+            onAppointmentDragStart={handleAppointmentDragStart}
+            onAppointmentDragOver={handleAppointmentDragOver}
+            onAppointmentDragEnd={handleAppointmentDragEnd}
+            draggingAppointment={draggingAppointment}
+            dropIndicator={dropIndicator}
+          />
+        )}
+        {view === "week" && (
+          <WeekView
+            date={date}
+            appointments={calendarAppointments}
+            isDragging={isDragging}
+            dragStart={dragStart}
+            dragEnd={dragEnd}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={() => setIsDragging(false)}
+            getSelectionStyles={getSelectionStyles}
+            getOverlappingAppointments={getOverlappingAppointments}
+            filterAppointmentsByDate={filterAppointmentsByDate}
+            getAppointmentStyle={getAppointmentStyle}
+            getAppointmentColors={getAppointmentColors}
+            getAppointmentStatusColors={getAppointmentStatusColors}
+            getAvatarColors={getAvatarColors}
+            getAppointmentTextColor={getAppointmentTextColor}
+            onAppointmentClick={handleCalendarAppointmentClick}
+            onAppointmentDragStart={handleAppointmentDragStart}
+            onAppointmentDragOver={handleAppointmentDragOver}
+            onAppointmentDragEnd={handleAppointmentDragEnd}
+            draggingAppointment={draggingAppointment}
+            dropIndicator={dropIndicator}
+          />
+        )}
+        {view === "month" && (
+          <MonthView
+            date={date}
+            appointments={calendarAppointments}
+            onDateSelect={(selectedDate) => {
+              setDate(selectedDate);
+              setView("day");
+            }}
+            onAppointmentClick={handleCalendarAppointmentClick}
+            getAppointmentColors={getAppointmentColors}
+            getAppointmentStatusColors={getAppointmentStatusColors}
+            filterAppointmentsByDate={filterAppointmentsByDate}
+          />
+        )}
       </div>
 
       {/*

@@ -9,10 +9,18 @@ import {
   MenteraLogoIcon,
 } from "@/components/atoms/icons";
 import { cn } from "@/lib/utils";
-import { CalendarDays, CheckSquare, ChevronRight, Home, MessageSquare, Users } from "lucide-react";
+import {
+  CalendarDays,
+  CheckSquare,
+  ChevronRight,
+  Home,
+  LogOut,
+  MessageSquare,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface SidebarItemProps {
   href: string;
@@ -29,7 +37,7 @@ function SidebarItem({ href, icon, title, isCollapsed, isActive, ...props }: Sid
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-300 ease-in-out relative group whitespace-nowrap",
         isActive
-          ? "bg-[#8A03D31A] text-[#8A03D3] font-medium"
+          ? "bg-brand-purple-background text-brand-purple-dark font-medium"
           : "text-gray-500 hover:bg-muted hover:text-foreground",
       )}
     >
@@ -64,8 +72,10 @@ interface SidebarProps {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Check if we're on mobile device and load stored state
   useEffect(() => {
@@ -93,6 +103,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       setIsCollapsed(!open);
     }
   }, [open, isMobile]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const toggleSidebar = () => {
     const newCollapsedState = !isCollapsed;
@@ -197,7 +221,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               className="flex flex-col h-full overflow-hidden bg-slate-50"
               style={{ height: !isMobile ? "calc(100vh - 4rem)" : "100%" }}
             >
-              <div className="flex-1 overflow-y-auto px-2 py-2 hide-scrollbar">
+              <div className="flex-1 overflow-y-auto p-2 hide-scrollbar">
                 <nav className="grid gap-1">
                   {sidebarItems.map((item) => (
                     <SidebarItem
@@ -210,22 +234,81 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   ))}
                 </nav>
               </div>
-              <div className="p-4 flex items-center gap-4">
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="w-10 h-10 rounded-full bg-[#F4F1FE] flex items-center justify-center">
-                    <span className="text-[#6941C6] font-medium">SD</span>
-                  </div>
-                  <span className="text-sm font-medium text-[#09090B]">Sarah Doe</span>
-                </div>
-                <button
-                  type="button"
-                  className="p-1 hover:bg-gray-100 rounded-md"
-                  onClick={() => {
-                    router.push(AUTH_ROUTES.LOGIN);
-                  }}
+              <div className="p-2 flex items-center gap-4 relative" ref={dropdownRef}>
+                <div
+                  className={cn(
+                    "flex items-center gap-2",
+                    isCollapsed ? "justify-center w-full" : "flex-1",
+                  )}
                 >
-                  <ChevronRight size={16} className="text-[#A1A1AA]" />
-                </button>
+                  <div className="min-w-10 min-h-10 w-10 h-10 rounded-full bg-ui-background-purple flex items-center justify-center">
+                    <span className="text-ui-icon-purple font-medium">SD</span>
+                  </div>
+                  {!isCollapsed && <span className="text-sm font-medium text-text">Sarah Doe</span>}
+                </div>
+                {!isCollapsed && (
+                  <button
+                    type="button"
+                    className="p-1 hover:bg-gray-100 rounded-md"
+                    onClick={() => setShowDropdown(!showDropdown)}
+                  >
+                    <ChevronRight
+                      size={16}
+                      className={cn(
+                        "text-ui-icon-muted transition-transform",
+                        showDropdown && "rotate-90",
+                      )}
+                    />
+                  </button>
+                )}
+
+                {/* Dropdown menu */}
+                {showDropdown && !isCollapsed && (
+                  <div className="absolute bottom-full mb-1 right-2 w-36 bg-white border rounded-md shadow-md z-50 overflow-hidden">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-100"
+                      onClick={() => {
+                        router.push(AUTH_ROUTES.LOGIN);
+                      }}
+                    >
+                      <LogOut size={16} className="text-gray-500" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Avatar-only dropdown trigger for collapsed state */}
+                {isCollapsed && (
+                  <button
+                    type="button"
+                    className="absolute inset-0 w-full h-full cursor-pointer"
+                    onClick={() => {
+                      if (isMobile) {
+                        router.push(AUTH_ROUTES.LOGIN);
+                      } else {
+                        setShowDropdown(!showDropdown);
+                      }
+                    }}
+                    aria-label="User menu"
+                  />
+                )}
+
+                {/* Dropdown for collapsed state */}
+                {showDropdown && isCollapsed && (
+                  <div className="absolute left-full ml-2 bottom-0 w-36 bg-white border rounded-md shadow-md z-50 overflow-hidden">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-100"
+                      onClick={() => {
+                        router.push(AUTH_ROUTES.LOGIN);
+                      }}
+                    >
+                      <LogOut size={16} className="text-gray-500" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

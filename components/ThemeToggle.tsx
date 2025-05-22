@@ -63,7 +63,7 @@ export function ThemeToggle() {
 
     setIsChanging(true);
     // Apply CSS class to body during transition
-    document.body.classList.add("theme-transitioning");
+    document.body.classList.add("theme-base-transition");
 
     // Small delay to allow the animation to complete
     setTimeout(() => {
@@ -71,7 +71,7 @@ export function ThemeToggle() {
 
       // Remove transition class after theme has changed
       setTimeout(() => {
-        document.body.classList.remove("theme-transitioning");
+        document.body.classList.remove("theme-base-transition");
         setIsChanging(false);
       }, 500);
     }, 200);
@@ -106,7 +106,7 @@ export function ThemeToggle() {
         <span
           className={cn(
             "pointer-events-none absolute flex h-5 w-5 items-center justify-center rounded-full shadow-md ring-0 z-10",
-            "transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]", // Bouncy effect
+            "transition-transform duration-300 ease-in-out",
             isDark
               ? "translate-x-[22px] bg-purple-500 border border-purple-600"
               : "translate-x-[1px] bg-amber-400 border border-amber-500",

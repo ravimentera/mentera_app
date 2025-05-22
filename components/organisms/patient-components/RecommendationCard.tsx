@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/organisms/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/organisms/Card";
 
 interface RecommendationCardProps {
   instructions: string;

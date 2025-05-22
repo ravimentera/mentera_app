@@ -1,4 +1,4 @@
-import { AppointmentMock, mockAppointments } from "@/mock/appointments.data";
+import { generatePendingNotifications } from "@/lib/utils/appointment-generator";
 import { PayloadAction, createSelector, createSlice } from "@reduxjs/toolkit";
 import { Appointment, updateAppointmentNotification } from "./appointmentsSlice";
 import type { AppDispatch, RootState } from "./index";
@@ -40,20 +40,17 @@ export interface ApprovalsState {
   error: string | null;
 }
 
-// Helper to transform AppointmentMock to ApprovalCardData
-const transformAppointmentToApprovalCard = (
-  appointment: AppointmentMock,
+// Helper to transform Appointment to ApprovalCardData
+export const transformAppointmentToApprovalCard = (
+  appointment: Appointment,
 ): ApprovalCardData | null => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const appointmentDate = new Date(appointment.startTime); // Assuming startTime is Date object
   appointmentDate.setHours(0, 0, 0, 0);
 
-  if (
-    appointmentDate.getTime() === today.getTime() &&
-    appointment.notificationStatus &&
-    appointment.notificationStatus.status === "pending"
-  ) {
+  // Always show today's appointments regardless of date check to support our new requirement
+  if (appointment.notificationStatus && appointment.notificationStatus.status === "pending") {
     const isPatientVIP = Number.parseInt(appointment.patientId.replace(/\D/g, "")) % 3 === 0;
     const time = new Date(appointment.startTime).toLocaleTimeString("en-US", {
       hour: "numeric",
@@ -61,14 +58,14 @@ const transformAppointmentToApprovalCard = (
     });
     let subject = "";
     if (appointment.notificationStatus?.type === "pre-care") {
-      subject = `Reminder for upcoming ${appointment.treatmentNotes.procedure}`;
+      subject = `Reminder for upcoming ${appointment.patient.condition || "appointment"}`;
     } else {
-      subject = `Follow up on recent ${appointment.treatmentNotes.procedure} treatment`;
+      subject = `Follow up on recent ${appointment.patient.condition || "appointment"}`;
     }
 
-    const { patient, treatmentNotes } = appointment;
+    const { patient } = appointment;
     const patientName = patient.firstName;
-    const procedure = treatmentNotes.procedure;
+    const procedure = patient.condition || "appointment";
 
     return {
       id: appointment.id,
@@ -83,13 +80,16 @@ const transformAppointmentToApprovalCard = (
       notificationType: appointment.notificationStatus?.type || "pre-care",
       aiGeneratedMessage: generatePersonalizedAIMessageForSlice(
         appointment.patient.firstName,
-        appointment.treatmentNotes.procedure,
+        procedure,
         appointment.notificationStatus?.type || "pre-care",
-        appointment.treatmentNotes.observations,
+        appointment.notes || "",
       ),
       chatHistory: appointment.chatHistory?.map((chat) => ({
         ...chat,
-        timestamp: new Date(chat.timestamp).toISOString(),
+        timestamp:
+          typeof chat.timestamp === "string"
+            ? chat.timestamp
+            : new Date(chat.timestamp).toISOString(),
       })),
       messageVariant: 0,
       showTeraCompose: false,
@@ -110,7 +110,9 @@ function generatePersonalizedAIMessageForSlice(
   return `AI Suggestion for ${patientName}: Hope your ${procedure} recovery is going well! ${observations ? `Regarding ${observations.substring(0, 30)}...` : ""}`;
 }
 
-const initialApprovalItems: ApprovalCardData[] = (mockAppointments as AppointmentMock[])
+// Generate approvals using our new utility
+const generatedAppointments = generatePendingNotifications(new Date(), 5);
+const initialApprovalItems: ApprovalCardData[] = generatedAppointments
   .map(transformAppointmentToApprovalCard)
   .filter((card): card is ApprovalCardData => card !== null);
 

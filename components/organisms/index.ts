@@ -6,11 +6,11 @@ export {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./card";
-export { Footer } from "./footer";
-export { ProfileForm } from "./profile-form";
-export { Sidebar } from "./sidebar";
-export { Table } from "./table";
+} from "./Card";
+export { Footer } from "./Footer";
+export { ProfileForm } from "./ProfileForm";
+export { Sidebar } from "./Sidebar";
+export { Table } from "./Table";
 
 // Export charts
 export * from "./charts";

@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/atoms/button";
-import { AuthMarketingSection } from "@/components/organisms/AuthMarketingSection";
+import { Button } from "@/components/atoms";
+import { AuthMarketingSection } from "@/components/organisms/auth-marketing-section";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { RegistrationForm } from "./components/RegistrationForm";

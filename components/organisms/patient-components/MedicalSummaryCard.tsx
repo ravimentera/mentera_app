@@ -1,9 +1,9 @@
 "use client";
 
-import { FilePlus2 } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { v4 as uuid } from "uuid";
-import { Card, CardContent } from "../card";
+import { Card, CardContent } from "../Card";
 
 type Allergy = {
   name: string;
@@ -22,7 +22,7 @@ export function MedicalSummaryCard({ allergies, onEditLink = "#" }: MedicalSumma
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <FilePlus2 className="text-purple-600 w-5 h-5" />
+            <ClipboardList className="text-purple-600 w-5 h-5" />
             <h3 className="text-sm font-semibold text-gray-900">Medical Summary</h3>
           </div>
           <Link href={onEditLink} className="text-sm text-blue-600 hover:underline">

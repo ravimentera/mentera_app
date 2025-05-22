@@ -93,7 +93,7 @@ export const LineChart = ({
         label: point.date,
         key: `x-label-${point.date}-${point.value}`,
       }));
-  }, [points, data.length, data]);
+  }, [points, data]);
 
   // Set mounted state when component mounts
   useEffect(() => {
