@@ -1,7 +1,6 @@
 "use client";
 
 import ComponentErrorBoundary from "@/components/organisms/ComponentErrorBoundary"; // Assuming this path is correct
-import React from "react";
 import { v4 as uuid } from "uuid";
 import { componentMap } from "./components"; // Assuming this path is correct
 
@@ -44,7 +43,7 @@ const UnknownComponentFallback = ({
   <div className="p-4 my-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-md shadow-sm w-full">
     <h3 className="font-bold text-md">Unknown Component</h3>
     <p className="text-sm">
-      The component named "<strong>{componentName}</strong>" could not be found.
+      The component named &quot;<strong>{componentName}</strong>&quot; could not be found.
     </p>
     <p className="text-xs mt-1">
       Please check the layout configuration and ensure the component is correctly registered in

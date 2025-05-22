@@ -1,7 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/atoms/badge";
-import { Button } from "@/components/atoms/button";
+import { Badge, Button } from "@/components/atoms";
 import { Mail, Pencil, Phone, Plus } from "lucide-react";
 import { Patient } from "../types";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { DrawerComponent } from "@/components/organisms/drawer";
+import { DrawerComponent } from "@/components/organisms/Drawer";
 import { DashboardLayout } from "@/components/templates";
 
 export default function DashboardLayoutWrapper({

@@ -102,19 +102,19 @@ export function ToastProvider({
   const getAnimationClasses = () => {
     switch (position) {
       case "top-left":
-        return "animate-in-left slide-in-from-left-5";
+        return "animate-in-left slide-in-from-left";
       case "top-center":
-        return "animate-in-top slide-in-from-top-5";
+        return "animate-in-top slide-in-from-top";
       case "top-right":
-        return "animate-in slide-in-from-right-5";
+        return "animate-in slide-in-from-right";
       case "bottom-left":
-        return "animate-in-left slide-in-from-left-5";
+        return "animate-in-left slide-in-from-left";
       case "bottom-center":
-        return "animate-in-bottom slide-in-from-bottom-5";
+        return "animate-in-bottom slide-in-from-bottom";
       case "bottom-right":
-        return "animate-in slide-in-from-right-5";
+        return "animate-in slide-in-from-right";
       default:
-        return "animate-in slide-in-from-right-5";
+        return "animate-in slide-in-from-right";
     }
   };
 

@@ -1,6 +1,6 @@
+import { ReduxProvider } from "@/components/ReduxProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/atoms";
-import { ReduxProvider } from "@/components/redux-provider";
-import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";

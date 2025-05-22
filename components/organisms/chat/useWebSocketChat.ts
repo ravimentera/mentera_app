@@ -273,6 +273,7 @@ export function useWebSocketChat({
     cacheDebug,
     dispatch,
     connected,
+    streamBuffer,
   ]);
 
   return {

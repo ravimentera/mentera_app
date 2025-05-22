@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/atoms/button";
+import { Button } from "@/components/atoms";
 import { Package2 } from "lucide-react";
 import { Package } from "../types";
 

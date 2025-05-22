@@ -1,4 +1,4 @@
-import { Button } from "@/components/atoms/button";
+import { Button } from "@/components/atoms";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 

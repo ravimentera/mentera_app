@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/atoms/button";
+import { Button } from "@/components/atoms";
 import { Calendar, ChevronRight, User } from "lucide-react";
 import { Appointment } from "../types";
 

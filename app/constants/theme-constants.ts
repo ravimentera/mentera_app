@@ -20,7 +20,7 @@ export const GRADIENTS = {
 
 // Feature Icon Background Colors
 export const FEATURE_ICON_COLORS = {
-  SCHEDULE: "bg-[#DBEAFE]",
-  DASHBOARD: "bg-[#E7D7F8]",
-  ROBOT: "bg-[#FCE7F3]",
+  SCHEDULE: "bg-blue-100",
+  DASHBOARD: "bg-ui-background-purple",
+  ROBOT: "bg-pink-100",
 };

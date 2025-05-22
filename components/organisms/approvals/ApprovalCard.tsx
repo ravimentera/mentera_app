@@ -1,12 +1,10 @@
 "use client";
 
 import ChatMessages from "@/app/components/ChatMessages";
-import { Button } from "@/components/atoms/button";
-import { Input } from "@/components/atoms/input";
-import { Textarea } from "@/components/atoms/textarea";
-import { ApprovalCardData, ApprovalChatMessage } from "@/lib/store/approvalsSlice";
+import { Button, Input, Textarea } from "@/components/atoms";
+import { ApprovalCardData } from "@/lib/store/approvalsSlice";
 import { RefreshCw, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface ApprovalCardComponentProps {
   cardData: ApprovalCardData;
@@ -141,7 +139,7 @@ export function ApprovalCardComponent({
                     onChange={(e) => setNewChatMessage(e.target.value)}
                     placeholder="Type a reply..."
                     className="flex-1"
-                    onKeyPress={(e) => {
+                    onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         handleSendChatMessageInternal();
