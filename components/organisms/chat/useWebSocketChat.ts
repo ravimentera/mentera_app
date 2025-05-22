@@ -1,19 +1,19 @@
+// components/organisms/chat/useWebSocketChat.ts
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
-import { addMessage } from "@/lib/store/messagesSlice";
+// Make sure ReduxMessage is the one with threadId and createdAt
+import { Message as ReduxMessage, addMessage } from "@/lib/store/messagesSlice"; // Ensure this is the updated Message type
+import { updateThreadLastMessageAt } from "@/lib/store/threadsSlice"; // Import action to update thread timestamp
 import { sanitizeMarkdown } from "@/lib/utils";
 import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
 import WebSocket from "isomorphic-ws";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { v4 as uuid } from "uuid";
-// Ensure PatientContextForMock is exported from your types file
-import { ChatMessage, WebSocketResponseMessage } from "./types";
+import { WebSocketResponseMessage } from "./types"; // Your existing type
 import { extractChunk, logMetadata } from "./utils";
 
 import type { AppDispatch } from "@/lib/store";
 import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
-
-// Import the new mock handler hook
 import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
 
 interface UseChatWebSocketProps {
@@ -21,11 +21,10 @@ interface UseChatWebSocketProps {
   isPatientContextEnabled: boolean;
   forceFresh: boolean;
   cacheDebug: boolean;
-  onMessage?: (messages: ChatMessage[]) => void;
+  activeThreadId: string; // Add activeThreadId
+  // onMessage?: (messages: ReduxMessage[]) => void; // This was for local state, likely not needed if Redux is sole source
 }
 
-// This helper can remain here if the real WebSocket path also needs it,
-// or be moved to utils if it's broadly used. The mock handler also defines its own.
 const getBotActualResponse = (rawContent: string): string => {
   const botMarker = "Bot: ";
   const markerIndex = rawContent.indexOf(botMarker);
@@ -40,6 +39,7 @@ export function useWebSocketChat({
   isPatientContextEnabled,
   forceFresh,
   cacheDebug,
+  activeThreadId, // Receive activeThreadId
 }: UseChatWebSocketProps) {
   const socketRef = useRef<WebSocket | null>(null);
   const retryCount = useRef(0);
@@ -47,55 +47,67 @@ export function useWebSocketChat({
   const retryDelay = 2000;
   const retryTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(false); // This loading is for chat messages
+  const [messages, setMessages] = useState<ReduxMessage[]>([]); // Local messages state might be redundant
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
-  // Use the mock handler hook
-  // It provides the mock sending logic and status
-  const { isMockActive, initialMockConnectedState, mockSendMessage } = useChatMockHandler({
-    setMessages, // Pass state setter for messages
-    setLoading, // Pass state setter for loading
+  /* inside useWebSocketChat() */
+  const threadIdRef = useRef(activeThreadId);
+  useEffect(() => {
+    threadIdRef.current = activeThreadId;
+  }, [activeThreadId]);
+
+  const {
+    isMockActive,
+    initialMockConnectedState,
+    mockSendMessage: originalMockSendMessage,
+  } = useChatMockHandler({
+    setMessages, // If you remove local messages state, this is not needed by mock handler directly
+    // The mock handler would need to dispatch to Redux if it creates messages
+    // For simplicity, let's assume mock handler is adapted or its setMessages is for its internal use only
+    setLoading,
     currentPatientId,
     isPatientContextEnabled,
   });
 
-  // Initialize 'connected' state based on whether mocking is active
   const [connected, setConnected] = useState(initialMockConnectedState);
-  const [streamBuffer, setStreamBuffer] = useState(""); // Used for real WebSocket streaming
-  const conversationId = useRef(`conv_${Date.now()}`);
+  const [streamBuffer, setStreamBuffer] = useState("");
+  const conversationId = useRef(`conv_${Date.now()}`); // This might need to be per-thread or managed differently
 
+  // sendMessage now only takes text, as activeThreadId is available from props
   const sendMessage = useCallback(
     (text: string) => {
-      const patient = patientDatabase[currentPatientId]; // Get current patient context
-      const newMessage: ChatMessage = { id: uuid(), sender: "user", text };
+      if (!activeThreadId) {
+        console.warn("[Chat] No active thread. Cannot send message.");
+        return;
+      }
 
-      // Update local messages and dispatch to Redux store immediately for user's message
-      setMessages((prev) => [...prev, newMessage]);
-      dispatch(addMessage(newMessage));
-      console.log("[Chat] User message added to state:", newMessage);
+      // User message is already added optimistically by TeraRuntimeProvider's onNew
+      // This hook's sendMessage is now primarily for triggering the WebSocket call.
+      // And for the mock handler.
 
-      if (isMockActive && mockSendMessage) {
-        // If mock is active, use the mockSendMessage function from the hook
+      console.log(`[Chat] sendMessage called for thread ${activeThreadId} with text: ${text}`);
+
+      if (isMockActive && originalMockSendMessage) {
         console.log("[Chat] Mock active, delegating to mockSendMessage.");
-        mockSendMessage(text);
+        // Adapt mockSendMessage if it needs to know about threadId or dispatch Redux actions
+        originalMockSendMessage(text, activeThreadId); // Pass activeThreadId if mock needs it
       } else {
-        // Logic for sending message via real WebSocket
         if (!connected || !socketRef.current) {
           console.warn("[Chat] Real WebSocket not connected. Cannot send message.");
-          // Optionally, queue the message or inform the user
           return;
         }
+        const patient = patientDatabase[currentPatientId];
         const payload: any = {
           type: "chat",
           nurseId: testNurse.id,
           message: text,
-          conversationId: conversationId.current,
+          conversationId: `${conversationId.current}_thread_${activeThreadId}`, // Make conversationId thread-specific
           medspaId: testMedSpa.medspaId,
           medSpaContext: testMedSpa,
-          streaming: true, // Request streaming from real backend
+          streaming: true,
           cacheControl: { debug: cacheDebug, forceFresh },
-          debug: { timestamp: new Date().toISOString() },
+          debug: { timestamp: new Date().toISOString(), activeThreadId },
         };
         if (isPatientContextEnabled && patient) {
           payload.patientId = patient.id;
@@ -107,32 +119,41 @@ export function useWebSocketChat({
       }
     },
     [
+      activeThreadId, // Add activeThreadId to dependencies
       isMockActive,
-      mockSendMessage,
+      originalMockSendMessage,
       connected,
       currentPatientId,
       isPatientContextEnabled,
-      dispatch, // dispatch is stable
-      cacheDebug, // from props
-      forceFresh, // from props
+      // dispatch, // dispatch is stable
+      cacheDebug,
+      forceFresh,
+      // conversationId.current // if conversationId is dynamic per thread
     ],
-  ); // Dependencies for sendMessage
+  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   useEffect(() => {
     if (isMockActive) {
       console.log(
-        "[Chat] Client-side mock chat is ENABLED (via hook). Real WebSocket connection will be skipped.",
+        "[Chat] Client-side mock chat is ENABLED. Real WebSocket connection will be skipped.",
       );
-      // Ensure 'connected' state is true if it wasn't set by initialMockConnectedState
-      // This might happen if initialMockConnectedState was false but isMockActive became true later (unlikely with current setup)
-      if (!connected) setConnected(true);
-      return; // Skip WebSocket connection logic
+      if (!connected) setConnected(true); // Ensure connected state for mock
+      return;
+    }
+    if (!activeThreadId) {
+      console.log("[Chat] No active thread, WebSocket connection paused.");
+      if (socketRef.current) {
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+      setConnected(false);
+      return; // Don't connect if no active thread
     }
 
-    // --- Real WebSocket Connection Logic (only if mock is not active) ---
-    console.log("[Chat] Client-side mock chat is DISABLED. Attempting real WebSocket connection.");
+    console.log(`[Chat] Attempting real WebSocket connection for thread: ${activeThreadId}`);
     const connect = async () => {
+      // ... (token fetching logic remains the same)
       let token = "";
       try {
         const tokenResponse = await fetch("/api/token");
@@ -155,6 +176,8 @@ export function useWebSocketChat({
       const url = new URL(wsUrl);
       url.searchParams.set("token", token);
       url.searchParams.set("medspaId", testMedSpa.medspaId);
+      // Potentially add threadId to WebSocket connection if backend needs it per-connection
+      // url.searchParams.set("threadId", activeThreadId);
 
       console.log("[Chat] Attempting to connect to real WebSocket:", url.toString());
       const socket = new WebSocket(url.toString());
@@ -174,6 +197,29 @@ export function useWebSocketChat({
       socket.onmessage = (event: MessageEvent<string>) => {
         const msg: WebSocketResponseMessage = JSON.parse(event.data);
         console.log("[Chat] Real WebSocket message received:", msg);
+
+        const processAndDispatchAiMessage = (content: string) => {
+          if (!activeThreadId) return; // Should not happen if connection depends on activeThreadId
+          const actualBotMessage = getBotActualResponse(content);
+          const aiMessage: ReduxMessage = {
+            id: uuid(),
+            // threadId: activeThreadId,
+            threadId: threadIdRef.current,
+            sender: "assistant", // ← must be exactly this
+            text: String(actualBotMessage), // ← force plain string now
+            createdAt: Date.now(),
+          };
+          // setMessages((prev) => [...prev, aiMessage]); // Remove if not using local state
+          dispatch(addMessage(aiMessage));
+          dispatch(
+            updateThreadLastMessageAt({ threadId: activeThreadId, timestamp: aiMessage.createdAt }),
+          );
+          setLoading(false);
+          if (actualBotMessage.trim()) {
+            dispatch(fetchDynamicLayout(actualBotMessage));
+          }
+        };
+
         switch (msg.type) {
           case "chat_stream_start":
             setLoading(true);
@@ -184,42 +230,22 @@ export function useWebSocketChat({
             break;
           case "chat_stream_complete": {
             const rawAiResponseContent = msg.response?.content || streamBuffer;
-            const actualBotMessage = getBotActualResponse(rawAiResponseContent); // Use the helper
-            const streamMessage: ChatMessage = {
-              id: uuid(),
-              sender: "ai",
-              text: sanitizeMarkdown(actualBotMessage),
-            };
-            setMessages((prev) => [...prev, streamMessage]);
-            dispatch(addMessage(streamMessage));
-            setLoading(false);
-            setStreamBuffer("");
+            processAndDispatchAiMessage(rawAiResponseContent);
+            setStreamBuffer(""); // Clear buffer after processing
             logMetadata(msg.response?.metadata);
-            if (actualBotMessage.trim()) {
-              dispatch(fetchDynamicLayout(actualBotMessage));
-            }
             break;
           }
           case "chat_response": {
+            // Non-streaming response
             const rawAiResponseContent = msg.response?.content || "";
-            const actualBotMessage = getBotActualResponse(rawAiResponseContent); // Use the helper
-            const chatResMessage: ChatMessage = {
-              id: uuid(),
-              sender: "ai",
-              text: extractChunk(actualBotMessage),
-            };
-            setMessages((prev) => [...prev, chatResMessage]);
-            dispatch(addMessage(chatResMessage));
-            setLoading(false);
+            processAndDispatchAiMessage(rawAiResponseContent);
             logMetadata(msg.response?.metadata);
-            if (actualBotMessage.trim()) {
-              dispatch(fetchDynamicLayout(actualBotMessage));
-            }
             break;
           }
           case "error":
             setLoading(false);
             console.error("Real WebSocket Server Error:", msg.error);
+            // Potentially dispatch an error message to the thread
             break;
           default:
             console.warn("Received unhandled real WebSocket message type:", msg.type);
@@ -229,16 +255,18 @@ export function useWebSocketChat({
       socket.onclose = (event: CloseEvent) => {
         setConnected(false);
         console.log("Real WebSocket closed:", event.code, event.reason);
-        // Only retry if mock is not active and retries are not exhausted
-        if (!isMockActive && retryCount.current < maxRetries) {
+        if (!isMockActive && activeThreadId && retryCount.current < maxRetries) {
+          // Only retry if there was an active thread
           retryCount.current += 1;
           console.log(
             `WebSocket connection closed. Retrying attempt ${retryCount.current}/${maxRetries} in ${retryDelay / 1000}s...`,
           );
           if (retryTimeout.current) clearTimeout(retryTimeout.current);
           retryTimeout.current = setTimeout(connect, retryDelay);
-        } else if (!isMockActive) {
-          console.error(`Real WebSocket connection failed after ${maxRetries} retries.`);
+        } else if (!isMockActive && activeThreadId) {
+          console.error(
+            `Real WebSocket connection failed after ${maxRetries} retries for thread ${activeThreadId}.`,
+          );
         }
       };
       socket.onerror = (errorEvent: WebSocket.ErrorEvent) => {
@@ -246,10 +274,9 @@ export function useWebSocketChat({
       };
     };
 
-    connect(); // Initial connection attempt
+    connect();
 
     return () => {
-      // Cleanup function
       if (retryTimeout.current) {
         clearTimeout(retryTimeout.current);
       }
@@ -258,27 +285,26 @@ export function useWebSocketChat({
         socketRef.current.onopen = null;
         socketRef.current.onmessage = null;
         socketRef.current.onerror = null;
-        socketRef.current.onclose = null;
+        socketRef.current.onclose = null; // Important to nullify to prevent calls on old socket instances
         socketRef.current.close();
         socketRef.current = null;
       }
     };
-    // Added isMockActive to the dependency array.
-    // `dispatch` is stable. `connected` is managed internally.
   }, [
     isMockActive,
-    currentPatientId,
-    isPatientContextEnabled,
-    forceFresh,
-    cacheDebug,
-    dispatch,
-    connected,
+    activeThreadId, // WebSocket connection now depends on activeThreadId
+    // currentPatientId, // These are used inside connect() or sendMessage(), not direct deps for connection effect
+    // isPatientContextEnabled,
+    // forceFresh,
+    // cacheDebug,
+    dispatch, // dispatch is stable
+    // connected, // Internal state, not a dependency for re-running the effect that sets it up
   ]);
 
   return {
     connected,
-    messages,
-    streamBuffer,
+    // messages, // Removed, as Redux is the source of truth via TeraRuntimeProvider
+    streamBuffer, // Still useful for streaming UI if you build chunks manually before dispatching full message
     loading,
     sendMessage,
   };

@@ -59,6 +59,8 @@ export const fetchDynamicLayout = createAsyncThunk<
   ThunkApiConfig // Type for thunkAPI
 >("dynamicLayout/fetchLayout", async (markdownKey, thunkAPI) => {
   try {
+    console.log({ markdownKey });
+
     const { dispatch, getState, rejectWithValue } = thunkAPI;
     const sessionId = getStreamingUISessionId(getState());
     dispatch(setSidePanelExpanded(true));

@@ -6,11 +6,13 @@ import dynamicLayoutReducer from "./dynamicLayoutSlice";
 import globalStateReducer from "./globalStateSlice";
 import messagesReducer from "./messagesSlice";
 import { usersApi } from "./services/userApi";
+import threadsReducer from "./threadsSlice";
 
 export const store = configureStore({
   reducer: {
     [usersApi.reducerPath]: usersApi.reducer,
     messages: messagesReducer,
+    threads: threadsReducer,
     dynamicLayout: dynamicLayoutReducer,
     globalState: globalStateReducer,
     appointments: appointmentsReducer,
