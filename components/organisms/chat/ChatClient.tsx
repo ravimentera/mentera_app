@@ -16,6 +16,7 @@ import type { AppDispatch, RootState } from "@/lib/store";
 import { loadMessages } from "@/lib/store/messagesSlice";
 import { addThread, loadThreads } from "@/lib/store/threadsSlice";
 import { patientDatabase } from "@/mock/chat.data";
+import { ThreadListDrawer } from "./ThreadListDrawer";
 
 export default function ChatClient() {
   const dispatch = useDispatch<AppDispatch>();
@@ -27,6 +28,7 @@ export default function ChatClient() {
   const [isPatientContextEnabled, setIsPatientContextEnabled] = useState(true);
   const [forceFresh, setForceFresh] = useState(false);
   const [cacheDebug, setCacheDebug] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   /* ---------------------------------------------------- */
   /* 2️⃣   Redux state                                    */
@@ -91,6 +93,7 @@ export default function ChatClient() {
   return (
     <div className="flex h-full  w-full flex-col bg-white dark:bg-slate-900">
       <ChatTopbar
+        onOpenDrawer={() => setDrawerOpen(true)} /* NEW */
         currentPatientId={currentPatientId}
         setCurrentPatientId={setCurrentPatientId}
         isPatientContextEnabled={isPatientContextEnabled}
@@ -109,16 +112,12 @@ export default function ChatClient() {
           forceFresh={forceFresh}
           cacheDebug={cacheDebug}
         >
-          <div className="flex flex-1 overflow-hidden">
-            {/* side rail */}
-            <div className="w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 overflow-y-auto">
-              <ThreadList />
-            </div>
+          {/* drawer for ANY screen size */}
+          <ThreadListDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
 
-            {/* messages pane */}
-            <div className="flex-1 overflow-hidden">
-              <Thread />
-            </div>
+          {/* messages */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <Thread />
           </div>
         </TeraRuntimeProvider>
       ) : (
