@@ -89,7 +89,7 @@ export default function ChatClient() {
   /* 5️⃣   Render                                          */
   /* ---------------------------------------------------- */
   return (
-    <div className="flex h-screen w-full flex-col bg-white dark:bg-slate-900">
+    <div className="flex h-full  w-full flex-col bg-white dark:bg-slate-900">
       <ChatTopbar
         currentPatientId={currentPatientId}
         setCurrentPatientId={setCurrentPatientId}

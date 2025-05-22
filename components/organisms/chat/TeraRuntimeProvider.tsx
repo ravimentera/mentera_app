@@ -255,7 +255,39 @@ export function TeraRuntimeProvider({
     [messageRuntime.thread],
   );
 
-  /* 6️⃣ final runtime (mutate; keep prototype intact) */
+  /* 6️⃣ wire the Redux actions into the external-store core **once** */
+  const coreThreads = (messageRuntime as any)._core.threads; // ⚠️ cast
+
+  coreThreads.adapter.onSwitchToNewThread = () => threadListRuntime.switchToNewThread();
+
+  coreThreads.adapter.onSwitchToThread = (id: string) => threadListRuntime.switchToThread(id);
+
+  /* optional: keep the adapter’s current threadId & list in sync */
+  coreThreads.adapter.threadId = activeThreadId;
+  coreThreads.adapter.threads = threadListRuntime
+    .getState()
+    .threads.map((id) => threadListRuntime.getItemById(id));
+
+  // / --- 6½  keep threads-core wired no matter how often the adapter object changes ---
+  const threadsCore: any = (messageRuntime as any)._core.threads;
+
+  // helper ↻
+  const patchAdapter = () => {
+    threadsCore.adapter.onSwitchToNewThread = () => threadListRuntime.switchToNewThread();
+    threadsCore.adapter.onSwitchToThread = (id: string) => threadListRuntime.switchToThread(id);
+  };
+
+  // run once now …
+  patchAdapter();
+
+  // …and every time the library swaps its adapter object
+  const originalSet = threadsCore.__internal_setAdapter.bind(threadsCore);
+  threadsCore.__internal_setAdapter = (nextAdapter: any) => {
+    originalSet(nextAdapter); // keep normal behaviour
+    patchAdapter(); // re-attach our callbacks
+  };
+
+  /* 7️⃣ expose archive + custom threads object (you already had this) */
   (messageRuntime as any).threads = threadListRuntime;
   (messageRuntime as any).archive = async (id: string) => {
     dispatch(deleteMessagesForThread(id));
