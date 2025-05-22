@@ -1,8 +1,7 @@
-/* -------------------------------------------------------------------------- */
-/*  TeraRuntimeProvider – Assistant-UI runtime wired to Redux + WebSocket     */
-/* -------------------------------------------------------------------------- */
 "use client";
 
+import { store } from "@/lib/store";
+import type { AppDispatch, RootState } from "@/lib/store";
 import {
   AssistantRuntimeProvider as AUIProvider,
   AppendMessage,
@@ -13,9 +12,6 @@ import {
   useExternalStoreRuntime,
 } from "@assistant-ui/react";
 import React, { PropsWithChildren, useCallback, useMemo } from "react";
-
-import { store } from "@/lib/store";
-import type { AppDispatch, RootState } from "@/lib/store";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 
@@ -29,10 +25,6 @@ import { addThread, deleteThread, setActiveThreadId } from "@/lib/store/threadsS
 
 import { useWebSocketChat } from "./useWebSocketChat";
 
-/* -------------------------------------------------------------------------- */
-/*  Helpers                                                                   */
-/* -------------------------------------------------------------------------- */
-
 const toAUIMessage = (msg: ReduxMessage): ThreadMessageLike => ({
   id: msg.id,
   role: msg.sender === "user" ? "user" : "assistant", // keep if you might have legacy "ai"
@@ -42,11 +34,6 @@ const toAUIMessage = (msg: ReduxMessage): ThreadMessageLike => ({
   createdAt: new Date(msg.createdAt),
 });
 
-/* ---------- Thread-list-item runtime factory ----------------------------- */
-/** assistant-ui only needs `getState` + `subscribe` (+ optional CRUD) */
-/* ------------------------------------------------------------------ */
-/*  New, bullet-proof ThreadListItemRuntime factory                    */
-/* ------------------------------------------------------------------ */
 function makeItemRuntime(idFn: () => string | undefined) {
   /*  lightweight EventEmitter  */
   const listeners: Record<string, Set<() => void>> = {};
@@ -105,7 +92,7 @@ function makeItemRuntime(idFn: () => string | undefined) {
   };
 }
 
-/* ---------- Thread-list runtime backed by Redux ------------------------- */
+// Thread-list runtime backed by Redux
 function createReduxThreadListRuntime(
   mainRuntime: ThreadRuntime,
   dispatch: AppDispatch,
@@ -127,7 +114,7 @@ function createReduxThreadListRuntime(
   };
 
   return {
-    /* ---------- state ---------- */
+    // state
     getState() {
       const s = slice();
       return {
@@ -141,7 +128,7 @@ function createReduxThreadListRuntime(
       return store.subscribe(cb);
     },
 
-    /* ---------- getters ---------- */
+    // getters
     get main() {
       return mainRuntime;
     },
@@ -149,7 +136,7 @@ function createReduxThreadListRuntime(
       return getOrCreateItem(this.getState().mainThreadId) as any;
     },
 
-    /* ---------- look-ups ---------- */
+    // look-ups
     getById(id) {
       this.switchToThread(id);
       return this.main;
@@ -162,7 +149,7 @@ function createReduxThreadListRuntime(
       return getOrCreateItem(this.getState().archivedThreads[i]) as any;
     },
 
-    /* ---------- actions ---------- */
+    // actions
     async switchToThread(id) {
       dispatch(setActiveThreadId(id));
       getOrCreateItem(id).__emit?.("switched-to"); // focus event
@@ -174,10 +161,6 @@ function createReduxThreadListRuntime(
     },
   };
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Provider component                                                        */
-/* -------------------------------------------------------------------------- */
 
 export interface TeraRuntimeProviderProps extends PropsWithChildren {
   activeThreadId: string;
@@ -197,12 +180,12 @@ export function TeraRuntimeProvider({
 }: TeraRuntimeProviderProps) {
   const dispatch = useDispatch<AppDispatch>();
 
-  /* 1️⃣ messages for active thread */
+  /*  messages for active thread */
   const messages = useSelector((s: RootState) =>
     s.messages.items.filter((m) => m.threadId === activeThreadId),
   );
 
-  /* 2️⃣ websocket */
+  /*  websocket */
   const { loading, sendMessage } = useWebSocketChat({
     currentPatientId,
     isPatientContextEnabled,
@@ -211,7 +194,7 @@ export function TeraRuntimeProvider({
     activeThreadId,
   });
 
-  /* 3️⃣ on new user message */
+  /*  on new user message */
   // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   const onNew = useCallback(
     async (msg: AppendMessage): Promise<void> => {
@@ -231,7 +214,7 @@ export function TeraRuntimeProvider({
     [activeThreadId],
   );
 
-  /* 4️⃣ per-thread runtime */
+  /*  per-thread runtime */
   const messageRuntime = useExternalStoreRuntime<ReduxMessage>({
     messages,
     isRunning: loading,
@@ -239,23 +222,14 @@ export function TeraRuntimeProvider({
     convertMessage: toAUIMessage,
   });
 
-  console.log(
-    "🪄 runtime messages",
-    messageRuntime.thread.getState().messages.map((m) => ({
-      id: m.id,
-      role: m.role,
-      content: m.content,
-    })),
-  );
-
-  /* 5️⃣ thread-list runtime */
+  /* thread-list runtime */
   // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   const threadListRuntime = useMemo(
     () => createReduxThreadListRuntime(messageRuntime.thread, dispatch, store.getState),
     [messageRuntime.thread],
   );
 
-  /* 6️⃣ wire the Redux actions into the external-store core **once** */
+  /*  wire the Redux actions into the external-store core **once** */
   const coreThreads = (messageRuntime as any)._core.threads; // ⚠️ cast
 
   coreThreads.adapter.onSwitchToNewThread = () => threadListRuntime.switchToNewThread();
@@ -268,7 +242,7 @@ export function TeraRuntimeProvider({
     .getState()
     .threads.map((id) => threadListRuntime.getItemById(id));
 
-  // / --- 6½  keep threads-core wired no matter how often the adapter object changes ---
+  //  6½  keep threads-core wired no matter how often the adapter object changes
   const threadsCore: any = (messageRuntime as any)._core.threads;
 
   // helper ↻

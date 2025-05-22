@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 import type { FC } from "react";
 
-import { MarkdownText } from "@/components/assistant-ui/markdown-text";
-import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { MarkdownText } from "@/components/assistant_ui/markdown_text";
+import { TooltipIconButton } from "@/components/assistant_ui/tooltip_icon_button";
 import { Button } from "@/components/ui/button";
 
 export const Thread: FC = () => {

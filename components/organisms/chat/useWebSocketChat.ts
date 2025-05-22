@@ -1,20 +1,18 @@
 // components/organisms/chat/useWebSocketChat.ts
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
-// Make sure ReduxMessage is the one with threadId and createdAt
-import { Message as ReduxMessage, addMessage } from "@/lib/store/messagesSlice"; // Ensure this is the updated Message type
-import { updateThreadLastMessageAt } from "@/lib/store/threadsSlice"; // Import action to update thread timestamp
+import type { AppDispatch } from "@/lib/store";
+import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
+import { Message as ReduxMessage, addMessage } from "@/lib/store/messagesSlice";
+import { updateThreadLastMessageAt } from "@/lib/store/threadsSlice";
 import { sanitizeMarkdown } from "@/lib/utils";
 import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
+import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
 import WebSocket from "isomorphic-ws";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { v4 as uuid } from "uuid";
-import { WebSocketResponseMessage } from "./types"; // Your existing type
+import { WebSocketResponseMessage } from "./types";
 import { extractChunk, logMetadata } from "./utils";
-
-import type { AppDispatch } from "@/lib/store";
-import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
-import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
 
 interface UseChatWebSocketProps {
   currentPatientId: keyof typeof patientDatabase;

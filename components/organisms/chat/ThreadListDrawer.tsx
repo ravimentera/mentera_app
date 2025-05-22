@@ -1,6 +1,6 @@
 "use client";
 
-import { ThreadList } from "@/components/assistant-ui/thread-list";
+import { ThreadList } from "@/components/assistant_ui/thread_list";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -20,10 +20,7 @@ export function ThreadListDrawer({ open, onOpenChange }: Props) {
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
       {/* right-hand sliding panel */}
-      <DrawerContent
-        // className="bg-background w-[280px]"
-        className="bg-background w-[280px]"
-      >
+      <DrawerContent className="bg-background w-[280px]">
         <DrawerHeader className="flex-row items-center justify-between border-b">
           <DrawerTitle className="text-base">Conversations</DrawerTitle>
 

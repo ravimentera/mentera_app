@@ -1,14 +1,11 @@
-/* --------------------------------------------------------------------- */
-/*  ChatClient – hosts top-bar, ThreadList, Thread & TeraRuntimeProvider  */
-/* --------------------------------------------------------------------- */
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 
-import { Thread } from "@/components/assistant-ui/thread";
-import { ThreadList } from "@/components/assistant-ui/thread-list";
+import { Thread } from "@/components/assistant_ui/thread";
+import { ThreadList } from "@/components/assistant_ui/thread_list";
 import { ChatTopbar } from "./ChatTopbar";
 import { TeraRuntimeProvider } from "./TeraRuntimeProvider";
 
@@ -21,24 +18,15 @@ import { ThreadListDrawer } from "./ThreadListDrawer";
 export default function ChatClient() {
   const dispatch = useDispatch<AppDispatch>();
 
-  /* ---------------------------------------------------- */
-  /* 1️⃣   UI toggles & patient selector                   */
-  /* ---------------------------------------------------- */
   const [currentPatientId, setCurrentPatientId] = useState<keyof typeof patientDatabase>("PT-1004");
   const [isPatientContextEnabled, setIsPatientContextEnabled] = useState(true);
   const [forceFresh, setForceFresh] = useState(false);
   const [cacheDebug, setCacheDebug] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  /* ---------------------------------------------------- */
-  /* 2️⃣   Redux state                                    */
-  /* ---------------------------------------------------- */
   const { threads, activeThreadId } = useSelector((s: RootState) => s.threads);
   const messages = useSelector((s: RootState) => s.messages.items);
 
-  /* ---------------------------------------------------- */
-  /* 3️⃣   One-time localStorage hydrate / persist        */
-  /* ---------------------------------------------------- */
   const hasLoaded = useRef(false);
 
   /* load once */
@@ -70,9 +58,6 @@ export default function ChatClient() {
       requestAnimationFrame(() => localStorage.setItem("chatMessages", JSON.stringify(messages)));
   }, [messages]);
 
-  /* ---------------------------------------------------- */
-  /* 4️⃣   Ensure at least one thread exists AFTER load    */
-  /* ---------------------------------------------------- */
   const defaultThreadCreated = useRef(false);
   useEffect(() => {
     if (!defaultThreadCreated.current && hasLoaded.current && threads.length === 0) {
@@ -87,9 +72,6 @@ export default function ChatClient() {
     }
   }, [threads.length, dispatch]);
 
-  /* ---------------------------------------------------- */
-  /* 5️⃣   Render                                          */
-  /* ---------------------------------------------------- */
   return (
     <div className="flex h-full  w-full flex-col bg-white dark:bg-slate-900">
       <ChatTopbar
