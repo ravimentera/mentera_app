@@ -41,7 +41,7 @@ interface UseChatMockHandlerProps {
 interface UseChatMockHandlerReturn {
   isMockActive: boolean;
   initialMockConnectedState: boolean;
-  mockSendMessage: ((text: string) => void) | null;
+  mockSendMessage: ((text: string, threadId: string) => void) | null;
 }
 
 export function useChatMockHandler({
@@ -53,7 +53,7 @@ export function useChatMockHandler({
   const dispatch = useDispatch<AppDispatch>();
 
   const handleMockResponse = useCallback(
-    (aiFullResponse: string) => {
+    (aiFullResponse: string, threadId: string) => {
       setLoading(true);
       console.log("[MockChatHandler] Simulating chat_stream_start");
 
@@ -62,8 +62,11 @@ export function useChatMockHandler({
           const actualBotMessageForDisplay = getBotActualResponse(aiFullResponse);
           const chatResponseMessage: ChatMessage = {
             id: uuid(),
-            sender: "ai",
-            text: sanitizeMarkdown(actualBotMessageForDisplay),
+            sender: "assistant",
+            // text: sanitizeMarkdown(actualBotMessageForDisplay),
+            text: actualBotMessageForDisplay,
+            threadId,
+            createdAt: Date.now(),
           };
 
           setMessages((prev) => [...prev, chatResponseMessage]);
@@ -89,7 +92,7 @@ export function useChatMockHandler({
   );
 
   const mockSendMessage = useCallback(
-    (text: string) => {
+    (text: string, threadId: string) => {
       if (!ENABLE_MOCK_CHAT) return;
 
       console.log("[MockChatHandler] Handling sendMessage with mock logic.");
@@ -98,7 +101,7 @@ export function useChatMockHandler({
         isPatientContextEnabled && patient ? { id: patient.id } : undefined;
 
       const aiResponse = generateMockAiResponse(text, mockPatientContext);
-      handleMockResponse(aiResponse);
+      handleMockResponse(aiResponse, threadId);
     },
     [currentPatientId, isPatientContextEnabled, handleMockResponse],
   );
