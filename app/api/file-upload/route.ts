@@ -1,34 +1,79 @@
-import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { nanoid } from "nanoid";
+// app/api/file-upload/route.ts
 import { NextRequest, NextResponse } from "next/server";
+
+// initialize once, reuse across invocations
+const s3 = new S3Client({ region: process.env.AWS_REGION || "us-east-1" });
+const BUCKET = process.env.S3_BUCKET_NAME || "myteramemories"; // e.g. "myteramemories"
+
+// (Optional) explicitly run on Node runtime so we can use Buffer, streams, etc.
+// export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const form = await req.formData();
 
-    if (!file) {
-      return NextResponse.json({ error: "No file field provided." }, { status: 400 });
+    // required multipart fields
+    const file = form.get("file") as File | null;
+    const medSpaId = form.get("medSpaId") as string | null;
+    const providerId = form.get("providerId") as string | null;
+    const patientId = form.get("patientId") as string | null;
+
+    if (!file || !medSpaId || !providerId || !patientId) {
+      return NextResponse.json(
+        { error: "Missing one of: file, medSpaId, providerId, patientId" },
+        { status: 400 },
+      );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const originalName = file.name.replace(/\s+/g, "_");
+    const uniqueSuffix = nanoid();
+    const key = [
+      "memories",
+      medSpaId,
+      providerId,
+      patientId,
+      "file_upload",
+      `${originalName}_${uniqueSuffix}`,
+    ].join("/");
 
-    const uploadsDir = join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
+    // read file into a Buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const body = Buffer.from(arrayBuffer);
 
-    const filename = `${nanoid()}_${file.name}`.replace(/\s+/g, "_");
-    const filepath = join(uploadsDir, filename);
-    await writeFile(filepath, buffer);
+    // --- future retention logic placeholder ---
+    // // TODO: attach metadata or kick off lifecycle rule enforcement here
+    // const retentionDate = new Date();
+    // retentionDate.setFullYear(retentionDate.getFullYear() + 1);
+    // metadata["x-amz-expiration-rule"] = retentionDate.toISOString();
 
-    const url = `/uploads/${filename}`;
-    console.info("[/api/file-upload] stored file →", url);
+    // upload to S3
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: BUCKET,
+        Key: key,
+        Body: body,
+        ContentType: file.type,
+        // ACL: "private"    // files are private by default
+      }),
+    );
 
-    return NextResponse.json({ url, name: file.name, type: file.type });
+    // your users can fetch via a presigned URL or via CloudFront later;
+    // for now we’ll return the public S3 URL pattern (adjust if you use a custom domain)
+    const url = `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+    return NextResponse.json({
+      url,
+      key,
+      name: file.name,
+      type: file.type,
+    });
+
+    // const url = `/uploads/${file.name}`;
+    // return NextResponse.json({ url, name: file.name, type: file.type });
   } catch (err) {
-    console.error("[/api/file-upload] failed:", err);
+    console.error("[/api/file-upload] upload error:", err);
     return NextResponse.json({ error: "Upload failed." }, { status: 500 });
   }
 }

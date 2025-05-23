@@ -3,14 +3,19 @@ import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
 import type { AppDispatch } from "@/lib/store";
 import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
 import { UploadedFile } from "@/lib/store/fileUploadsSlice";
+import {
+  selectPatientDatabase,
+  selectTestMedSpa,
+  selectTestNurse,
+} from "@/lib/store/globalStateSlice";
 import { Message as ReduxMessage, addMessage } from "@/lib/store/messagesSlice";
-import { updateThreadLastMessageAt } from "@/lib/store/threadsSlice";
+import { getActiveThreadId, updateThreadLastMessageAt } from "@/lib/store/threadsSlice";
 import { sanitizeMarkdown } from "@/lib/utils";
 import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
 import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
 import WebSocket from "isomorphic-ws";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuid } from "uuid";
 import { WebSocketResponseMessage } from "./types";
 import { extractChunk, logMetadata } from "./utils";
@@ -50,6 +55,10 @@ export function useWebSocketChat({
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
+  const patientDatabase = useSelector(selectPatientDatabase);
+  const testMedSpa = useSelector(selectTestMedSpa);
+  const testNurse = useSelector(selectTestNurse);
+
   /* inside useWebSocketChat() */
   const threadIdRef = useRef(activeThreadId);
   useEffect(() => {
@@ -71,7 +80,9 @@ export function useWebSocketChat({
 
   const [connected, setConnected] = useState(initialMockConnectedState);
   const [streamBuffer, setStreamBuffer] = useState("");
-  const conversationId = useRef(`conv_${Date.now()}`); // This might need to be per-thread or managed differently
+  const conversationId = useSelector(getActiveThreadId); // This might need to be per-thread or managed differently
+
+  console.log({ conversationId });
 
   // sendMessage now only takes text, as activeThreadId is available from props
   const sendMessage = useCallback(
@@ -102,7 +113,7 @@ export function useWebSocketChat({
           type: "chat",
           nurseId: testNurse.id,
           message: text,
-          conversationId: `${conversationId.current}_thread_${activeThreadId}`, // Make conversationId thread-specific
+          conversationId: `${conversationId}_thread_${activeThreadId}`, // Make conversationId thread-specific
           medspaId: testMedSpa.medspaId,
           medSpaContext: testMedSpa,
           streaming: true,
@@ -128,6 +139,10 @@ export function useWebSocketChat({
       // dispatch, // dispatch is stable
       cacheDebug,
       forceFresh,
+      testMedSpa,
+      patientDatabase,
+      testNurse.id,
+      conversationId,
       // conversationId.current // if conversationId is dynamic per thread
     ],
   );

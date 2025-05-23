@@ -1,63 +1,88 @@
+// components/organisms/chat/ChatClient.tsx
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 
 import { Thread } from "@/components/assistant_ui/thread";
-import { ThreadList } from "@/components/assistant_ui/thread_list";
 import { ChatTopbar } from "./ChatTopbar";
 import { TeraRuntimeProvider } from "./TeraRuntimeProvider";
+import { ThreadListDrawer } from "./ThreadListDrawer";
 
 import type { AppDispatch, RootState } from "@/lib/store";
 import { loadMessages } from "@/lib/store/messagesSlice";
 import { addThread, loadThreads } from "@/lib/store/threadsSlice";
-import { patientDatabase } from "@/mock/chat.data";
-import { ThreadListDrawer } from "./ThreadListDrawer";
+
+import {
+  selectPatientDatabase,
+  selectSelectedPatientId,
+  setSelectedPatientId,
+} from "@/lib/store/globalStateSlice";
 
 export default function ChatClient() {
   const dispatch = useDispatch<AppDispatch>();
 
-  const [currentPatientId, setCurrentPatientId] = useState<keyof typeof patientDatabase>("PT-1004");
-  const [isPatientContextEnabled, setIsPatientContextEnabled] = useState(true);
+  // grab the mock patient DB and selected ID from Redux
+  const patientDB = useSelector(selectPatientDatabase);
+  const selectedId = useSelector(selectSelectedPatientId);
+
+  // pick a default if none is set yet
+  const defaultPatientId = Object.keys(patientDB)[0] as string;
+
+  // ensure we always have a currentPatientId in Redux
+  useEffect(() => {
+    if (!selectedId) {
+      dispatch(setSelectedPatientId(defaultPatientId));
+    }
+  }, [selectedId, defaultPatientId, dispatch]);
+
+  const currentPatientId = selectedId ?? defaultPatientId;
+
+  // local UI state
+  const [isPatientContextEnabled, setIsPatientContextEnabled] = React.useState(true);
   const [forceFresh, setForceFresh] = useState(false);
   const [cacheDebug, setCacheDebug] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const { threads, activeThreadId } = useSelector((s: RootState) => s.threads);
-  const messages = useSelector((s: RootState) => s.messages.items);
-
+  // load persisted threads & messages once
   const hasLoaded = useRef(false);
 
-  /* load once */
+  console.log({ selectedId, currentPatientId });
+
   useEffect(() => {
     if (hasLoaded.current) return;
     hasLoaded.current = true;
 
     try {
-      const storedThreads = localStorage.getItem("chatThreads");
-      if (storedThreads) dispatch(loadThreads(JSON.parse(storedThreads)));
+      const ts = localStorage.getItem("chatThreads");
+      if (ts) dispatch(loadThreads(JSON.parse(ts)));
 
-      const storedMsgs = localStorage.getItem("chatMessages");
-      if (storedMsgs) dispatch(loadMessages(JSON.parse(storedMsgs)));
-    } catch (e) {
-      console.warn("Corrupt chat persistence, clearing.", e);
+      const ms = localStorage.getItem("chatMessages");
+      if (ms) dispatch(loadMessages(JSON.parse(ms)));
+    } catch {
       localStorage.removeItem("chatThreads");
       localStorage.removeItem("chatMessages");
     }
   }, [dispatch]);
 
-  /* persist on change (debounced to animation-frame for perf) */
+  // persist threads & messages
+  const { threads, activeThreadId } = useSelector((s: RootState) => s.threads);
+  const messages = useSelector((s: RootState) => s.messages.items);
+
   useEffect(() => {
-    if (threads.length)
+    if (threads.length) {
       requestAnimationFrame(() => localStorage.setItem("chatThreads", JSON.stringify(threads)));
+    }
   }, [threads]);
 
   useEffect(() => {
-    if (messages.length)
+    if (messages.length) {
       requestAnimationFrame(() => localStorage.setItem("chatMessages", JSON.stringify(messages)));
+    }
   }, [messages]);
 
+  // create a default thread if none exist
   const defaultThreadCreated = useRef(false);
   useEffect(() => {
     if (!defaultThreadCreated.current && hasLoaded.current && threads.length === 0) {
@@ -73,11 +98,11 @@ export default function ChatClient() {
   }, [threads.length, dispatch]);
 
   return (
-    <div className="flex h-full  w-full flex-col bg-white dark:bg-slate-900">
+    <div className="flex h-full w-full flex-col bg-white dark:bg-slate-900">
       <ChatTopbar
-        onOpenDrawer={() => setDrawerOpen(true)} /* NEW */
+        onOpenDrawer={() => setDrawerOpen(true)}
         currentPatientId={currentPatientId}
-        setCurrentPatientId={setCurrentPatientId}
+        setCurrentPatientId={(id) => dispatch(setSelectedPatientId(id))}
         isPatientContextEnabled={isPatientContextEnabled}
         setIsPatientContextEnabled={setIsPatientContextEnabled}
         forceFresh={forceFresh}
@@ -94,10 +119,8 @@ export default function ChatClient() {
           forceFresh={forceFresh}
           cacheDebug={cacheDebug}
         >
-          {/* drawer for ANY screen size */}
           <ThreadListDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
 
-          {/* messages */}
           <div className="flex-1 min-h-0 overflow-hidden">
             <Thread />
           </div>

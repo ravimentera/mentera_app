@@ -1,6 +1,7 @@
 // store/threadsSlice.ts
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
+import type { RootState } from "./index";
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                     */
@@ -105,6 +106,8 @@ export const threadsSlice = createSlice({
     },
   },
 });
+
+export const getActiveThreadId = (state: RootState) => state.threads.activeThreadId;
 
 /* -------------------------------------------------------------------------- */
 /*  Exports                                                                   */
