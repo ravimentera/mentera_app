@@ -12,6 +12,8 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
+  FileIcon,
+  PaperclipIcon,
   PencilIcon,
   RefreshCwIcon,
   SendHorizontalIcon,
@@ -21,6 +23,11 @@ import type { FC } from "react";
 import { MarkdownText } from "@/components/assistant_ui/markdown_text";
 import { TooltipIconButton } from "@/components/assistant_ui/tooltip_icon_button";
 import { Button } from "@/components/ui/button";
+import { useFileUpload } from "@/lib/hooks/useFileUpload";
+import { RootState } from "@/lib/store";
+import { removeFile } from "@/lib/store/fileUploadsSlice";
+import { useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 export const Thread: FC = () => {
   return (
@@ -109,15 +116,92 @@ const ThreadWelcomeSuggestions: FC = () => {
 };
 
 const Composer: FC = () => {
+  const dispatch = useDispatch();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { uploadFile } = useFileUpload();
+
+  const files = useSelector((state: RootState) => state.fileUploads.files);
+
+  const triggerBrowse = () => fileInputRef.current?.click();
+
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    if (!e.target.files) return;
+
+    const incoming = Array.from(e.target.files);
+    const already = files.length;
+
+    if (incoming.length + already > 5) {
+      alert("You can attach a maximum of 5 files per message.");
+      e.target.value = "";
+      return;
+    }
+
+    for (const file of incoming) {
+      try {
+        await uploadFile(file);
+      } catch {
+        /* handled inside hook */
+      }
+    }
+    e.target.value = ""; // allow same file to be picked again
+  };
+
   return (
-    <ComposerPrimitive.Root className="focus-within:border-ring/20 flex w-full flex-wrap items-end rounded-lg border bg-inherit px-2.5 shadow-sm transition-colors ease-in">
-      <ComposerPrimitive.Input
-        rows={1}
-        autoFocus
-        placeholder="Write a message..."
-        className="placeholder:text-muted-foreground max-h-40 flex-grow resize-none border-none bg-transparent px-2 py-4 text-sm outline-none focus:ring-0 disabled:cursor-not-allowed"
-      />
-      <ComposerAction />
+    <ComposerPrimitive.Root className="focus-within:border-ring/20 flex w-full flex-col rounded-lg border bg-inherit shadow-sm transition-colors ease-in">
+      {/* === preview bar INSIDE the box === */}
+      {files.length > 0 && (
+        <div className="flex w-full gap-2 overflow-x-auto px-2 py-1 scrollbar-thin">
+          {files.map((f) => (
+            <div
+              key={f.id}
+              className="relative min-w-8 min-h-8 flex-shrink-0 rounded bg-muted flex items-center justify-center overflow-visible"
+            >
+              {/* delete button */}
+              <button
+                onClick={() => dispatch(removeFile(f.id))}
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-background/90 text-[10px] font-bold leading-none shadow hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                aria-label={`Remove ${f.name}`}
+                type="button"
+              >
+                ×
+              </button>
+
+              {f.type === "image" ? (
+                <img
+                  src={f.url !== "__uploading__" ? f.url : ""}
+                  alt={f.name}
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <FileIcon className="size-4" />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* input row */}
+      <div className="flex w-full items-end px-2.5">
+        {/* clip first */}
+        <TooltipIconButton
+          tooltip="Attach file"
+          variant="ghost"
+          className="my-2.5 size-8 p-2"
+          onClick={triggerBrowse}
+        >
+          <PaperclipIcon />
+        </TooltipIconButton>
+        <input ref={fileInputRef} type="file" hidden onChange={handleChange} multiple />
+
+        {/* textarea */}
+        <ComposerPrimitive.Input
+          rows={1}
+          autoFocus
+          placeholder="Write a message..."
+          className="placeholder:text-muted-foreground max-h-40 flex-grow resize-none border-none bg-transparent px-2 py-4 text-sm outline-none focus:ring-0 disabled:cursor-not-allowed"
+        />
+        <ComposerAction />
+      </div>
     </ComposerPrimitive.Root>
   );
 };

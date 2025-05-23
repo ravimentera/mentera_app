@@ -2,6 +2,7 @@
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
 import type { AppDispatch } from "@/lib/store";
 import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
+import { UploadedFile } from "@/lib/store/fileUploadsSlice";
 import { Message as ReduxMessage, addMessage } from "@/lib/store/messagesSlice";
 import { updateThreadLastMessageAt } from "@/lib/store/threadsSlice";
 import { sanitizeMarkdown } from "@/lib/utils";
@@ -74,7 +75,8 @@ export function useWebSocketChat({
 
   // sendMessage now only takes text, as activeThreadId is available from props
   const sendMessage = useCallback(
-    (text: string) => {
+    //@TODO: not using allFiles for now.
+    (text: string, allFiles?: UploadedFile[]) => {
       if (!activeThreadId) {
         console.warn("[Chat] No active thread. Cannot send message.");
         return;

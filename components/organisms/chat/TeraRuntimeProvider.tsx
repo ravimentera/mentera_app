@@ -2,6 +2,13 @@
 
 import { store } from "@/lib/store";
 import type { AppDispatch, RootState } from "@/lib/store";
+import { clear, selectAllFiles } from "@/lib/store/fileUploadsSlice";
+import {
+  Message as ReduxMessage,
+  addMessage,
+  deleteMessagesForThread,
+} from "@/lib/store/messagesSlice";
+import { addThread, deleteThread, setActiveThreadId } from "@/lib/store/threadsSlice";
 import {
   AssistantRuntimeProvider as AUIProvider,
   AppendMessage,
@@ -12,17 +19,9 @@ import {
   useExternalStoreRuntime,
 } from "@assistant-ui/react";
 import React, { PropsWithChildren, useCallback, useMemo } from "react";
+import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
-
-import {
-  Message as ReduxMessage,
-  addMessage,
-  deleteMessagesForThread,
-} from "@/lib/store/messagesSlice";
-
-import { addThread, deleteThread, setActiveThreadId } from "@/lib/store/threadsSlice";
-
 import { useWebSocketChat } from "./useWebSocketChat";
 
 const toAUIMessage = (msg: ReduxMessage): ThreadMessageLike => ({
@@ -184,6 +183,13 @@ export function TeraRuntimeProvider({
   const messages = useSelector((s: RootState) =>
     s.messages.items.filter((m) => m.threadId === activeThreadId),
   );
+  const allFiles = useSelector(selectAllFiles);
+
+  //  keep latest files in a ref so onNew always sees the current list
+  const filesRef = useRef(allFiles);
+  useEffect(() => {
+    filesRef.current = allFiles;
+  }, [allFiles]);
 
   /*  websocket */
   const { loading, sendMessage } = useWebSocketChat({
@@ -195,7 +201,6 @@ export function TeraRuntimeProvider({
   });
 
   /*  on new user message */
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   const onNew = useCallback(
     async (msg: AppendMessage): Promise<void> => {
       const text = msg.content[0]?.type === "text" ? msg.content[0].text : "";
@@ -209,9 +214,12 @@ export function TeraRuntimeProvider({
       console.log({ reduxMsg });
 
       dispatch(addMessage(reduxMsg));
-      sendMessage(text);
+      //  always send the most recent files
+      sendMessage(text, filesRef.current);
+
+      dispatch(clear());
     },
-    [activeThreadId],
+    [activeThreadId, dispatch, sendMessage], // files handled via ref
   );
 
   /*  per-thread runtime */
