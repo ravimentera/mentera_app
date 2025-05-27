@@ -3,14 +3,18 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import appointmentsReducer from "./appointmentsSlice";
 import approvalsReducer from "./approvalsSlice";
 import dynamicLayoutReducer from "./dynamicLayoutSlice";
+import fileUploadsReducer from "./fileUploadsSlice";
 import globalStateReducer from "./globalStateSlice";
 import messagesReducer from "./messagesSlice";
 import { usersApi } from "./services/userApi";
+import threadsReducer from "./threadsSlice";
 
 export const store = configureStore({
   reducer: {
     [usersApi.reducerPath]: usersApi.reducer,
     messages: messagesReducer,
+    fileUploads: fileUploadsReducer,
+    threads: threadsReducer,
     dynamicLayout: dynamicLayoutReducer,
     globalState: globalStateReducer,
     appointments: appointmentsReducer,

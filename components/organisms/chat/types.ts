@@ -1,9 +1,11 @@
-export type Sender = "user" | "ai";
+export type Sender = "user" | "assistant";
 
 export interface ChatMessage {
   id: string;
   sender: Sender;
   text: string;
+  threadId: string;
+  createdAt: number;
 }
 
 export interface WebSocketResponseMessage {

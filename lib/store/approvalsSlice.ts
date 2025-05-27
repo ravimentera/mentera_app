@@ -7,7 +7,7 @@ import type { AppDispatch, RootState } from "./index";
 export interface ApprovalChatMessage {
   id: string;
   text: string;
-  sender: string; // "user", "provider", "patient", "ai" etc.
+  sender: string; // "user", "provider", "patient","assistant" etc.
   timestamp: string; // ISO string for serializability
   isOutbound: boolean;
 }

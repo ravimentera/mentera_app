@@ -1,4 +1,4 @@
-export type Sender = "user" | "ai";
+export type Sender = "user" | "assistant";
 
 export type ChatMessage = {
   id: string;

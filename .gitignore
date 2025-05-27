@@ -15,3 +15,5 @@ out/
 # TypeScript incremental build info
 tsconfig.tsbuildinfo
 
+/public/uploads
+
