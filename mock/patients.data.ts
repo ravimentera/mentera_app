@@ -1,6 +1,16 @@
 export const patients = [
   {
     patientId: "PT-1001",
+    profile: {
+      firstName: "Nikolaj",
+      lastName: "Larsen",
+      gender: "male",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/men/25.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/25.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/25.jpg",
+      },
+    },
     chartId: "CH-5001",
     visitDate: "2025-03-10",
     provider: "Rachel Garcia",
@@ -31,6 +41,16 @@ export const patients = [
   },
   {
     patientId: "PT-1002",
+    profile: {
+      firstName: "Lauri",
+      lastName: "Seppala",
+      gender: "male",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/men/94.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/94.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/94.jpg",
+      },
+    },
     chartId: "CH-5002",
     visitDate: "2025-03-08",
     provider: "Samantha Taylor",
@@ -61,6 +81,16 @@ export const patients = [
   },
   {
     patientId: "PT-1003",
+    profile: {
+      firstName: "Agnes",
+      lastName: "Andre",
+      gender: "female",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/women/44.jpg",
+        medium: "https://randomuser.me/api/portraits/med/women/44.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/women/44.jpg",
+      },
+    },
     chartId: "CH-5003",
     visitDate: "2025-02-27",
     provider: "Veronica Miller",
@@ -91,6 +121,16 @@ export const patients = [
   },
   {
     patientId: "PT-1004",
+    profile: {
+      firstName: "Jacob",
+      lastName: "Jones",
+      gender: "male",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/men/21.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/21.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/21.jpg",
+      },
+    },
     chartId: "CH-5004",
     visitDate: "2025-03-05",
     provider: "Megan Wilson",
@@ -121,6 +161,16 @@ export const patients = [
   },
   {
     patientId: "PT-1005",
+    profile: {
+      firstName: "Yashodha",
+      lastName: "Prabhu",
+      gender: "female",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/women/60.jpg",
+        medium: "https://randomuser.me/api/portraits/med/women/60.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/women/60.jpg",
+      },
+    },
     chartId: "CH-5005",
     visitDate: "2025-03-09",
     provider: "Jessica Brown",
@@ -151,6 +201,16 @@ export const patients = [
   },
   {
     patientId: "PT-1006",
+    profile: {
+      firstName: "Vildan",
+      lastName: "Çörekçi",
+      gender: "female",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/women/52.jpg",
+        medium: "https://randomuser.me/api/portraits/med/women/52.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/women/52.jpg",
+      },
+    },
     chartId: "CH-5006",
     visitDate: "2025-03-11",
     provider: "Emily Chen",
@@ -181,6 +241,16 @@ export const patients = [
   },
   {
     patientId: "PT-1007",
+    profile: {
+      firstName: "Clemente",
+      lastName: "Balderas",
+      gender: "male",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/men/50.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/50.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/50.jpg",
+      },
+    },
     chartId: "CH-5007",
     visitDate: "2025-03-12",
     provider: "David Park",
@@ -211,6 +281,16 @@ export const patients = [
   },
   {
     patientId: "PT-1008",
+    profile: {
+      firstName: "Willow",
+      lastName: "Robinson",
+      gender: "female",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/women/22.jpg",
+        medium: "https://randomuser.me/api/portraits/med/women/22.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/women/22.jpg",
+      },
+    },
     chartId: "CH-5008",
     visitDate: "2025-03-13",
     provider: "Sarah Johnson",
@@ -241,6 +321,16 @@ export const patients = [
   },
   {
     patientId: "PT-1009",
+    profile: {
+      firstName: "Önal",
+      lastName: "Okumuş",
+      gender: "male",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/men/71.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/71.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/71.jpg",
+      },
+    },
     chartId: "CH-5009",
     visitDate: "2025-03-14",
     provider: "Michael Rodriguez",
@@ -270,6 +360,16 @@ export const patients = [
   },
   {
     patientId: "PT-1010",
+    profile: {
+      firstName: "Evelyn",
+      lastName: "Walker",
+      gender: "female",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/women/38.jpg",
+        medium: "https://randomuser.me/api/portraits/med/women/38.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/women/38.jpg",
+      },
+    },
     chartId: "CH-5010",
     visitDate: "2025-03-15",
     provider: "Amanda Lee",
@@ -299,6 +399,16 @@ export const patients = [
   },
   {
     patientId: "PT-1011",
+    profile: {
+      firstName: "Zayan",
+      lastName: "Bhardwaj",
+      gender: "male",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/men/15.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/15.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/15.jpg",
+      },
+    },
     chartId: "CH-5011",
     visitDate: "2025-03-16",
     provider: "Lisa Thompson",
@@ -329,6 +439,16 @@ export const patients = [
   },
   {
     patientId: "PT-1012",
+    profile: {
+      firstName: "Malthe",
+      lastName: "Nielsen",
+      gender: "male",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/men/9.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/9.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/9.jpg",
+      },
+    },
     chartId: "CH-5012",
     visitDate: "2025-03-17",
     provider: "Robert Kim",
@@ -358,6 +478,16 @@ export const patients = [
   },
   {
     patientId: "PT-1013",
+    profile: {
+      firstName: "Delphine",
+      lastName: "Ouellet",
+      gender: "female",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/women/36.jpg",
+        medium: "https://randomuser.me/api/portraits/med/women/36.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/women/36.jpg",
+      },
+    },
     chartId: "CH-5013",
     visitDate: "2025-03-18",
     provider: "Jennifer White",
@@ -387,6 +517,16 @@ export const patients = [
   },
   {
     patientId: "PT-1014",
+    profile: {
+      firstName: "Käthe",
+      lastName: "Baier",
+      gender: "female",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/women/57.jpg",
+        medium: "https://randomuser.me/api/portraits/med/women/57.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/women/57.jpg",
+      },
+    },
     chartId: "CH-5014",
     visitDate: "2025-03-19",
     provider: "Kevin Martinez",
@@ -416,6 +556,16 @@ export const patients = [
   },
   {
     patientId: "PT-1015",
+    profile: {
+      firstName: "Horst",
+      lastName: "Rolland",
+      gender: "male",
+      avatar: {
+        large: "https://randomuser.me/api/portraits/men/98.jpg",
+        medium: "https://randomuser.me/api/portraits/med/men/98.jpg",
+        thumbnail: "https://randomuser.me/api/portraits/thumb/men/98.jpg",
+      },
+    },
     chartId: "CH-5015",
     visitDate: "2025-03-20",
     provider: "Nicole Anderson",

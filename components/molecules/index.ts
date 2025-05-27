@@ -42,5 +42,7 @@ export { Popover, PopoverContent, PopoverTrigger } from "./Popover";
 
 export { FormStepper } from "./form-stepper";
 export { GoogleSignInButton } from "./GoogleSignInButton";
+export { RoleToggle } from "./RoleToggle";
 export { TreatmentPillGroup } from "./treatment-pill-group";
 export type { TreatmentOption } from "./treatment-pill-group";
+export { default as UserAvatar } from "./UserAvatar";

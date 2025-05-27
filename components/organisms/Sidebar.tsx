@@ -21,6 +21,12 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import {
+  getFirstProvider,
+  getProviderFullName,
+  getProviderInitials,
+} from "../../utils/provider.utils";
+import { UserAvatar } from "../molecules";
 
 interface SidebarItemProps {
   href: string;
@@ -137,6 +143,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     window.dispatchEvent(event);
   };
 
+  // Get first provider's details
+  const firstProvider = getFirstProvider();
+  const providerName = firstProvider ? getProviderFullName(firstProvider) : "Sarah Doe";
+  const providerInitials = firstProvider ? getProviderInitials(firstProvider) : "SD";
+
   const sidebarItems = [
     {
       name: "Dashboard",
@@ -241,10 +252,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     isCollapsed ? "justify-center w-full" : "flex-1",
                   )}
                 >
-                  <div className="min-w-10 min-h-10 w-10 h-10 rounded-full bg-ui-background-purple flex items-center justify-center">
-                    <span className="text-ui-icon-purple font-medium">SD</span>
-                  </div>
-                  {!isCollapsed && <span className="text-sm font-medium text-text">Sarah Doe</span>}
+                  {firstProvider?.avatar && (
+                    <UserAvatar avatar={firstProvider.avatar} name={providerName} size="small" />
+                  )}
+                  {!isCollapsed && (
+                    <span className="text-sm font-medium text-text">{providerName}</span>
+                  )}
                 </div>
                 {!isCollapsed && (
                   <button

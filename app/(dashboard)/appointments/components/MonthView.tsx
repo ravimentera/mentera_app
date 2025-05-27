@@ -30,10 +30,17 @@ export function MonthView({
   getAppointmentStatusColors,
   filterAppointmentsByDate,
 }: MonthViewProps) {
+  const monthDays = eachDayOfInterval({
+    start: startOfWeek(startOfMonth(date), { weekStartsOn: 0 }),
+    end: endOfWeek(endOfMonth(date), { weekStartsOn: 0 }),
+  });
+
+  const numberOfWeeks = Math.ceil(monthDays.length / 7);
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="border border-zinc-200 bg-white overflow-hidden rounded-lg flex flex-col h-full max-h-screen overflow-y-auto">
       {/* Month grid header */}
-      <div className="grid grid-cols-7 border-b bg-white">
+      <div className="grid grid-cols-7 border-b bg-white sticky top-0 z-30">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div key={day} className="px-2 py-3 text-center text-sm font-medium text-gray-500">
             {day}
@@ -42,11 +49,11 @@ export function MonthView({
       </div>
 
       {/* Month grid */}
-      <div className="flex-1 grid grid-cols-7 grid-rows-[repeat(6,_1fr)] divide-x divide-y">
-        {eachDayOfInterval({
-          start: startOfWeek(startOfMonth(date), { weekStartsOn: 0 }),
-          end: endOfWeek(endOfMonth(date), { weekStartsOn: 0 }),
-        }).map((day) => (
+      <div
+        className="flex-1 grid grid-cols-7 divide-x divide-y"
+        style={{ gridTemplateRows: `repeat(${numberOfWeeks}, 1fr)` }}
+      >
+        {monthDays.map((day) => (
           <button
             key={format(day, "yyyy-MM-dd")}
             type="button"

@@ -143,6 +143,9 @@ module.exports = {
         md: "0.375rem",
         sm: "0.25rem",
       },
+      margin: {
+        4.5: "1.125rem",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: 0 },

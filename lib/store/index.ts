@@ -6,6 +6,7 @@ import dynamicLayoutReducer from "./dynamicLayoutSlice";
 import globalStateReducer from "./globalStateSlice";
 import messagesReducer from "./messagesSlice";
 import { usersApi } from "./services/userApi";
+import userRoleReducer from "./userRoleSlice";
 
 export const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ export const store = configureStore({
     globalState: globalStateReducer,
     appointments: appointmentsReducer,
     approvals: approvalsReducer,
+    userRole: userRoleReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(usersApi.middleware),
 });
