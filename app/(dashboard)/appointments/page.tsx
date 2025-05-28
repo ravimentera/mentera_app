@@ -2,6 +2,7 @@
 
 import { Button, Input } from "@/components/atoms";
 import { Card, LineChart } from "@/components/organisms";
+import { PlusIcon } from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
 import { AppointmentCalendar } from "./components/AppointmentCalendar";
 
@@ -191,9 +192,14 @@ export default function AppointmentsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Appointments</h1>
-        <p className="text-gray-500">View and manage your upcoming and past appointments.</p>
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold text-gray-900">Appointments</h1>
+          <p className="text-gray-500">View and manage your upcoming and past appointments.</p>
+        </div>
+        <Button>
+          <PlusIcon /> <span className="ml-2">New Appointment</span>
+        </Button>
       </div>
 
       <AppointmentCalendar />
@@ -270,7 +276,6 @@ export default function AppointmentsPage() {
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
-              <Button>+ New Appointment</Button>
             </div>
           </div>
         </div>

@@ -512,7 +512,7 @@ export function AppointmentCalendar({
   }, [view, date, loadMockData, dispatch]); // Remove calendarAppointments from dependencies
 
   return (
-    <div className="border rounded-lg bg-white" onMouseLeave={handleCalendarMouseLeave}>
+    <div className="bg-white" onMouseLeave={handleCalendarMouseLeave}>
       <CalendarHeader
         date={date}
         view={view}
@@ -527,7 +527,7 @@ export function AppointmentCalendar({
         setIsDatePickerOpen={setIsDatePickerOpen}
       />
 
-      <div className="overflow-auto max-h-[calc(100vh-16rem)] relative">
+      <div className="overflow-auto max-h-[calc(100vh-16rem)] relative rounded-lg">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-purple"></div>
