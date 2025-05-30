@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Input } from "@/components/atoms";
+import { RoleToggle } from "@/components/molecules";
 import { Card, LineChart } from "@/components/organisms";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
@@ -197,9 +198,12 @@ export default function AppointmentsPage() {
           <h1 className="text-2xl font-semibold text-gray-900">Appointments</h1>
           <p className="text-gray-500">View and manage your upcoming and past appointments.</p>
         </div>
-        <Button>
-          <PlusIcon /> <span className="ml-2">New Appointment</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <RoleToggle className="mr-2" />
+          <Button>
+            <PlusIcon /> <span className="ml-2">New Appointment</span>
+          </Button>
+        </div>
       </div>
 
       <AppointmentCalendar />

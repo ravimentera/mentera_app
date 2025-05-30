@@ -66,7 +66,7 @@ export function ProviderDayView({
   dropIndicator,
 }: ProviderDayViewProps) {
   return (
-    <div className="border border-zinc-200 bg-white overflow-hidden rounded-lg p-4">
+    <div className="bg-white overflow-hidden rounded-lg p-4">
       {/* Day view container */}
       <div className="grid grid-cols-[64px_1fr] gap-4">
         {/* Time slots */}

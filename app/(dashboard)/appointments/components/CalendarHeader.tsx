@@ -370,8 +370,6 @@ export function CalendarHeader({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* <RoleToggle className="mr-2" /> */}
-
           <Button
             variant="outline"
             size="sm"

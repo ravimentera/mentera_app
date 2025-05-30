@@ -16,6 +16,17 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        gradient:
+          "bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest text-white shadow hover:opacity-90 [&>svg]:stroke-white [&>svg]:text-white",
+        "gradient-bordered":
+          "bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest text-white shadow hover:opacity-90 [&>svg]:stroke-white [&>svg]:text-white border border-transparent bg-clip-padding",
+        success: "bg-green-600 text-white shadow hover:bg-green-700",
+        danger: "bg-red-600 text-white shadow hover:bg-red-700",
+        "success-light": "bg-green-100 text-green-800 shadow-sm hover:bg-green-200",
+        "danger-light": "bg-red-100 text-red-800 shadow-sm hover:bg-red-200",
+        "outline-ghost": "text-brand-blue hover:bg-blue-50 hover:text-brand-blue",
+        "gradient-light":
+          "bg-gradient-to-r from-brand-purple-light via-brand-purple-light/90 to-brand-purple-light/80 text-brand-purple-dark shadow-sm hover:opacity-90 [&>svg]:text-brand-purple-dark",
       },
       size: {
         default: "h-9 px-4 py-2",

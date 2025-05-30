@@ -78,7 +78,7 @@ export function AdminWeekView({
   const weekDays = getWeekDays(date);
 
   return (
-    <div className="border border-zinc-200 bg-white overflow-hidden rounded-lg h-full max-h-screen overflow-y-auto">
+    <div className="bg-white overflow-hidden rounded-lg h-full max-h-screen overflow-y-auto">
       {/* Header row */}
       <div className="sticky top-0 z-30 bg-white border-b border-zinc-200">
         <div className="grid grid-cols-[200px_repeat(7,_1fr)] gap-0">
