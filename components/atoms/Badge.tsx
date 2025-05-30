@@ -3,7 +3,15 @@ import { HTMLAttributes, ReactNode } from "react";
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   children: ReactNode;
-  variant?: "primary" | "secondary" | "outline" | "success" | "warning" | "danger";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "outline"
+    | "success"
+    | "warning"
+    | "danger"
+    | "info"
+    | "accent";
 }
 
 export function Badge({ children, variant = "primary", className, ...props }: BadgeProps) {
@@ -14,6 +22,8 @@ export function Badge({ children, variant = "primary", className, ...props }: Ba
     success: "bg-green-100 text-green-800",
     warning: "bg-yellow-100 text-yellow-800",
     danger: "bg-red-100 text-red-800",
+    info: "bg-blue-50 text-blue-600",
+    accent: "bg-blue-50 text-blue-600",
   };
 
   return (

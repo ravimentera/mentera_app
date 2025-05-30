@@ -38,7 +38,7 @@ export function MonthView({
   const numberOfWeeks = Math.ceil(monthDays.length / 7);
 
   return (
-    <div className="border border-zinc-200 bg-white overflow-hidden rounded-lg flex flex-col h-full max-h-screen overflow-y-auto">
+    <div className="bg-white overflow-hidden rounded-lg flex flex-col h-full max-h-screen overflow-y-auto">
       {/* Month grid header */}
       <div className="grid grid-cols-7 border-b bg-white sticky top-0 z-30">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (

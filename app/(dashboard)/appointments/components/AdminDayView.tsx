@@ -89,7 +89,7 @@ export function AdminDayView({
   };
 
   return (
-    <div className="border border-zinc-200 bg-white overflow-hidden rounded-lg h-full max-h-screen overflow-y-auto">
+    <div className="bg-white overflow-hidden rounded-lg h-full max-h-screen overflow-y-auto">
       {/* Provider headers row */}
       <div className="bg-white border-b border-zinc-200 sticky top-0 z-30">
         <div className="flex">
