@@ -73,7 +73,7 @@ export function ProviderWeekView({
   const weekDays = getWeekDays(date);
 
   return (
-    <div className="border border-zinc-200 bg-white overflow-hidden rounded-lg h-full max-h-screen overflow-y-auto">
+    <div className="bg-white overflow-hidden rounded-lg h-full max-h-screen overflow-y-auto">
       <div className="flex flex-col">
         {/* Headers row */}
         <div className="grid grid-cols-[64px_repeat(7,_1fr)] gap-x-2 px-4 pt-4 sticky top-0 z-30 bg-white border-b border-zinc-200">
@@ -113,7 +113,7 @@ export function ProviderWeekView({
           {/* Time slots column */}
           <div className="grid grid-rows-[repeat(24,_minmax(60px,_1fr))]">
             {Array.from({ length: 24 }, (_, i) => (
-              <div key={`time-slot-hour-${uuidv4()}`} className="text-sm text-gray-500 -mt-2">
+              <div key={`time-slot-hour-${uuidv4()}`} className="text-sm text-gray-500">
                 {format(new Date().setHours(i, 0), "h a")}
               </div>
             ))}

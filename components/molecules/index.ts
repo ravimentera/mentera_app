@@ -35,6 +35,7 @@ export {
 } from "./Tabs";
 
 export { Toggle } from "./Toggle";
+export { ToggleSwitch } from "./ToggleSwitch";
 
 export { Calendar } from "./Calendar";
 export { Dialog, DialogContent, DialogHeader, DialogTitle } from "./Dialog";
