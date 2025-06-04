@@ -11,7 +11,7 @@ import { handleMockLayoutRequest } from "./mockLayoutHandler";
 
 // Environment variables
 const agentId = process.env.BEDROCK_AGENT_ID || "YLGT5ZEQ0Q";
-const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID || "MIOIB6QJTI";
+const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID || "IX6QKI0770";
 const region = process.env.AWS_REGION || "us-east-1";
 
 // Determine if mocking is enabled for the API route
