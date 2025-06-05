@@ -1,10 +1,17 @@
 "use client";
 
-import ChatMessages from "@/app/components/ChatMessages";
-import { Input } from "@/components/ui/input";
+import { Button, Input } from "@/components/atoms";
+import { ChatMessages } from "@/components/molecules";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/organisms";
 import { chatData } from "@/mock/chat.data";
 import { format } from "date-fns";
-import { Search, Send } from "lucide-react";
+import { Search, Send, X } from "lucide-react";
 import { useState } from "react";
 
 export default function InboxPage() {
@@ -19,6 +26,10 @@ export default function InboxPage() {
     // Here you would typically send the message to your backend
     // For now, we'll just clear the input
     setNewMessage("");
+  };
+
+  const handleCloseChat = () => {
+    setSelectedChat(null);
   };
 
   return (
@@ -104,75 +115,74 @@ export default function InboxPage() {
         </table>
       </div>
 
-      {/* Chat Panel */}
-      {selectedChat && selectedChatData && (
-        <div className="fixed top-0 right-0 w-[500px] h-full bg-white border-l border-gray-200 shadow-lg flex flex-col">
-          {/* Chat header */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
-                  <span className="text-lg font-medium text-gray-600">
-                    {selectedChatData.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </span>
+      {/* Chat Drawer */}
+      <Drawer direction="right" open={!!selectedChat} onOpenChange={handleCloseChat}>
+        <DrawerContent direction="right" className="w-[500px]">
+          {selectedChatData && (
+            <>
+              {/* Chat header */}
+              <DrawerHeader className="p-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
+                      <span className="text-lg font-medium text-gray-600">
+                        {selectedChatData.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </span>
+                    </div>
+                    <div>
+                      <DrawerTitle className="text-lg font-semibold text-gray-900">
+                        {selectedChatData.name}
+                      </DrawerTitle>
+                      <p className="text-sm text-gray-500">{selectedChatData.patientName}</p>
+                    </div>
+                  </div>
+                  <DrawerClose asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-6 w-6" />
+                      <span className="sr-only">Close panel</span>
+                    </Button>
+                  </DrawerClose>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{selectedChatData.name}</h3>
-                  <p className="text-sm text-gray-500">{selectedChatData.patientName}</p>
+              </DrawerHeader>
+
+              {/* Chat messages */}
+              <div className="flex-1 overflow-y-auto">
+                <ChatMessages messages={selectedChatData.messages} />
+              </div>
+
+              {/* Message input */}
+              <div className="p-4 border-t border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleSendMessage();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    className="bg-gradient-to-r from-[#BD05DD] to-[#111A53] text-white hover:opacity-90"
+                  >
+                    <Send className="h-5 w-5" />
+                  </Button>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedChat(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <span className="sr-only">Close panel</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Chat messages */}
-          <div className="flex-1 overflow-y-auto">
-            <ChatMessages messages={selectedChatData.messages} />
-          </div>
-
-          {/* Message input */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleSendMessage();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleSendMessage}
-                className="p-2 bg-gradient-to-r from-[#BD05DD] to-[#111A53] text-white rounded-lg hover:opacity-90 transition-opacity"
-              >
-                <Send className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

@@ -3,10 +3,15 @@ import { Maximize2, Sparkles } from "lucide-react";
 
 interface ConversationSummaryProps {
   conversationSummary: string;
+  onViewConversation?: () => void;
   className?: string;
 }
 
-export function ConversationSummary({ conversationSummary, className }: ConversationSummaryProps) {
+export function ConversationSummary({
+  conversationSummary,
+  onViewConversation,
+  className,
+}: ConversationSummaryProps) {
   return (
     <div className={className}>
       <div className="bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest p-[1px] rounded-lg relative">
@@ -21,7 +26,12 @@ export function ConversationSummary({ conversationSummary, className }: Conversa
             <h3 className="text-lg font-semibold bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest bg-clip-text text-transparent">
               Conversation Summary
             </h3>
-            <Button variant="outline-ghost" size="sm" className="p-0 h-auto">
+            <Button
+              variant="outline-ghost"
+              size="sm"
+              className="p-0 h-auto"
+              onClick={onViewConversation}
+            >
               View Conversation
               <Maximize2 className="w-4 h-4 ml-2" />
             </Button>

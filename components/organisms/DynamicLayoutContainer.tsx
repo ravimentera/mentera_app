@@ -1,26 +1,26 @@
 "use client";
 
-import { LayoutRenderer } from "@/components/layout-renderer/LayoutRenderer";
+import { LayoutRenderer } from "@/components/organisms/LayoutRenderer";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { v4 as uuid } from "uuid";
 
-import ChatMessageSkeleton from "@/components/skeletons/ChatMessageSkeleton";
+import { ChatMessageSkeleton } from "@/components/atoms";
 // Import ShadCN Accordion components
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/molecules";
 
 // Import relevant selectors/types from the Redux slice
+import type { LayoutEntry } from "@/lib/store/dynamicLayoutSlice"; // Import types
 import {
   selectAllLayouts,
   selectIsLayoutLoading,
   selectLayoutError,
 } from "@/lib/store/dynamicLayoutSlice";
-import type { LayoutEntry } from "@/lib/store/dynamicLayoutSlice"; // Import types
 
 export function DynamicLayoutContainer() {
   const allLayouts = useSelector(selectAllLayouts); // Array of LayoutEntry { key: string, data: LayoutAST }

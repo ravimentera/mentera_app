@@ -26,7 +26,7 @@ const TooltipContent = React.forwardRef<
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
-// Simple helper component
+// Simple helper component with provider included
 interface TooltipProps {
   content: React.ReactNode;
   children: React.ReactNode;
@@ -47,12 +47,14 @@ const Tooltip = ({
   }
 
   return (
-    <TooltipRoot>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side={side} align={align}>
-        {content}
-      </TooltipContent>
-    </TooltipRoot>
+    <TooltipProvider>
+      <TooltipRoot>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent side={side} align={align}>
+          {content}
+        </TooltipContent>
+      </TooltipRoot>
+    </TooltipProvider>
   );
 };
 

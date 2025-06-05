@@ -4,7 +4,9 @@ import { getAllProviders, getProviderFullName } from "@/utils/provider.utils";
 import { format } from "date-fns";
 import React from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Appointment, DropIndicator } from "./types";
+import { AppointmentCard } from "./AppointmentCard";
+import { DropIndicator } from "./DropIndicator";
+import { Appointment, DropIndicator as DropIndicatorType } from "./types";
 
 interface AdminDayViewProps {
   date: Date;
@@ -40,7 +42,7 @@ interface AdminDayViewProps {
   onAppointmentDragOver: (event: React.MouseEvent<HTMLDivElement>, dayDate?: Date) => void;
   onAppointmentDragEnd: () => void;
   draggingAppointment: Appointment | null;
-  dropIndicator: DropIndicator;
+  dropIndicator: DropIndicatorType;
 }
 
 export function AdminDayView({
@@ -229,62 +231,16 @@ export function AdminDayView({
                   )}
 
                   {/* Drop indicator for appointment drag and drop */}
-                  {dropIndicator.isVisible &&
-                    draggingAppointment &&
-                    activeProviderId === provider.providerId && (
-                      <div
-                        className={cn(
-                          "absolute left-0 right-0 border z-30 pointer-events-none rounded-md overflow-hidden animate-pulse",
-                          draggingAppointment.type === "therapy"
-                            ? "bg-[#8A03D3]/40 border-[#8A03D3]/40"
-                            : draggingAppointment.type === "consultation"
-                              ? "bg-[#035DD3]/40 border-[#035DD3]/40"
-                              : draggingAppointment.type === "followup"
-                                ? "bg-[#D36203]/40 border-[#D36203]/40"
-                                : "bg-[#03A10B]/40 border-[#03A10B]/40",
-                        )}
-                        style={{
-                          top: dropIndicator.top,
-                          height: dropIndicator.height,
-                        }}
-                      >
-                        <div
-                          className={cn(
-                            "h-full w-full rounded-md p-2 flex flex-col",
-                            draggingAppointment.type === "therapy"
-                              ? "bg-[#8A03D3]/30"
-                              : draggingAppointment.type === "consultation"
-                                ? "bg-[#035DD3]/30"
-                                : draggingAppointment.type === "followup"
-                                  ? "bg-[#D36203]/30"
-                                  : "bg-[#03A10B]/30",
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "text-xs font-medium truncate",
-                              getAppointmentTextColor(draggingAppointment.type),
-                            )}
-                          >
-                            {draggingAppointment.patient.firstName}{" "}
-                            {draggingAppointment.patient.lastName}
-                            <span className="ml-2 text-[10px] opacity-70 italic">
-                              {format(
-                                new Date(dropIndicator.date).setHours(
-                                  Math.floor(
-                                    ((Number.parseFloat(dropIndicator.top) / 100) * 24 * 60) / 60,
-                                  ),
-                                  Math.floor(
-                                    ((Number.parseFloat(dropIndicator.top) / 100) * 24 * 60) % 60,
-                                  ),
-                                ),
-                                "h:mm a",
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                  <DropIndicator
+                    dropIndicator={dropIndicator}
+                    draggingAppointment={draggingAppointment}
+                    getAppointmentTextColor={getAppointmentTextColor}
+                    style={{
+                      left: 0,
+                      right: 0,
+                    }}
+                    className={activeProviderId !== provider.providerId ? "hidden" : ""}
+                  />
 
                   {/* Render appointments for this provider */}
                   {getOverlappingAppointments(
@@ -320,7 +276,7 @@ export function AdminDayView({
                             isCompact ? "px-1 py-0.5" : isMedium ? "px-1.5 py-1" : "px-2 py-1.5",
                             getAppointmentColors(appointment.type),
                             getAppointmentStatusColors(appointment.status),
-                            isDragging && "opacity-40 shadow-lg",
+                            isDragging && "shadow-lg",
                           )}
                           style={{
                             ...getAppointmentStyle(appointment, index, group.length),
@@ -339,56 +295,16 @@ export function AdminDayView({
                           }}
                         >
                           <div className={cn("flex flex-col", isCompact ? "gap-0" : "gap-0.5")}>
-                            <div
-                              className={cn("flex items-start", isCompact ? "gap-1" : "gap-1.5")}
-                            >
-                              {showAvatar && (
-                                <div
-                                  className={cn(
-                                    "shrink-0 rounded-full flex items-center justify-center font-medium shadow-sm",
-                                    isCompact
-                                      ? "h-3 w-3 text-[7px]"
-                                      : isMedium
-                                        ? "h-4 w-4 text-[8px]"
-                                        : "h-5 w-5 text-[9px]",
-                                    getAvatarColors(appointment.type),
-                                  )}
-                                >
-                                  {appointment.patient.firstName.charAt(0)}
-                                  {appointment.patient.lastName.charAt(0)}
-                                </div>
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <div
-                                  className={cn(
-                                    "font-medium truncate",
-                                    isCompact
-                                      ? "text-[9px] leading-[1]"
-                                      : isMedium
-                                        ? "text-[10px] leading-[1.1]"
-                                        : "text-[11px] leading-[1.2]",
-                                    getAppointmentTextColor(appointment.type),
-                                  )}
-                                >
-                                  {isCompact
-                                    ? appointment.patient.firstName
-                                    : `${appointment.patient.firstName} ${appointment.patient.lastName}`}
-                                </div>
-                                {!isCompact && durationInMinutes >= 20 && (
-                                  <div
-                                    className={cn(
-                                      "text-zinc-500 truncate",
-                                      isMedium
-                                        ? "text-[7px] leading-[1]"
-                                        : "text-[8px] leading-[1.2]",
-                                    )}
-                                  >
-                                    {format(appointment.startTime, "h:mm a")} -{" "}
-                                    {format(appointment.endTime, "h:mm a")}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                            <AppointmentCard
+                              appointment={appointment}
+                              durationInMinutes={durationInMinutes}
+                              isCompact={isCompact}
+                              isMedium={isMedium}
+                              showAvatar={showAvatar}
+                              isDragging={!!isDragging}
+                              getAvatarColors={getAvatarColors}
+                              getAppointmentTextColor={getAppointmentTextColor}
+                            />
                           </div>
                         </div>
                       );
