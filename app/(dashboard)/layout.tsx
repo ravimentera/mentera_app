@@ -1,6 +1,6 @@
 "use client";
 
-import { DrawerComponent } from "@/components/organisms/Drawer";
+import { ChatDrawer } from "@/components/organisms/ChatDrawer";
 import { DashboardLayout } from "@/components/templates";
 
 export default function DashboardLayoutWrapper({
@@ -10,7 +10,7 @@ export default function DashboardLayoutWrapper({
 }>) {
   return (
     <DashboardLayout>
-      <DrawerComponent />
+      <ChatDrawer />
       {children}
     </DashboardLayout>
   );

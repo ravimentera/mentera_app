@@ -1,13 +1,14 @@
 "use client";
 
 import ComponentErrorBoundary from "@/components/organisms/ComponentErrorBoundary"; // Assuming this path is correct
+import { componentMap } from "@/lib/layout-renderer/components"; // Updated path
 import { v4 as uuid } from "uuid";
-import { componentMap } from "./components"; // Assuming this path is correct
 
 // Type definitions (ensure these match your AST structure)
 type LayoutAST = {
   type: "Layout";
   layout: GridNode[]; // An array of grid definitions
+  title?: string; // Added title property
 };
 
 type GridNode = {

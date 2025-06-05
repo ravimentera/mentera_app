@@ -13,14 +13,13 @@ import {
   ChevronRightIcon,
   CopyIcon,
   PencilIcon,
-  RefreshCwIcon,
   SendHorizontalIcon,
 } from "lucide-react";
 import type { FC } from "react";
 
-import { MarkdownText } from "@/components/assistant-ui/markdown-text";
-import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/atoms";
+import { MarkdownText } from "@/components/molecules/MarkdownText";
+import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 
 export const Thread: FC = () => {
   return (

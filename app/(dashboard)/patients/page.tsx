@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge, Button, Input } from "@/components/atoms";
 import {
   Table,
   TableBody,
@@ -8,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/atoms/table";
-import { Badge, Button, Input } from "@/components/ui";
 import { patients } from "@/mock/patients.data";
 import { ChevronDownIcon, Filter, MoreHorizontalIcon, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";

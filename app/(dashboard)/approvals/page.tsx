@@ -1,5 +1,8 @@
 "use client";
 
+import { ChatMessages } from "@/components/molecules";
+import { CommunicationToggle } from "@/components/molecules/CommunicationToggle";
+import { Drawer, DrawerClose, DrawerContent, DrawerHeader } from "@/components/organisms";
 import {
   ApprovalCard,
   ApprovalsHeader,
@@ -9,13 +12,17 @@ import {
   PatientOverview,
 } from "@/components/organisms/approvals";
 import { ApprovalItem, approvalItems, getPatientById } from "@/mock/approvals.data";
+import { mockConversationData } from "@/mock/conversations.data";
 import confetti from "canvas-confetti";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Toaster, toast } from "sonner";
 
 export default function ApprovalsPage() {
   const [currentApprovalIndex, setCurrentApprovalIndex] = useState(0);
   const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
+  const [showConversationDrawer, setShowConversationDrawer] = useState(false);
+  const [activeCommMethod, setActiveCommMethod] = useState<"chat" | "email">("chat");
 
   useEffect(() => {
     // Get pending approvals
@@ -65,6 +72,10 @@ export default function ApprovalsPage() {
     }
   };
 
+  const handleViewConversation = () => {
+    setShowConversationDrawer(true);
+  };
+
   if (approvals.length === 0) {
     return (
       <>
@@ -89,7 +100,10 @@ export default function ApprovalsPage() {
           {/* Approval Section */}
           <div className="flex-1 space-y-6">
             {/* Conversation Summary */}
-            <ConversationSummary conversationSummary={currentApproval.conversationSummary || ""} />
+            <ConversationSummary
+              conversationSummary={currentApproval.conversationSummary || ""}
+              onViewConversation={handleViewConversation}
+            />
 
             {/* Approval Card */}
             <div className="flex flex-col gap-4">
@@ -111,6 +125,40 @@ export default function ApprovalsPage() {
           {/* Patient Overview Section */}
           <PatientOverview approval={currentApproval} />
         </div>
+
+        {/* Conversation Drawer */}
+        <Drawer
+          direction="right"
+          open={showConversationDrawer}
+          onOpenChange={setShowConversationDrawer}
+        >
+          <DrawerContent className="w-[567px]" direction="right">
+            <DrawerHeader className="border-b border-gray-100 p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-2xl font-semibold text-foreground">All Conversations</h2>
+
+                  {/* Communication Method Toggle */}
+                  <CommunicationToggle
+                    activeMethod={activeCommMethod}
+                    onMethodChange={setActiveCommMethod}
+                  />
+                </div>
+
+                <DrawerClose asChild>
+                  <button type="button" className="text-gray-400 hover:text-gray-600">
+                    <X className="h-6 w-6" />
+                  </button>
+                </DrawerClose>
+              </div>
+            </DrawerHeader>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto">
+              <ChatMessages messages={mockConversationData.messages} />
+            </div>
+          </DrawerContent>
+        </Drawer>
       </div>
     </>
   );

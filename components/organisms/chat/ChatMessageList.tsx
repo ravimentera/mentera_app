@@ -1,4 +1,4 @@
-import ChatMessageSkeleton from "@/components/skeletons/ChatMessageSkeleton";
+import { ChatMessageSkeleton } from "@/components/atoms";
 import clsx from "clsx";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

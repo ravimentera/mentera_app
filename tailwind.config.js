@@ -100,6 +100,7 @@ module.exports = {
           },
           blue: {
             DEFAULT: "#2563eb",
+            hover: "#235ad3",
             gradient: {
               dark: "#111a53",
             },

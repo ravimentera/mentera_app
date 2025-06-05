@@ -129,7 +129,6 @@ We organize components by atomic design principles:
 - components/molecules/    # Combinations of atoms
 - components/organisms/    # Complex components
 - components/templates/    # Page layouts
-- components/ui/           # UI-specific components
 ```
 
 #### Next.js Route Groups

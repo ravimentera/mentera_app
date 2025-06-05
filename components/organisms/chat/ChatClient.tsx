@@ -1,6 +1,6 @@
 "use client";
 
-import { Thread } from "@/components/assistant-ui/thread";
+import { Thread } from "@/components/organisms";
 import { patientDatabase } from "@/mock/chat.data";
 import { useState } from "react";
 import { ChatTopbar } from "./ChatTopbar";

@@ -3,7 +3,9 @@ import { cn } from "@/lib/utils";
 import { getAllProviders, getProviderFullName } from "@/utils/provider.utils";
 import { addDays, format, isSameDay, startOfWeek } from "date-fns";
 import React from "react";
-import { Appointment, DropIndicator } from "./types";
+import { AppointmentCard } from "./AppointmentCard";
+import { DropIndicator } from "./DropIndicator";
+import { Appointment, DropIndicator as DropIndicatorType } from "./types";
 
 interface AdminWeekViewProps {
   date: Date;
@@ -39,7 +41,7 @@ interface AdminWeekViewProps {
   onAppointmentDragOver: (event: React.MouseEvent<HTMLDivElement>, dayDate?: Date) => void;
   onAppointmentDragEnd: () => void;
   draggingAppointment: Appointment | null;
-  dropIndicator: DropIndicator;
+  dropIndicator: DropIndicatorType;
 }
 
 export function AdminWeekView({
@@ -78,7 +80,7 @@ export function AdminWeekView({
   const weekDays = getWeekDays(date);
 
   return (
-    <div className="bg-white overflow-hidden rounded-lg h-full max-h-screen overflow-y-auto">
+    <div className="bg-white rounded-lg h-full max-h-screen overflow-y-auto scrollbar-hide">
       {/* Header row */}
       <div className="sticky top-0 z-30 bg-white border-b border-zinc-200">
         <div className="grid grid-cols-[200px_repeat(7,_1fr)] gap-0">
@@ -91,7 +93,7 @@ export function AdminWeekView({
 
           {/* Day headers */}
           {weekDays.map((day, dayIndex) => (
-            <div key={format(day, "yyyy-MM-dd")} className="p-4 pb-0 text-center bg-white">
+            <div key={format(day, "yyyy-MM-dd")} className="p-4 text-center bg-white">
               <div
                 className={cn(
                   "inline-flex flex-col items-center gap-1 px-3 py-1 rounded-xl",
@@ -186,54 +188,21 @@ export function AdminWeekView({
                   )}
 
                   {/* Drop indicator for appointment drag and drop */}
-                  {dropIndicator.isVisible &&
-                    draggingAppointment &&
-                    activeProviderDay === dayKey &&
-                    isSameDay(day, dropIndicator.date) && (
-                      <div
-                        className={cn(
-                          "absolute inset-x-1 border z-30 pointer-events-none rounded-md overflow-hidden animate-pulse",
-                          draggingAppointment.type === "therapy"
-                            ? "bg-[#8A03D3]/40 border-[#8A03D3]/40"
-                            : draggingAppointment.type === "consultation"
-                              ? "bg-[#035DD3]/40 border-[#035DD3]/40"
-                              : draggingAppointment.type === "followup"
-                                ? "bg-[#D36203]/40 border-[#D36203]/40"
-                                : "bg-[#03A10B]/40 border-[#03A10B]/40",
-                        )}
-                        style={{
-                          top: "8px",
-                          height: "calc(100% - 16px)",
-                        }}
-                      >
-                        <div
-                          className={cn(
-                            "h-full w-full rounded-md p-2 flex flex-col justify-center",
-                            draggingAppointment.type === "therapy"
-                              ? "bg-[#8A03D3]/30"
-                              : draggingAppointment.type === "consultation"
-                                ? "bg-[#035DD3]/30"
-                                : draggingAppointment.type === "followup"
-                                  ? "bg-[#D36203]/30"
-                                  : "bg-[#03A10B]/30",
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "text-xs font-medium truncate",
-                              getAppointmentTextColor(draggingAppointment.type),
-                            )}
-                          >
-                            {draggingAppointment.patient.firstName}{" "}
-                            {draggingAppointment.patient.lastName}
-                          </div>
-                          <div className="text-[10px] opacity-70 truncate">
-                            {format(draggingAppointment.startTime, "h:mm a")} -{" "}
-                            {format(draggingAppointment.endTime, "h:mm a")}
-                          </div>
-                        </div>
-                      </div>
+                  <DropIndicator
+                    dropIndicator={dropIndicator}
+                    draggingAppointment={draggingAppointment}
+                    getAppointmentTextColor={getAppointmentTextColor}
+                    style={{
+                      top: "8px",
+                      height: "calc(100% - 16px)",
+                    }}
+                    className={cn(
+                      "inset-x-1",
+                      !(activeProviderDay === dayKey && isSameDay(day, dropIndicator.date)) &&
+                        "hidden",
                     )}
+                    variant="week"
+                  />
 
                   {/* Render appointments for this provider and day */}
                   <div className="space-y-1">
@@ -255,7 +224,7 @@ export function AdminWeekView({
                               "rounded-md border cursor-pointer overflow-hidden group transition-all hover:shadow-sm cursor-grab select-none p-2",
                               getAppointmentColors(appointment.type),
                               getAppointmentStatusColors(appointment.status),
-                              isDragging && "opacity-40 shadow-lg",
+                              isDragging && "shadow-lg",
                             )}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -263,35 +232,18 @@ export function AdminWeekView({
                             }}
                             onMouseDown={(e) => onAppointmentDragStart(appointment, e)}
                           >
-                            <div className="flex items-center gap-2">
-                              {/* Status icon */}
-                              <div
-                                className={cn(
-                                  "w-2 h-2 rounded-full flex-shrink-0",
-                                  appointment.status === "completed"
-                                    ? "bg-green-500"
-                                    : appointment.status === "cancelled"
-                                      ? "bg-red-500"
-                                      : appointment.status === "scheduled"
-                                        ? "bg-blue-500"
-                                        : "bg-yellow-500",
-                                )}
-                              />
-                              <div className="min-w-0 flex-1">
-                                <div
-                                  className={cn(
-                                    "text-xs font-medium truncate",
-                                    getAppointmentTextColor(appointment.type),
-                                  )}
-                                >
-                                  {appointment.patient.firstName} {appointment.patient.lastName}
-                                </div>
-                                <div className="text-[10px] opacity-70 truncate">
-                                  {format(appointment.startTime, "h:mm a")} -{" "}
-                                  {format(appointment.endTime, "h:mm a")}
-                                </div>
-                              </div>
-                            </div>
+                            <AppointmentCard
+                              appointment={appointment}
+                              durationInMinutes={
+                                (appointment.endTime?.getTime() - appointment.startTime.getTime()) /
+                                (60 * 1000)
+                              }
+                              showAvatar={false}
+                              showStatusIcon={true}
+                              isDragging={!!isDragging}
+                              getAvatarColors={getAvatarColors}
+                              getAppointmentTextColor={getAppointmentTextColor}
+                            />
                           </div>
                         );
                       })}
