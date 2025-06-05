@@ -1,114 +1,97 @@
 // lib/hooks/useChatMockHandler.ts
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { v4 as uuid } from "uuid";
 
-// Assuming ChatMessage type is defined in a shared location or useWebSocketChat's types.ts
-import type { ChatMessage } from "@/components/organisms/chat/types"; // Adjust path as needed
 import type { AppDispatch } from "@/lib/store";
 import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
 import { addMessage } from "@/lib/store/messagesSlice";
-import { sanitizeMarkdown } from "@/lib/utils"; // Assuming this path is correct
+import { updateThreadLastMessageAt } from "@/lib/store/threadsSlice";
 
-import { patientDatabase as mockPatientDatabase } from "@/mock/chat.data"; // For patient context in mock
-// Import the core mock response generation logic
-import { generateMockAiResponse } from "@/mock/mockTera/chatWebSocketMockLogic"; // Adjust path as needed
+import { sanitizeMarkdown } from "@/lib/utils";
+import { patientDatabase as mockPatientDatabase } from "@/mock/chat.data";
+import { generateMockAiResponse } from "@/mock/mockTera/chatWebSocketMockLogic";
 
-/**
- * Extracts the actual message content after a "Bot: " marker.
- */
-const getBotActualResponse = (rawContent: string): string => {
-  const botMarker = "Bot: ";
-  const markerIndex = rawContent.indexOf(botMarker);
-  if (markerIndex !== -1) {
-    return rawContent.substring(markerIndex + botMarker.length).trim();
-  }
-  return rawContent.trim();
-};
+/* ------------------------------------------------------------------ */
+/*  Feature-flag                                                      */
+/* ------------------------------------------------------------------ */
+const IS_DEV = process.env.NODE_ENV === "development";
+// export const ENABLE_MOCK_CHAT = true;
+export const ENABLE_MOCK_CHAT = IS_DEV && process.env.NEXT_PUBLIC_ENABLE_MOCK_CHAT === "true";
 
-// Determine if client-side mocking is enabled
-const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
-export const ENABLE_MOCK_CHAT = true;
-//   IS_DEVELOPMENT && process.env.NEXT_PUBLIC_ENABLE_MOCK_CHAT === "true";
-
-interface UseChatMockHandlerProps {
-  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+/* ------------------------------------------------------------------ */
+/*  Types                                                             */
+/* ------------------------------------------------------------------ */
+interface Props {
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  currentPatientId: keyof typeof mockPatientDatabase; // Use the imported mockPatientDatabase type
+  currentPatientId: keyof typeof mockPatientDatabase;
   isPatientContextEnabled: boolean;
 }
 
-interface UseChatMockHandlerReturn {
+interface Return {
   isMockActive: boolean;
   initialMockConnectedState: boolean;
   mockSendMessage: ((text: string, threadId: string) => void) | null;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Hook                                                              */
+/* ------------------------------------------------------------------ */
 export function useChatMockHandler({
-  setMessages,
   setLoading,
   currentPatientId,
   isPatientContextEnabled,
-}: UseChatMockHandlerProps): UseChatMockHandlerReturn {
+}: Props): Return {
   const dispatch = useDispatch<AppDispatch>();
 
-  const handleMockResponse = useCallback(
-    (aiFullResponse: string, threadId: string) => {
-      setLoading(true);
-      console.log("[MockChatHandler] Simulating chat_stream_start");
+  /* ---- internal helper to publish the AI reply ---------------- */
+  const publishAssistantMessage = useCallback(
+    (content: string, threadId: string) => {
+      const clean = sanitizeMarkdown(content);
 
-      setTimeout(
-        () => {
-          const actualBotMessageForDisplay = getBotActualResponse(aiFullResponse);
-          const chatResponseMessage: ChatMessage = {
-            id: uuid(),
-            sender: "assistant",
-            // text: sanitizeMarkdown(actualBotMessageForDisplay),
-            text: actualBotMessageForDisplay,
-            threadId,
-            createdAt: Date.now(),
-          };
+      const aiMsg = {
+        id: uuid(),
+        threadId,
+        sender: "assistant" as const,
+        text: clean,
+        createdAt: Date.now(),
+      };
 
-          setMessages((prev) => [...prev, chatResponseMessage]);
-          dispatch(addMessage(chatResponseMessage));
-          setLoading(false);
-          console.log(
-            "[MockChatHandler] Simulating chat_response. Display text:",
-            actualBotMessageForDisplay,
-          );
+      dispatch(addMessage(aiMsg));
+      dispatch(updateThreadLastMessageAt({ threadId, timestamp: aiMsg.createdAt }));
 
-          if (actualBotMessageForDisplay.trim()) {
-            console.log(
-              "[MockChatHandler] Dispatching fetchDynamicLayout:",
-              actualBotMessageForDisplay,
-            );
-            dispatch(fetchDynamicLayout(actualBotMessageForDisplay));
-          }
-        },
-        800 + Math.random() * 1200,
-      );
+      if (clean.trim()) dispatch(fetchDynamicLayout(clean));
     },
-    [dispatch, setLoading, setMessages],
+    [dispatch],
   );
 
+  /* ---- the function returned to useWebSocketChat --------------- */
   const mockSendMessage = useCallback(
     (text: string, threadId: string) => {
       if (!ENABLE_MOCK_CHAT) return;
 
-      console.log("[MockChatHandler] Handling sendMessage with mock logic.");
-      const patient = mockPatientDatabase[currentPatientId];
-      const mockPatientContext =
-        isPatientContextEnabled && patient ? { id: patient.id } : undefined;
+      setLoading(true);
 
-      const aiResponse = generateMockAiResponse(text, mockPatientContext);
-      handleMockResponse(aiResponse, threadId);
+      /* generate fake answer based on patient context (if enabled) */
+      const patient = mockPatientDatabase[currentPatientId];
+      const context = isPatientContextEnabled && patient ? { id: patient.id } : undefined;
+      const rawReply = generateMockAiResponse(text, context);
+
+      /* simulate latency 0.6 – 1.5 s */
+      setTimeout(
+        () => {
+          publishAssistantMessage(rawReply, threadId);
+          setLoading(false);
+        },
+        600 + Math.random() * 900,
+      );
     },
-    [currentPatientId, isPatientContextEnabled, handleMockResponse],
+    [currentPatientId, isPatientContextEnabled, publishAssistantMessage, setLoading],
   );
 
   return {
     isMockActive: ENABLE_MOCK_CHAT,
-    initialMockConnectedState: ENABLE_MOCK_CHAT, // If mock is active, consider it "connected"
+    initialMockConnectedState: ENABLE_MOCK_CHAT, // pretend “connected”
     mockSendMessage: ENABLE_MOCK_CHAT ? mockSendMessage : null,
   };
 }

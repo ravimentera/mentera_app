@@ -1,66 +1,38 @@
-import { UploadedFile, addFile, removeFile, updateFileUrl } from "@/lib/store/fileUploadsSlice";
-import {
-  selectSelectedPatientId,
-  selectTestMedSpa,
-  selectTestNurse,
-} from "@/lib/store/globalStateSlice";
 // lib/hooks/useFileUpload.ts
+import { addFile, removeFile } from "@/lib/store/fileUploadsSlice";
+import { selectSelectedPatientId } from "@/lib/store/globalStateSlice";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuid } from "uuid";
 
+/**
+ * Only manages optimistic preview state.
+ * Real upload happens inside `useWebSocketChat.sendMessage`.
+ */
 export function useFileUpload() {
   const dispatch = useDispatch();
-  const currentPatientId = useSelector(selectSelectedPatientId);
-  const testMedSpa = useSelector(selectTestMedSpa);
-  const testNurse = useSelector(selectTestNurse);
+  const patientId = useSelector(selectSelectedPatientId);
 
   const uploadFile = useCallback(
-    async (file: File): Promise<UploadedFile> => {
+    async (file: File) => {
+      if (!patientId) throw new Error("Select a patient first.");
+
       const id = uuid();
       const kind = file.type.startsWith("image/") ? "image" : "file";
+      const url = URL.createObjectURL(file);
 
-      // 1) Optimistic placeholder
-      dispatch(addFile({ id, name: file.name, type: kind, url: "__uploading__" }));
-
-      // 2) Guard against no patient selected
-      if (!currentPatientId) {
-        dispatch(removeFile(id));
-        throw new Error("No patient selected. Please choose a patient before uploading.");
-      }
-
-      // 3) Build the FormData
-      const form = new FormData();
-      form.append("file", file);
-      form.append("medSpaId", testMedSpa.medspaId);
-      form.append("providerId", testNurse.id);
-      form.append("patientId", currentPatientId); // now guaranteed a string
-
-      try {
-        // 4) Send to your S3-backed route
-        const res = await fetch("/api/file-upload", {
-          method: "POST",
-          body: form,
-        });
-
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Upload failed: ${res.status} ${text}`);
-        }
-
-        // 5) Parse once & update Redux
-        const { url } = (await res.json()) as { url: string };
-        dispatch(updateFileUrl({ id, url }));
-
-        return { id, name: file.name, type: kind, url };
-      } catch (err) {
-        console.error("[useFileUpload] upload failed:", err);
-        dispatch(removeFile(id));
-        throw err;
-      }
+      dispatch(addFile({ id, name: file.name, type: kind, file, previewUrl: url }));
+      return { id, name: file.name, type: kind, file, previewUrl: url };
     },
-    [dispatch, testMedSpa.medspaId, testNurse.id, currentPatientId],
+    [dispatch, patientId],
   );
 
-  return { uploadFile };
+  const cancelFile = useCallback(
+    (id: string) => {
+      dispatch(removeFile(id));
+    },
+    [dispatch],
+  );
+
+  return { uploadFile, cancelFile };
 }

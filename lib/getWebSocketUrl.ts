@@ -10,7 +10,8 @@ export function getWebSocketUrl(): string {
     const localHost = process.env.NEXT_PUBLIC_WS_HOST_LOCAL || "localhost:8080";
     // Ensure your mock server listens on the root path or adjust accordingly.
     // The mock server provided listens on the root path (e.g., ws://localhost:8080/)
-    return `ws://${localHost}`;
+    // return `ws://${localHost}`;
+    return "ws://0.0.0.0:5010/ws";
   }
 
   // Production or other environments: use the provided host or default

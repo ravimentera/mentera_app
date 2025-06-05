@@ -1,8 +1,15 @@
 // components/organisms/chat/useWebSocketChat.ts
+import WebSocket from "isomorphic-ws";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { v4 as uuid } from "uuid";
+
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
 import type { AppDispatch } from "@/lib/store";
+import { store } from "@/lib/store";
+
 import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
-import { UploadedFile } from "@/lib/store/fileUploadsSlice";
+import { UploadedFile, clear as clearFiles, selectAllFiles } from "@/lib/store/fileUploadsSlice";
 import {
   selectPatientDatabase,
   selectTestMedSpa,
@@ -10,317 +17,330 @@ import {
 } from "@/lib/store/globalStateSlice";
 import { Message as ReduxMessage, addMessage } from "@/lib/store/messagesSlice";
 import { getActiveThreadId, updateThreadLastMessageAt } from "@/lib/store/threadsSlice";
+
 import { sanitizeMarkdown } from "@/lib/utils";
-import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
 import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
-import WebSocket from "isomorphic-ws";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { v4 as uuid } from "uuid";
 import { WebSocketResponseMessage } from "./types";
 import { extractChunk, logMetadata } from "./utils";
 
 interface UseChatWebSocketProps {
-  currentPatientId: keyof typeof patientDatabase;
+  currentPatientId: keyof ReturnType<typeof selectPatientDatabase>;
   isPatientContextEnabled: boolean;
   forceFresh: boolean;
   cacheDebug: boolean;
   activeThreadId: string; // Add activeThreadId
-  // onMessage?: (messages: ReduxMessage[]) => void; // This was for local state, likely not needed if Redux is sole source
 }
 
-const getBotActualResponse = (rawContent: string): string => {
-  const botMarker = "Bot: ";
-  const markerIndex = rawContent.indexOf(botMarker);
-  if (markerIndex !== -1) {
-    return rawContent.substring(markerIndex + botMarker.length).trim();
-  }
-  return rawContent.trim();
-};
+const tag = (t: string) => `%c[WS:${t}]`;
+const blue = "color:#1e90ff;font-weight:bold";
 
 export function useWebSocketChat({
   currentPatientId,
   isPatientContextEnabled,
   forceFresh,
   cacheDebug,
-  activeThreadId, // Receive activeThreadId
+  activeThreadId,
 }: UseChatWebSocketProps) {
-  const socketRef = useRef<WebSocket | null>(null);
-  const retryCount = useRef(0);
-  const maxRetries = 3;
-  const retryDelay = 2000;
-  const retryTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  const [messages, setMessages] = useState<ReduxMessage[]>([]); // Local messages state might be redundant
-  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-
   const patientDatabase = useSelector(selectPatientDatabase);
   const testMedSpa = useSelector(selectTestMedSpa);
   const testNurse = useSelector(selectTestNurse);
 
-  /* inside useWebSocketChat() */
   const threadIdRef = useRef(activeThreadId);
   useEffect(() => {
     threadIdRef.current = activeThreadId;
   }, [activeThreadId]);
 
-  const {
-    isMockActive,
-    initialMockConnectedState,
-    mockSendMessage: originalMockSendMessage,
-  } = useChatMockHandler({
-    setMessages, // If you remove local messages state, this is not needed by mock handler directly
-    // The mock handler would need to dispatch to Redux if it creates messages
-    // For simplicity, let's assume mock handler is adapted or its setMessages is for its internal use only
+  /* ---------------- local state ------------------------------- */
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [streamBuffer, setStreamBuffer] = useState("");
+
+  /* ---------------- socket & retry ---------------------------- */
+  const socketRef = useRef<WebSocket | null>(null);
+  const retryCount = useRef(0);
+  const retryTimer = useRef<NodeJS.Timeout | null>(null);
+  const maxRetries = 3;
+  const retryDelay = 2_000;
+
+  /* ---------------- helper: File -> base64 -------------------- */
+  const encodeFile = (file: File) =>
+    new Promise<string>((ok, err) => {
+      const r = new FileReader();
+      r.onload = () => ok(String(r.result)); // data:…;base64,AAAA
+      r.onerror = () => err(r.error);
+      r.readAsDataURL(file);
+    });
+
+  /* ---------------- helper: stash AI message ------------------ */
+  const stashAssistantMessage = (content: string, meta?: any) => {
+    const cleaned = sanitizeMarkdown(content);
+    const ai: ReduxMessage = {
+      id: uuid(),
+      threadId: threadIdRef.current,
+      sender: "assistant",
+      text: cleaned,
+      createdAt: Date.now(),
+    };
+    dispatch(addMessage(ai));
+    dispatch(
+      updateThreadLastMessageAt({
+        threadId: threadIdRef.current,
+        timestamp: ai.createdAt,
+      }),
+    );
+    if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
+    logMetadata(meta);
+  };
+
+  /* ---------------- sendMessage ------------------------------- */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
+  const sendMessage = useCallback(
+    async (text: string, _ignored?: UploadedFile[]) => {
+      if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+        console.warn(tag("WARN"), blue, "socket not open – abort send");
+        return;
+      }
+
+      const files = selectAllFiles(store.getState());
+      const hasDoc = files.length > 0;
+      const convo = `${store.getState().threads.activeThreadId}_thread_${activeThreadId}`;
+
+      const payload: any = {
+        type: hasDoc ? "CHAT_WITH_DOCUMENT" : "chat",
+        nurseId: testNurse.id,
+        conversationId: convo,
+        medspaId: testMedSpa.medspaId,
+        medSpaContext: testMedSpa,
+        streaming: true,
+        cacheControl: { debug: cacheDebug, forceFresh },
+      };
+
+      const patient = patientDatabase[currentPatientId];
+      if (isPatientContextEnabled && patient) {
+        payload.patientId = patient.id;
+        payload.patientInfo = patient;
+      }
+
+      setLoading(true); // show spinner
+
+      /* ------- plain chat ---------- */
+      if (!hasDoc) {
+        payload.message = text;
+        console.log(tag("SEND"), blue, payload);
+        socketRef.current.send(JSON.stringify(payload));
+        return;
+      }
+
+      /* ------- chat + first file ---- */
+      const file = files[0];
+      const dataUrl = await encodeFile(file.file); // data:…;base64,xxx
+      const base64 = dataUrl.includes(",") ? dataUrl.split(",", 2)[1] : dataUrl;
+
+      payload.payload = {
+        message: text || `Please analyze this document: ${file.name}`,
+        document: {
+          fileName: file.name,
+          base64Data: base64, // <-- NO “data:” prefix
+          mimeType: file.file.type || "application/octet-stream",
+          fileSize: file.file.size,
+        },
+        conversationId: convo,
+        nurseId: testNurse.id,
+        streaming: true,
+        processingOptions: {
+          maxFileSize: 10 * 1024 * 1024,
+          sanitizeFileName: true,
+          extractTextContent: true,
+        },
+      };
+
+      console.log(tag("SEND-DOC"), blue, payload);
+      socketRef.current.send(JSON.stringify(payload));
+      dispatch(clearFiles());
+    },
+    [
+      activeThreadId,
+      cacheDebug,
+      forceFresh,
+      patientDatabase,
+      currentPatientId,
+      isPatientContextEnabled,
+      testMedSpa,
+      testNurse.id,
+      dispatch,
+    ],
+  );
+
+  /* ---------------- mock handler ------------------------------ */
+  const { isMockActive, mockSendMessage, initialMockConnectedState } = useChatMockHandler({
     setLoading,
     currentPatientId,
     isPatientContextEnabled,
   });
 
-  const [connected, setConnected] = useState(initialMockConnectedState);
-  const [streamBuffer, setStreamBuffer] = useState("");
-  const conversationId = useSelector(getActiveThreadId); // This might need to be per-thread or managed differently
-
-  console.log({ conversationId });
-
-  // sendMessage now only takes text, as activeThreadId is available from props
-  const sendMessage = useCallback(
-    //@TODO: not using allFiles for now.
-    (text: string, allFiles?: UploadedFile[]) => {
-      if (!activeThreadId) {
-        console.warn("[Chat] No active thread. Cannot send message.");
-        return;
-      }
-
-      // User message is already added optimistically by TeraRuntimeProvider's onNew
-      // This hook's sendMessage is now primarily for triggering the WebSocket call.
-      // And for the mock handler.
-
-      console.log(`[Chat] sendMessage called for thread ${activeThreadId} with text: ${text}`);
-
-      if (isMockActive && originalMockSendMessage) {
-        console.log("[Chat] Mock active, delegating to mockSendMessage.");
-        // Adapt mockSendMessage if it needs to know about threadId or dispatch Redux actions
-        originalMockSendMessage(text, activeThreadId); // Pass activeThreadId if mock needs it
-      } else {
-        if (!connected || !socketRef.current) {
-          console.warn("[Chat] Real WebSocket not connected. Cannot send message.");
-          return;
-        }
-        const patient = patientDatabase[currentPatientId];
-        const payload: any = {
-          type: "chat",
-          nurseId: testNurse.id,
-          message: text,
-          conversationId: `${conversationId}_thread_${activeThreadId}`, // Make conversationId thread-specific
-          medspaId: testMedSpa.medspaId,
-          medSpaContext: testMedSpa,
-          streaming: true,
-          cacheControl: { debug: cacheDebug, forceFresh },
-          debug: { timestamp: new Date().toISOString(), activeThreadId },
-        };
-        if (isPatientContextEnabled && patient) {
-          payload.patientId = patient.id;
-          payload.patientInfo = patient;
-          payload.debug.activePatientContext = patient.id;
-        }
-        socketRef.current.send(JSON.stringify(payload));
-        console.log("[Chat] Message sent to real WebSocket:", payload);
-      }
-    },
-    [
-      activeThreadId, // Add activeThreadId to dependencies
-      isMockActive,
-      originalMockSendMessage,
-      connected,
-      currentPatientId,
-      isPatientContextEnabled,
-      // dispatch, // dispatch is stable
-      cacheDebug,
-      forceFresh,
-      testMedSpa,
-      patientDatabase,
-      testNurse.id,
-      conversationId,
-      // conversationId.current // if conversationId is dynamic per thread
-    ],
-  );
-
+  /* ---------------- connect / lifecycle ----------------------- */
   // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   useEffect(() => {
     if (isMockActive) {
-      console.log(
-        "[Chat] Client-side mock chat is ENABLED. Real WebSocket connection will be skipped.",
-      );
-      if (!connected) setConnected(true); // Ensure connected state for mock
+      setConnected(initialMockConnectedState);
       return;
     }
     if (!activeThreadId) {
-      console.log("[Chat] No active thread, WebSocket connection paused.");
-      if (socketRef.current) {
-        socketRef.current.close();
-        socketRef.current = null;
-      }
+      console.log(tag("PAUSE"), blue, "No activeThreadId");
       setConnected(false);
-      return; // Don't connect if no active thread
+      socketRef.current?.close();
+      socketRef.current = null;
+      return;
     }
 
-    console.log(`[Chat] Attempting real WebSocket connection for thread: ${activeThreadId}`);
     const connect = async () => {
-      // ... (token fetching logic remains the same)
-      let token = "";
       try {
-        const tokenResponse = await fetch("/api/token");
-        if (!tokenResponse.ok) {
-          console.error("Failed to fetch token:", tokenResponse.status, await tokenResponse.text());
-          return;
-        }
-        const tokenData = await tokenResponse.json();
-        token = tokenData.token;
-        if (!token) {
-          console.error("Token not found in response from /api/token");
-          return;
-        }
-      } catch (error) {
-        console.error("Error fetching token:", error);
-        return;
-      }
+        /* ---- get JWT ---------------------------------------- */
+        const tokRes = await fetch("/api/token");
+        if (!tokRes.ok) throw new Error(`token api ${tokRes.status}`);
+        const { token } = await tokRes.json();
 
-      const wsUrl = getWebSocketUrl();
-      const url = new URL(wsUrl);
-      url.searchParams.set("token", token);
-      url.searchParams.set("medspaId", testMedSpa.medspaId);
-      // Potentially add threadId to WebSocket connection if backend needs it per-connection
-      // url.searchParams.set("threadId", activeThreadId);
+        /* ---- open socket ------------------------------------ */
+        const url = new URL(getWebSocketUrl());
+        console.log({ url });
 
-      console.log("[Chat] Attempting to connect to real WebSocket:", url.toString());
-      const socket = new WebSocket(url.toString());
-      socketRef.current = socket;
+        url.searchParams.set("token", token);
+        url.searchParams.set("medspaId", testMedSpa.medspaId);
 
-      socket.onopen = () => {
-        setConnected(true);
-        retryCount.current = 0;
-        if (retryTimeout.current) {
-          clearTimeout(retryTimeout.current);
-          retryTimeout.current = null;
-        }
-        socket.send(JSON.stringify({ type: "auth", token: token.replace(/^Bearer\s+/, "") }));
-        console.log("[Chat] Real WebSocket connected and authenticated.");
-      };
+        console.log(tag("OPEN"), blue, url.toString());
+        const ws = new WebSocket(url.toString());
+        socketRef.current = ws;
 
-      socket.onmessage = (event: MessageEvent<string>) => {
-        const msg: WebSocketResponseMessage = JSON.parse(event.data);
-        console.log("[Chat] Real WebSocket message received:", msg);
+        /* ---- open ------------------------------------------- */
+        ws.onopen = () => {
+          setConnected(true);
+          retryCount.current = 0;
+          retryTimer.current && clearTimeout(retryTimer.current);
 
-        const processAndDispatchAiMessage = (content: string) => {
-          if (!activeThreadId) return; // Should not happen if connection depends on activeThreadId
-          const actualBotMessage = getBotActualResponse(content);
-          const aiMessage: ReduxMessage = {
-            id: uuid(),
-            // threadId: activeThreadId,
-            threadId: threadIdRef.current,
-            sender: "assistant", // ← must be exactly this
-            text: String(actualBotMessage), // ← force plain string now
-            createdAt: Date.now(),
-          };
-          // setMessages((prev) => [...prev, aiMessage]); // Remove if not using local state
-          dispatch(addMessage(aiMessage));
-          dispatch(
-            updateThreadLastMessageAt({ threadId: activeThreadId, timestamp: aiMessage.createdAt }),
+          ws.send(
+            JSON.stringify({
+              type: "auth",
+              token: token.replace(/^Bearer\s+/i, ""),
+              medSpaId: testMedSpa.medspaId,
+            }),
           );
-          setLoading(false);
-          if (actualBotMessage.trim()) {
-            dispatch(fetchDynamicLayout(actualBotMessage));
+          console.log(tag("OPEN"), blue, "auth sent");
+        };
+
+        /* ---- message ---------------------------------------- */
+        ws.onmessage = (e: any) => {
+          const msg: WebSocketResponseMessage = JSON.parse(e.data);
+          console.log(tag("RX"), blue, msg.type, msg);
+
+          switch (msg.type) {
+            case "auth_success":
+              console.log(tag("AUTH_OK"), blue);
+              break;
+
+            /* ---------- chat streaming ---------------------- */
+            case "chat_stream_start":
+              setLoading(true);
+              setStreamBuffer("");
+              break;
+
+            case "chat_stream_chunk":
+              setStreamBuffer((prev) => prev + extractChunk(msg.chunk));
+              break;
+
+            case "chat_stream_complete":
+              stashAssistantMessage(msg.response?.content || streamBuffer, msg.response?.metadata);
+              setStreamBuffer("");
+              setLoading(false);
+              break;
+
+            case "chat_stream_error":
+              console.error(tag("STREAM_ERR"), blue, msg.error);
+              setLoading(false);
+              break;
+
+            /* ---------- document upload -------------------- */
+            case "DOCUMENT_ANALYSIS_CHUNK":
+              setStreamBuffer((prev) => prev + extractChunk(msg.payload.chunk));
+              break;
+
+            case "DOCUMENT_UPLOAD_RESPONSE":
+              if (msg.payload.success && msg.payload.message) {
+                stashAssistantMessage(
+                  msg.payload.message.content || streamBuffer,
+                  msg.payload.message.metadata,
+                );
+              } else {
+                console.error(tag("DOC_FAIL"), blue, msg.payload.error);
+              }
+              setStreamBuffer("");
+              setLoading(false);
+              break;
+
+            case "DOCUMENT_UPLOAD_PROGRESS":
+            case "DOCUMENT_VALIDATION_ERROR":
+              // these can drive a separate progress UI if desired
+              break;
+
+            /* ---------- misc ------------------------------- */
+            case "cache_control_response":
+              break;
+
+            case "error":
+            case "auth_error":
+              console.error(tag("ERROR"), blue, msg.error);
+              setLoading(false);
+              break;
+
+            default:
+              console.warn(tag("UNHANDLED"), blue, msg);
           }
         };
 
-        switch (msg.type) {
-          case "chat_stream_start":
-            setLoading(true);
-            setStreamBuffer("");
-            break;
-          case "chat_stream_chunk":
-            setStreamBuffer((prev) => prev + extractChunk(msg.chunk));
-            break;
-          case "chat_stream_complete": {
-            const rawAiResponseContent = msg.response?.content || streamBuffer;
-            processAndDispatchAiMessage(rawAiResponseContent);
-            setStreamBuffer(""); // Clear buffer after processing
-            logMetadata(msg.response?.metadata);
-            break;
+        /* ---- close / error --------------------------------- */
+        ws.onclose = (ev: any) => {
+          console.log(tag("CLOSE"), blue, ev.code, ev.reason);
+          setConnected(false);
+          setLoading(false);
+          if (retryCount.current < maxRetries) {
+            retryCount.current++;
+            retryTimer.current = setTimeout(connect, retryDelay);
           }
-          case "chat_response": {
-            // Non-streaming response
-            const rawAiResponseContent = msg.response?.content || "";
-            processAndDispatchAiMessage(rawAiResponseContent);
-            logMetadata(msg.response?.metadata);
-            break;
-          }
-          case "error":
-            setLoading(false);
-            console.error("Real WebSocket Server Error:", msg.error);
-            // Potentially dispatch an error message to the thread
-            break;
-          default:
-            console.warn("Received unhandled real WebSocket message type:", msg.type);
-        }
-      };
-
-      socket.onclose = (event: CloseEvent) => {
-        setConnected(false);
-        console.log("Real WebSocket closed:", event.code, event.reason);
-        if (!isMockActive && activeThreadId && retryCount.current < maxRetries) {
-          // Only retry if there was an active thread
-          retryCount.current += 1;
-          console.log(
-            `WebSocket connection closed. Retrying attempt ${retryCount.current}/${maxRetries} in ${retryDelay / 1000}s...`,
-          );
-          if (retryTimeout.current) clearTimeout(retryTimeout.current);
-          retryTimeout.current = setTimeout(connect, retryDelay);
-        } else if (!isMockActive && activeThreadId) {
-          console.error(
-            `Real WebSocket connection failed after ${maxRetries} retries for thread ${activeThreadId}.`,
-          );
-        }
-      };
-      socket.onerror = (errorEvent: WebSocket.ErrorEvent) => {
-        console.error("Real WebSocket error observed:", errorEvent.message);
-      };
+        };
+        ws.onerror = (err: any) => console.error(tag("WS_ERR"), blue, err.message);
+      } catch (err) {
+        console.error(tag("BOOT_ERR"), blue, err);
+      }
     };
 
     connect();
 
     return () => {
-      if (retryTimeout.current) {
-        clearTimeout(retryTimeout.current);
-      }
-      if (socketRef.current) {
-        console.log("Closing real WebSocket connection on component unmount/effect cleanup.");
-        socketRef.current.onopen = null;
-        socketRef.current.onmessage = null;
-        socketRef.current.onerror = null;
-        socketRef.current.onclose = null; // Important to nullify to prevent calls on old socket instances
-        socketRef.current.close();
-        socketRef.current = null;
-      }
+      retryTimer.current && clearTimeout(retryTimer.current);
+      socketRef.current?.close();
+      socketRef.current = null;
     };
   }, [
     isMockActive,
-    activeThreadId, // WebSocket connection now depends on activeThreadId
-    // currentPatientId, // These are used inside connect() or sendMessage(), not direct deps for connection effect
-    // isPatientContextEnabled,
-    // forceFresh,
-    // cacheDebug,
-    dispatch, // dispatch is stable
-    // connected, // Internal state, not a dependency for re-running the effect that sets it up
+    activeThreadId,
+    cacheDebug,
+    forceFresh,
+    currentPatientId,
+    isPatientContextEnabled,
+    testMedSpa.medspaId,
   ]);
+
+  const send = isMockActive
+    ? (txt: string, _files?: unknown) => {
+        /* always use current active thread id */
+        if (mockSendMessage) mockSendMessage(txt, threadIdRef.current);
+      }
+    : sendMessage;
 
   return {
     connected,
-    // messages, // Removed, as Redux is the source of truth via TeraRuntimeProvider
-    streamBuffer, // Still useful for streaming UI if you build chunks manually before dispatching full message
     loading,
-    sendMessage,
+    streamBuffer,
+    sendMessage: send,
   };
 }

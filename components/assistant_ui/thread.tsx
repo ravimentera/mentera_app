@@ -29,6 +29,8 @@ import { removeFile } from "@/lib/store/fileUploadsSlice";
 import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import { selectAllFiles } from "@/lib/store/fileUploadsSlice";
+
 export const Thread: FC = () => {
   return (
     <ThreadPrimitive.Root
@@ -117,10 +119,9 @@ const ThreadWelcomeSuggestions: FC = () => {
 
 const Composer: FC = () => {
   const dispatch = useDispatch();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFile } = useFileUpload();
-
-  const files = useSelector((state: RootState) => state.fileUploads.files);
+  const files = useSelector(selectAllFiles);
 
   const triggerBrowse = () => fileInputRef.current?.click();
 
@@ -140,26 +141,33 @@ const Composer: FC = () => {
       try {
         await uploadFile(file);
       } catch {
-        /* handled inside hook */
+        /* error handled inside hook */
       }
     }
-    e.target.value = ""; // allow same file to be picked again
+    e.target.value = ""; // allow same file again
   };
 
   return (
-    <ComposerPrimitive.Root className="focus-within:border-ring/20 flex w-full flex-col rounded-lg border bg-inherit shadow-sm transition-colors ease-in">
-      {/* === preview bar INSIDE the box === */}
+    <ComposerPrimitive.Root
+      className="focus-within:border-ring/20 flex w-full flex-col rounded-lg
+                 border bg-inherit shadow-sm transition-colors ease-in"
+    >
+      {/* === preview bar === */}
       {files.length > 0 && (
         <div className="flex w-full gap-2 overflow-x-auto px-2 py-1 scrollbar-thin">
           {files.map((f) => (
             <div
               key={f.id}
-              className="relative min-w-8 min-h-8 flex-shrink-0 rounded bg-muted flex items-center justify-center overflow-visible"
+              className="relative min-w-8 min-h-8 flex-shrink-0 rounded
+                         bg-muted flex items-center justify-center overflow-visible"
             >
-              {/* delete button */}
+              {/* delete btn */}
               <button
                 onClick={() => dispatch(removeFile(f.id))}
-                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-background/90 text-[10px] font-bold leading-none shadow hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full
+                           bg-background/90 text-[10px] font-bold leading-none
+                           shadow hover:bg-destructive hover:text-destructive-foreground
+                           transition-colors"
                 aria-label={`Remove ${f.name}`}
                 type="button"
               >
@@ -167,11 +175,7 @@ const Composer: FC = () => {
               </button>
 
               {f.type === "image" ? (
-                <img
-                  src={f.url !== "__uploading__" ? f.url : ""}
-                  alt={f.name}
-                  className="object-cover w-full h-full"
-                />
+                <img src={f.previewUrl} alt={f.name} className="object-cover w-full h-full" />
               ) : (
                 <FileIcon className="size-4" />
               )}
@@ -180,9 +184,8 @@ const Composer: FC = () => {
         </div>
       )}
 
-      {/* input row */}
+      {/* === input row === */}
       <div className="flex w-full items-end px-2.5">
-        {/* clip first */}
         <TooltipIconButton
           tooltip="Attach file"
           variant="ghost"
@@ -193,14 +196,21 @@ const Composer: FC = () => {
         </TooltipIconButton>
         <input ref={fileInputRef} type="file" hidden onChange={handleChange} multiple />
 
-        {/* textarea */}
         <ComposerPrimitive.Input
           rows={1}
           autoFocus
           placeholder="Write a message..."
-          className="placeholder:text-muted-foreground max-h-40 flex-grow resize-none border-none bg-transparent px-2 py-4 text-sm outline-none focus:ring-0 disabled:cursor-not-allowed"
+          className="placeholder:text-muted-foreground max-h-40 flex-grow
+                     resize-none border-none bg-transparent px-2 py-4 text-sm
+                     outline-none focus:ring-0 disabled:cursor-not-allowed"
         />
-        <ComposerAction />
+
+        {/* default send-button from Assistant-UI (runtime.onNew handles everything) */}
+        <ComposerPrimitive.Send asChild>
+          <TooltipIconButton tooltip="Send" variant="default" className="my-2.5 size-8 p-2">
+            <SendHorizontalIcon />
+          </TooltipIconButton>
+        </ComposerPrimitive.Send>
       </div>
     </ComposerPrimitive.Root>
   );
