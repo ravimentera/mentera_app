@@ -1,12 +1,12 @@
 import type { PatientOverviewCard } from "@/types/patient-overview";
 
-export const MOCK_PATIENT_OVERVIEW_TITLE = "Mock Patient Overview";
+export const MOCK_PATIENT_OVERVIEW_TITLE = "Patient Overview";
 
 export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "provider-recommendations",
     title: "Provider Recommendations",
-    backgroundColor: "bg-gray-50",
+    backgroundColor: "bg-white",
     data: [
       {
         label: "Recommended Frequency:",
@@ -27,7 +27,7 @@ export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "patient-observations",
     title: "Patient Observations",
-    backgroundColor: "bg-gray-50",
+    backgroundColor: "bg-white",
     data: [
       {
         label: "Skin Condition:",
@@ -48,7 +48,7 @@ export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "actionable-insights",
     title: "Actionable Insights",
-    backgroundColor: "bg-gray-50",
+    backgroundColor: "bg-white",
     data: [
       {
         label: "Procedure:",
@@ -69,7 +69,7 @@ export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "user-history",
     title: "User History",
-    backgroundColor: "bg-gray-50",
+    backgroundColor: "bg-white",
     data: [
       {
         label: "Last Visited On:",
@@ -92,7 +92,7 @@ export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "procedure-details",
     title: "Procedure Details",
-    backgroundColor: "bg-gray-50",
+    backgroundColor: "bg-white",
     data: [
       {
         label: "Procedure:",
