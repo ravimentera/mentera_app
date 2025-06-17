@@ -49,7 +49,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div
           className={cn(
             "h-screen transition-[width] duration-300 ease-in-out",
-            isSidebarCollapsed ? "w-[60px]" : "w-[240px]",
+            isSidebarCollapsed ? "w-15" : "w-60",
           )}
         >
           <Sidebar open={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />

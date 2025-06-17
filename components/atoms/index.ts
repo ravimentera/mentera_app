@@ -5,6 +5,7 @@ export { Button, buttonVariants } from "./Button";
 export { default as ChatMessageSkeleton } from "./ChatMessageSkeleton";
 export { Input, PasswordInput } from "./Input";
 export { Label } from "./Label";
+export { PatientDataItem } from "./PatientDataItem";
 export { Skeleton } from "./Skeleton";
 export { Toaster } from "./Sonner";
 export { Switch } from "./Switch";

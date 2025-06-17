@@ -273,7 +273,7 @@ export function PatientOverview({ approval, className }: PatientOverviewProps) {
   };
 
   return (
-    <div className={cn("w-[530px] bg-ui-background-gray rounded-lg overflow-hidden", className)}>
+    <div className={cn("w-132 bg-ui-background-gray rounded-lg overflow-hidden", className)}>
       {/* Header */}
       <div className="bg-ui-background-gray p-4 space-y-2">
         <div className="flex items-center justify-between">

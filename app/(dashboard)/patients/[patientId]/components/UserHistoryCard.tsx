@@ -19,7 +19,7 @@ export function UserHistoryCard({ history }: UserHistoryCardProps) {
   return (
     <div className="bg-white rounded-lg border p-6 space-y-6">
       <div className="flex items-center gap-2">
-        <History className="h-5 w-5 text-[#7C3AED]" />
+        <History className="h-5 w-5 text-brand-violet" />
         <h2 className="text-lg font-semibold">User History</h2>
       </div>
 

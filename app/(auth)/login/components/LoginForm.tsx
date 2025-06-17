@@ -67,10 +67,10 @@ export function LoginForm() {
             <p className="text-3xl font-semibold text-gray-900 text-left">Login to Mentera</p>
           </div>
           <div className="flex flex-col justify-end items-end mt-2">
-            <p className="text-[#6B7280] text-md text-right">New member?</p>
+            <p className="text-text-gray-500 text-md text-right">New member?</p>
             <Link
               href={AUTH_ROUTES.REGISTER}
-              className="text-[#C026D3] font-semibold text-sm ml-1 hover:underline"
+              className="text-brand-purple font-semibold text-sm ml-1 hover:underline"
             >
               Create Account here
             </Link>
@@ -114,7 +114,7 @@ export function LoginForm() {
             <div></div>
             <Link
               href={AUTH_ROUTES.FORGOT_PASSWORD}
-              className="text-[#6B7280] text-sm hover:underline"
+              className="text-text-gray-500 text-sm hover:underline"
             >
               Forgot your password?
             </Link>
@@ -122,7 +122,7 @@ export function LoginForm() {
 
           <Button
             type="submit"
-            className="w-full mt-2 bg-[#C026D3] hover:bg-[#BD05DD]"
+            className="w-full mt-2 bg-brand-purple hover:bg-brand-purple-hover"
             disabled={isLoading || !formData.email || !formData.password}
           >
             {isLoading ? "Please wait..." : "Login"}
@@ -139,10 +139,10 @@ export function LoginForm() {
             variant="outline"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full relative bg-[#F1F5F9] hover:bg-gray-100"
+            className="w-full relative bg-secondary hover:bg-gray-100"
           >
             <Image src="/google.svg" alt="Google Logo" width={20} height={20} />
-            <span className="text-[#0F172A] ml-2">Login with Google</span>
+            <span className="text-foreground ml-2">Login with Google</span>
           </Button>
         </form>
       </div>

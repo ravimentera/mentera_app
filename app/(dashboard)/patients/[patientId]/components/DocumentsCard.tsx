@@ -14,7 +14,7 @@ export function DocumentsCard({ documents, onViewAll }: DocumentsCardProps) {
     <div className="bg-white rounded-lg border p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-[#DC2626]" />
+          <FileText className="h-5 w-5 text-brand-red" />
           <h2 className="text-lg font-semibold">Recent Documents</h2>
         </div>
         <Button variant="link" onClick={onViewAll} className="text-blue-600 font-medium">

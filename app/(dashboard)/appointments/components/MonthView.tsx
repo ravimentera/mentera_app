@@ -60,7 +60,7 @@ export function MonthView({
             className={cn(
               "min-h-[120px] bg-white p-2 relative text-left",
               !isSameMonth(day, date) && "bg-gray-50",
-              isSameDay(day, new Date()) && "bg-[#8A03D3]/5",
+              isSameDay(day, new Date()) && "bg-brand-purple-dark/5",
             )}
             onClick={() => onDateSelect(day)}
             aria-label={format(day, "EEEE, MMMM d, yyyy")}
@@ -70,7 +70,7 @@ export function MonthView({
               className={cn(
                 "inline-flex h-6 w-6 items-center justify-center rounded-full text-sm",
                 !isSameMonth(day, date) && "text-gray-400",
-                isSameDay(day, new Date()) && "bg-[#8A03D3] text-white",
+                isSameDay(day, new Date()) && "bg-brand-purple-dark text-white",
                 isSameMonth(day, date) &&
                   !isSameDay(day, new Date()) &&
                   "text-gray-900 hover:bg-gray-100",

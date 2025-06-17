@@ -9,15 +9,7 @@ import {
   MenteraLogoIcon,
 } from "@/components/atoms/icons";
 import { cn } from "@/lib/utils";
-import {
-  CalendarDays,
-  CheckSquare,
-  ChevronRight,
-  Home,
-  LogOut,
-  MessageSquare,
-  Users,
-} from "lucide-react";
+import { CheckSquare, ChevronRight, Home, LogOut, MessageSquare, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -154,11 +146,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       href: DASHBOARD_PATHS.HOME,
       icon: <Home className="h-5 w-5" />,
     },
-    {
-      name: "Appointments",
-      href: DASHBOARD_PATHS.APPOINTMENTS,
-      icon: <CalendarDays className="h-5 w-5" />,
-    },
+    // {
+    //   name: "Appointments",
+    //   href: DASHBOARD_PATHS.APPOINTMENTS,
+    //   icon: <CalendarDays className="h-5 w-5" />,
+    // },
     {
       name: "Approvals",
       href: DASHBOARD_PATHS.APPROVALS,
@@ -182,8 +174,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div
           className={cn(
             "border-r bg-background h-full transition-all duration-300 ease-in-out fixed lg:relative",
-            isCollapsed ? "w-[60px]" : "w-[240px]",
-            isMobile && isCollapsed ? "w-[60px]" : "",
+            isCollapsed ? "w-15" : "w-60",
+            isMobile && isCollapsed ? "w-15" : "",
             isMobile && !isCollapsed ? "shadow-xl z-30" : "",
           )}
         >

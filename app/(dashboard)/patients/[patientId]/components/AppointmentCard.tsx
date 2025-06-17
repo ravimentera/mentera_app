@@ -14,7 +14,7 @@ export function AppointmentCard({ appointments, onViewAll }: AppointmentCardProp
     <div className="bg-white rounded-lg border p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-[#60A5FA]" />
+          <Calendar className="h-5 w-5 text-brand-blue" />
           <h2 className="text-lg font-semibold">Next Appointment</h2>
         </div>
         <Button variant="link" onClick={onViewAll} className="text-blue-600 font-medium">

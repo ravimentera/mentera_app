@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React from "react";
 import { Avatar } from "../../types/user.types";
 
@@ -20,6 +21,17 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     large: "w-16 h-16",
   };
 
+  const getSizeInPixels = () => {
+    switch (size) {
+      case "small":
+        return 40;
+      case "large":
+        return 64;
+      default:
+        return 48;
+    }
+  };
+
   const getImageUrl = () => {
     if (!avatar) return undefined;
 
@@ -33,18 +45,6 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     }
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    // Fallback to initials if image fails to load
-    const target = e.target as HTMLImageElement;
-    target.style.display = "none";
-
-    // Show initials fallback
-    const fallback = target.nextElementSibling as HTMLElement;
-    if (fallback) {
-      fallback.style.display = "flex";
-    }
-  };
-
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -54,15 +54,17 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   };
 
   const imageUrl = getImageUrl();
+  const sizeInPixels = getSizeInPixels();
 
   return (
     <div className={`relative ${sizeClasses[size]} ${className}`}>
       {imageUrl ? (
-        <img
+        <Image
           src={imageUrl}
           alt={`${name}'s avatar`}
+          width={sizeInPixels}
+          height={sizeInPixels}
           className={`${sizeClasses[size]} rounded-full object-cover border-2 border-gray-200`}
-          onError={handleImageError}
         />
       ) : null}
       {/* Fallback initials */}

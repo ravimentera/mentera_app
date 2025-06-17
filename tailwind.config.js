@@ -80,6 +80,7 @@ module.exports = {
           muted: "#71717a",
           gray: {
             400: "#9ca3af",
+            500: "#6b7280",
             600: "#4b5563",
             700: "#374151",
             900: "#1f2937",
@@ -101,24 +102,59 @@ module.exports = {
           blue: {
             DEFAULT: "#2563eb",
             hover: "#235ad3",
+            light: "#eff6ff",
+            background: "#2563eb1a",
             gradient: {
               dark: "#111a53",
             },
+          },
+          green: {
+            DEFAULT: "#047857",
+            light: "#f0fdf4",
+            background: "#0478571a",
+          },
+          amber: {
+            DEFAULT: "#ca8a04",
+            light: "#fef9c3",
+            background: "#ca8a041a",
+          },
+          violet: {
+            DEFAULT: "#7c3aed",
+            light: "#f4f1fe",
+            background: "#7c3aed1a",
+          },
+          red: {
+            DEFAULT: "#dc2626",
+            light: "#fef2f2",
+            background: "#dc26261a",
           },
         },
         ui: {
           border: {
             DEFAULT: "#e2e8f0",
             muted: "#cbd5e1",
+            subtle: "#e5e7eb",
           },
           icon: {
             DEFAULT: "#94a3b8",
             purple: "#6941c6",
             muted: "#a1a1aa",
+            gray: "#9ca3af",
           },
           background: {
             purple: "#f4f1fe",
             gray: "#f9fafb",
+            subtle: "#fcfcfc",
+          },
+          status: {
+            success: {
+              DEFAULT: "#027a48",
+              light: "#ecfdf3",
+            },
+            warning: {
+              DEFAULT: "#c11574",
+              light: "#fdf2fa",
+            },
           },
         },
         chart: {
@@ -188,9 +224,9 @@ module.exports = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        in: "slide-in-right 0.3s ease-out forwards",
-        "in-left": "slide-in-left 0.3s ease-out forwards",
-        "in-top": "slide-in-top 0.3s ease-out forwards",
+        "slide-in-right": "slide-in-right 0.3s ease-out",
+        "slide-in-left": "slide-in-left 0.3s ease-out",
+        "slide-in-top": "slide-in-top 0.3s ease-out",
         "in-bottom": "slide-in-bottom 0.3s ease-out forwards",
         out: "fade-out 0.3s ease-in forwards",
         "draw-line": "draw-line 1.5s ease-in-out forwards",
@@ -210,6 +246,44 @@ module.exports = {
       transitionDuration: {
         400: "400ms",
         500: "500ms",
+      },
+      spacing: {
+        4.5: "1.125rem", // 18px
+        5.5: "1.375rem", // 22px
+        13.5: "3.375rem", // 54px
+        15: "3.75rem", // 60px
+        22: "22rem", // 352px
+        30: "7.5rem", // 120px
+        32: "32rem", // 512px
+        46: "11.5rem", // 184px
+        60: "15rem", // 240px
+        132: "33rem", // 530px
+        142: "35.5rem", // 567px
+        150: "37.5rem", // 600px
+      },
+      width: {
+        13.5: "3.375rem", // 54px
+        15: "3.75rem", // 60px
+        22: "22rem", // 352px
+        32: "32rem", // 512px
+        46: "11.5rem", // 184px
+        60: "15rem", // 240px
+        132: "33rem", // 530px
+        142: "35.5rem", // 567px
+        150: "37.5rem", // 600px
+      },
+      height: {
+        4.5: "1.125rem", // 18px
+        13.5: "3.375rem", // 54px
+      },
+      minWidth: {
+        46: "11.5rem", // 184px
+      },
+      minHeight: {
+        30: "7.5rem", // 120px
+      },
+      translate: {
+        5.5: "1.375rem", // 22px
       },
     },
   },
@@ -321,6 +395,16 @@ module.exports = {
         },
         ".cursor-grab": {
           cursor: "grab",
+        },
+        ".bg-brand-gradient": {
+          background: "linear-gradient(to right, #BD05DD, #111A53)",
+        },
+        ".text-brand-gradient": {
+          background: "linear-gradient(to right, #BD05DD, #111A53)",
+          "-webkit-background-clip": "text",
+          "background-clip": "text",
+          "-webkit-text-fill-color": "transparent",
+          color: "transparent",
         },
       });
     },

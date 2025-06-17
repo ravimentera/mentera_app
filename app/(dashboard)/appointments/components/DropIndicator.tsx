@@ -27,25 +27,30 @@ export function DropIndicator({
 
   const getBackgroundColors = (type: Appointment["type"]) => {
     switch (type) {
-      case "therapy":
-        return {
-          border: "bg-[#8A03D3]/40 border-[#8A03D3]/40",
-          background: "bg-[#8A03D3]/30",
-        };
       case "consultation":
         return {
-          border: "bg-[#035DD3]/40 border-[#035DD3]/40",
-          background: "bg-[#035DD3]/30",
+          border: "bg-brand-purple-dark/40 border-brand-purple-dark/40",
+          background: "bg-brand-purple-dark/30",
         };
       case "followup":
         return {
-          border: "bg-[#D36203]/40 border-[#D36203]/40",
-          background: "bg-[#D36203]/30",
+          border: "bg-brand-blue/40 border-brand-blue/40",
+          background: "bg-brand-blue/30",
+        };
+      case "therapy":
+        return {
+          border: "bg-brand-amber/40 border-brand-amber/40",
+          background: "bg-brand-amber/30",
+        };
+      case "general":
+        return {
+          border: "bg-brand-green/40 border-brand-green/40",
+          background: "bg-brand-green/30",
         };
       default:
         return {
-          border: "bg-[#03A10B]/40 border-[#03A10B]/40",
-          background: "bg-[#03A10B]/30",
+          border: "",
+          background: "",
         };
     }
   };

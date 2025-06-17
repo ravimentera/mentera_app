@@ -53,7 +53,7 @@ export function AuthMarketingSection() {
 
       {/* Marketing content */}
       <div className="relative z-10 max-w-md space-y-6">
-        <p className="text-5xl font-bold bg-gradient-to-r from-[#111A53] to-[#BD05DD] bg-clip-text text-transparent">
+        <p className="text-5xl font-bold bg-gradient-brand bg-clip-text text-transparent">
           Transform your med-spa with Tera AI
         </p>
         <p className="text-gray-700 text-lg">
