@@ -117,18 +117,29 @@ export function ChatInterface({
     <div className={cn("max-w-2xl space-y-6", className)}>
       {/* Welcome Section */}
       {!hasChatStarted && (
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-brand-gradient">Hello, {username}</h1>
-          <div className="space-y-4 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-medium text-gray-900">
-              Your Medspa&apos;s Smartest Assistant
-            </h2>
-            <p className="text-gray-500 text-center leading-relaxed">
-              From appointment management to compliance, Mentera empowers your entire team to work
-              smarter.
-            </p>
-          </div>
-        </div>
+        <div className="text-center space-y-6">
+  <h1 className="text-4xl font-bold text-brand-gradient">Hello, {username}</h1>
+
+  <div className="max-w-md mx-auto bg-white shadow-sm rounded-2xl px-6 py-5 text-left border border-gray-200 space-y-5">
+
+    <div>
+      <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Today</p>
+      <p className="text-base text-gray-800">
+        <span className="font-medium">8 appointments</span> — first at <span className="font-medium">9:00 AM</span>, last at <span className="font-medium">4:30 PM</span>
+      </p>
+    </div>
+
+    <div>
+      <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Reminders</p>
+      <ul className="text-base text-gray-800 space-y-1 list-disc list-inside">
+        <li>3 charts pending</li>
+        <li>Pre-care needed (filler)</li>
+        <li>Laser follow-up – Jenna R.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
       )}
 
       {/* Chat Input Box */}

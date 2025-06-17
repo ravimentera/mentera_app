@@ -21,7 +21,7 @@ export function ChatInput({ message, onMessageChange, onSend, onKeyUp }: ChatInp
           value={message}
           onChange={handleChange}
           onKeyUp={onKeyUp}
-          placeholder="Ask anything to mentera..."
+          placeholder="Ask anything"
           className="w-full border-0 text-gray-800 placeholder:text-gray-400 bg-transparent focus:ring-0 resize-none"
           style={{ boxShadow: "none" }}
         />
