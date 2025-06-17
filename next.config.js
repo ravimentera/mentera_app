@@ -5,6 +5,9 @@ const nextConfig = {
   },
   // For Vercel deployment
   swcMinify: true,
+  images: {
+    domains: ["randomuser.me"],
+  },
 };
 
 module.exports = nextConfig;

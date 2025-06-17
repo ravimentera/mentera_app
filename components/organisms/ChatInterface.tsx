@@ -120,7 +120,9 @@ export function ChatInterface({
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-brand-gradient">Hello, {username}</h1>
           <div className="space-y-4 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-medium text-gray-900">Your Medspa's Smartest Assistant</h2>
+            <h2 className="text-3xl font-medium text-gray-900">
+              Your Medspa&apos;s Smartest Assistant
+            </h2>
             <p className="text-gray-500 text-center leading-relaxed">
               From appointment management to compliance, Mentera empowers your entire team to work
               smarter.
