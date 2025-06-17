@@ -1,6 +1,5 @@
 import { PaperclipIcon, SendHorizonalIcon } from "lucide-react";
 import { ChangeEvent, KeyboardEvent } from "react";
-import { Button } from "../atoms/Button";
 import { Input } from "../atoms/Input";
 
 interface ChatInputProps {
@@ -38,13 +37,12 @@ export function ChatInput({ message, onMessageChange, onSend, onKeyUp }: ChatInp
           </span>
         </div>
 
-        <Button
+        <div
           onClick={onSend}
-          disabled={!message.trim()}
-          className="bg-brand-gradient text-white hover:opacity-90 rounded-lg p-2"
+          className="text-brand-purple cursor-pointer bg-transparent rounded-lg p-2"
         >
           <SendHorizonalIcon className="h-5 w-5" />
-        </Button>
+        </div>
       </div>
     </div>
   );

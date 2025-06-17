@@ -6,7 +6,7 @@ export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "provider-recommendations",
     title: "Provider Recommendations",
-    backgroundColor: "bg-red-50",
+    backgroundColor: "bg-gray-50",
     data: [
       {
         label: "Recommended Frequency:",
@@ -27,7 +27,7 @@ export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "patient-observations",
     title: "Patient Observations",
-    backgroundColor: "bg-orange-50",
+    backgroundColor: "bg-gray-50",
     data: [
       {
         label: "Skin Condition:",
@@ -48,7 +48,7 @@ export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "actionable-insights",
     title: "Actionable Insights",
-    backgroundColor: "bg-teal-50",
+    backgroundColor: "bg-gray-50",
     data: [
       {
         label: "Procedure:",
@@ -69,7 +69,7 @@ export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "user-history",
     title: "User History",
-    backgroundColor: "bg-teal-50",
+    backgroundColor: "bg-gray-50",
     data: [
       {
         label: "Last Visited On:",
@@ -92,7 +92,7 @@ export const MOCK_PATIENT_OVERVIEW_CARDS: PatientOverviewCard[] = [
   {
     id: "procedure-details",
     title: "Procedure Details",
-    backgroundColor: "bg-green-50",
+    backgroundColor: "bg-gray-50",
     data: [
       {
         label: "Procedure:",
