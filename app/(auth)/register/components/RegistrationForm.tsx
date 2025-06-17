@@ -131,10 +131,10 @@ export function RegistrationForm({
             <p className="text-3xl font-semibold text-gray-900 text-left">{labels.title}</p>
           </div>
           <div className="flex flex-col justify-end items-end mt-2">
-            <p className="text-[#6B7280] text-md text-right">{labels.loginText}</p>
+            <p className="text-text-gray-500 text-md text-right">{labels.loginText}</p>
             <Link
               href={AUTH_ROUTES.LOGIN}
-              className="text-[#C026D3] font-semibold text-sm ml-1 hover:underline"
+              className="text-brand-purple font-semibold text-sm ml-1 hover:underline"
             >
               {labels.loginLink}
             </Link>
@@ -224,7 +224,7 @@ export function RegistrationForm({
 
           <Button
             type="submit"
-            className="w-full mt-2 bg-[#C026D3] hover:bg-[#BD05DD]"
+            className="w-full mt-2 bg-brand-purple hover:bg-brand-purple-hover"
             disabled={
               isLoading ||
               !formData.email ||

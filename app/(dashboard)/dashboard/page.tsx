@@ -1,155 +1,149 @@
 "use client";
 
-import { BarChart, Card, DonutChart, LineChart } from "@/components/organisms";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/atoms";
+import { ChatInterface } from "@/components/organisms";
+import { cn } from "@/lib/utils";
+import { Edit, PanelLeft, Search } from "lucide-react";
+import { useState } from "react";
 
-// Use seed values instead of random to prevent hydration errors
-const appointmentDataSeed = [
-  { date: "Jan", value: 8 },
-  { date: "Feb", value: 10 },
-  { date: "Mar", value: 7 },
-  { date: "Apr", value: 12 },
-  { date: "May", value: 9 },
-  { date: "Jun", value: 11 },
-  { date: "Jul", value: 15 },
-  { date: "Aug", value: 14 },
+const recentChats = [
+  "Appointment Schedule",
+  "Create campaign",
+  "Patient follow-up",
+  "Inventory management",
+  "Staff scheduling",
 ];
-
-const treatmentDataSeed = [
-  { label: "Facial", value: 32 },
-  { label: "Massage", value: 28 },
-  { label: "Laser", value: 18 },
-  { label: "Botox", value: 14 },
-  { label: "Hair Rem.", value: 10 },
-];
-
-const satisfactionDataSeed = [
-  { label: "Excellent", value: 56, color: "#22c55e" },
-  { label: "Good", value: 32, color: "#3b82f6" },
-  { label: "Average", value: 10, color: "#eab308" },
-  { label: "Poor", value: 2, color: "#ef4444" },
-];
-
-const userDataSeed = [
-  {
-    id: "user-1",
-    name: "Emma Davis",
-    email: "emma.davis@example.com",
-    phone: "(555) 123-4567",
-    nextAppt: "15 Apr, 2:30 PM",
-    treatment: "Facial Treatment",
-  },
-  {
-    id: "user-2",
-    name: "Michael Wilson",
-    email: "michael.wilson@example.com",
-    phone: "(555) 234-5678",
-    nextAppt: "18 Apr, 10:00 AM",
-    treatment: "Laser Therapy",
-  },
-  {
-    id: "user-3",
-    name: "Sophia Lee",
-    email: "sophia.lee@example.com",
-    phone: "(555) 345-6789",
-    nextAppt: "20 Apr, 3:15 PM",
-    treatment: "Body Massage",
-  },
-];
-
-// Get consistent values for display stats
-const totalAppointments = 86;
-const upcomingAppointments = 4;
-const totalCustomers = 78;
-const rewardsPoints = 245;
 
 export default function DashboardPage() {
-  const [appointmentData] = useState(appointmentDataSeed);
-  const [treatmentData] = useState(treatmentDataSeed);
-  const [satisfactionData] = useState(satisfactionDataSeed);
-  const [userData] = useState(userDataSeed);
-  const [lastUpdated, setLastUpdated] = useState("");
+  const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(false);
+  const [hasChatStarted, setHasChatStarted] = useState(false);
+  const [showDynamicContent, setShowDynamicContent] = useState(false);
+  const [messageCount, setMessageCount] = useState(0);
 
-  // Set lastUpdated date only on client side to avoid hydration issues
-  useEffect(() => {
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-    const formattedTime = now.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    setLastUpdated(`${formattedDate} ${formattedTime}`);
-  }, []);
+  const toggleChatSidebar = () => {
+    setIsChatSidebarOpen(!isChatSidebarOpen);
+  };
+
+  const handleSendMessage = () => {
+    if (!hasChatStarted) {
+      setHasChatStarted(true);
+    }
+
+    // Increment message count and show dynamic content after 2nd message exchange
+    const newCount = messageCount + 1;
+    setMessageCount(newCount);
+
+    if (newCount >= 2) {
+      // Show dynamic content after 2nd AI reply (with delay for AI response)
+      setTimeout(() => {
+        setShowDynamicContent(true);
+      }, 1500);
+    }
+  };
+
+  const handleNewChat = () => {
+    setHasChatStarted(false);
+    setShowDynamicContent(false);
+    setMessageCount(0);
+  };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <div className="">
-          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 text-sm">
-            Welcome to your Mentera-AI dashboard. Here you can manage your appointments and
-            services.
-          </p>
+    <div className="min-h-screen bg-gray-50/40 flex">
+      {/* Chat Sidebar */}
+      <div
+        className={cn(
+          "bg-slate-50 border-r border-gray-200 transition-all duration-300 overflow-hidden",
+          isChatSidebarOpen ? "w-60" : "w-12",
+        )}
+      >
+        {/* Toggle Button */}
+        <div className="p-2 flex justify-end">
+          <Button
+            onClick={toggleChatSidebar}
+            variant="ghost"
+            size="sm"
+            className="w-8 h-8 p-0 hover:bg-slate-200"
+          >
+            <PanelLeft className="h-4 w-4 text-gray-600" />
+          </Button>
         </div>
-        <span className="text-sm text-gray-500">
-          {lastUpdated ? `Last updated: ${lastUpdated}` : "Loading..."}
-        </span>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-6">
-          <h3 className="font-medium">Total Appointments</h3>
-          <p className="text-3xl font-bold">{totalAppointments}</p>
-          <p className="text-sm text-gray-500 mt-1">Last 8 months</p>
-        </Card>
-        <Card className="p-6">
-          <h3 className="font-medium">Upcoming Appointments</h3>
-          <p className="text-3xl font-bold">{upcomingAppointments}</p>
-          <p className="text-sm text-gray-500 mt-1">Next 7 days</p>
-        </Card>
-        <Card className="p-6">
-          <h3 className="font-medium">Total Customers</h3>
-          <p className="text-3xl font-bold">{totalCustomers}</p>
-          <p className="text-sm text-gray-500 mt-1">Active profiles</p>
-        </Card>
-        <Card className="p-6">
-          <h3 className="font-medium">Rewards Points</h3>
-          <p className="text-3xl font-bold">{rewardsPoints}</p>
-          <p className="text-sm text-gray-500 mt-1">Redeemable points</p>
-        </Card>
-      </div>
+        {/* Sidebar Content */}
+        {isChatSidebarOpen && (
+          <div className="px-2 pb-4 space-y-4">
+            {/* New Chat & Search Chat */}
+            <div className="space-y-1">
+              <Button
+                onClick={handleNewChat}
+                variant="ghost"
+                className="w-full justify-start gap-2 h-10 px-2 bg-slate-100 text-purple-600 hover:bg-slate-200"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="text-sm font-medium">New Chat</span>
+              </Button>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <LineChart data={appointmentData} title="Appointments Over Time" width={500} height={250} />
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2 h-10 px-2 text-gray-700 hover:bg-slate-100"
+              >
+                <Search className="h-4 w-4" />
+                <span className="text-sm font-medium">Search Chat</span>
+              </Button>
+            </div>
 
-        <BarChart data={treatmentData} title="Popular Treatments" width={500} height={250} />
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="p-6">
-          <h3 className="text-lg font-medium mb-4">Recent Customers</h3>
-          <div className="space-y-4">
-            {userData.map((user) => (
-              <div key={user.id} className="flex justify-between border-b pb-3">
-                <div>
-                  <p className="font-medium">{user.name}</p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                  <p className="text-sm text-gray-500">{user.phone}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{user.nextAppt}</p>
-                  <p className="text-sm text-gray-500">{user.treatment}</p>
-                </div>
+            {/* Recents Section */}
+            <div className="space-y-1">
+              <div className="px-2 py-1">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Recents
+                </span>
               </div>
-            ))}
-          </div>
-        </Card>
 
-        <DonutChart data={satisfactionData} title="Customer Satisfaction" size={250} />
+              <div className="space-y-1">
+                {recentChats.map((chat, index) => (
+                  <Button
+                    key={chat}
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start h-8 px-2 text-gray-600 hover:bg-slate-100 text-sm",
+                      index === 0 && "bg-slate-100 text-gray-700",
+                    )}
+                  >
+                    <span className="truncate">{chat}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex">
+        <div className="flex-1 flex flex-col">
+          <div
+            className={cn(
+              "w-full flex flex-col items-center",
+              hasChatStarted ? "h-full" : "justify-center px-8 h-full",
+            )}
+          >
+            <div
+              className={cn(
+                "w-full flex flex-col items-center",
+                hasChatStarted && !showDynamicContent ? "max-w-2xl" : "",
+                hasChatStarted ? "h-full" : "justify-center",
+              )}
+            >
+              <ChatInterface
+                onSendMessage={handleSendMessage}
+                hasChatStarted={hasChatStarted}
+                username="Rachel"
+                showDynamicContent={showDynamicContent}
+                className="h-full w-full"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

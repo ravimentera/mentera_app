@@ -53,11 +53,11 @@ function DrawerContent({
   const getPositionClasses = () => {
     switch (direction) {
       case "right":
-        return "inset-y-0 right-0 h-full border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right";
+        return "inset-y-0 right-0 h-full border-l animate-slide-in-right";
       case "left":
-        return "inset-y-0 left-0 h-full border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left";
+        return "inset-y-0 left-0 h-full border-r animate-slide-in-left";
       case "bottom":
-        return "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom";
+        return "inset-x-0 bottom-0 border-t animate-in-bottom";
     }
   };
 
@@ -67,7 +67,7 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "fixed z-50 bg-background flex flex-col shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:duration-500 data-[state=closed]:duration-500",
+          "fixed z-50 bg-background flex flex-col shadow-lg",
           getPositionClasses(),
           className,
         )}

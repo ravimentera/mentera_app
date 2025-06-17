@@ -14,7 +14,7 @@ export function PackageCard({ packages, onViewAll }: PackageCardProps) {
     <div className="bg-white rounded-lg border p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Package2 className="h-5 w-5 text-[#C026D3]" />
+          <Package2 className="h-5 w-5 text-brand-purple" />
           <h2 className="text-lg font-semibold">Active Packages (2/7)</h2>
         </div>
         <Button variant="link" onClick={onViewAll} className="text-blue-600 font-medium">
@@ -33,7 +33,7 @@ export function PackageCard({ packages, onViewAll }: PackageCardProps) {
             </div>
             <div className="relative w-full h-2 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-[#BD05DD] to-[#111A53]"
+                className="absolute left-0 top-0 h-full rounded-full bg-brand-gradient"
                 style={{ width: `${(pkg.completedSessions / pkg.totalSessions) * 100}%` }}
               />
             </div>

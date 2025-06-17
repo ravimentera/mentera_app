@@ -132,7 +132,7 @@ export default function ApprovalsPage() {
           open={showConversationDrawer}
           onOpenChange={setShowConversationDrawer}
         >
-          <DrawerContent className="w-[567px]" direction="right">
+          <DrawerContent className="w-142" direction="right">
             <DrawerHeader className="border-b border-gray-100 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">

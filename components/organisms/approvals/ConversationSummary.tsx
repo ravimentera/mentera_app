@@ -14,7 +14,7 @@ export function ConversationSummary({
 }: ConversationSummaryProps) {
   return (
     <div className={className}>
-      <div className="bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest p-[1px] rounded-lg relative">
+      <div className="bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest p-px rounded-lg relative">
         <div className="bg-white rounded-lg p-6 space-y-4">
           <div className="absolute -top-4 left-3">
             <div className="inline-flex items-center gap-1 bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest text-white px-2 py-1 rounded-md text-sm font-semibold">

@@ -165,7 +165,7 @@ export function ApprovalCard({ approval, patient, onApproval, className }: Appro
                   ref={textareaRef}
                   value={editedMessage}
                   onChange={(e) => setEditedMessage(e.target.value)}
-                  className="w-full min-h-[120px] resize-none border-none outline-none text-foreground leading-relaxed bg-transparent"
+                  className="w-full min-h-30 resize-none border-none outline-none text-foreground leading-relaxed bg-transparent"
                   placeholder="Enter your message..."
                 />
                 <div className="flex gap-2 justify-end">
@@ -202,7 +202,7 @@ export function ApprovalCard({ approval, patient, onApproval, className }: Appro
 
           {/* Action Buttons */}
           <div className="flex justify-between items-center">
-            <div className="bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest p-[1px] rounded-lg">
+            <div className="bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest p-px rounded-lg">
               <Button
                 variant="gradient-light"
                 size="default"
@@ -223,7 +223,7 @@ export function ApprovalCard({ approval, patient, onApproval, className }: Appro
                 variant="success-light"
                 onClick={() => onApproval("approved")}
                 size="default"
-                className="min-w-[184px]"
+                className="min-w-46"
               >
                 <ThumbsUp className="w-4 h-4 mr-2" />
                 Approve & Send

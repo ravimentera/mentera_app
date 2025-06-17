@@ -25,7 +25,7 @@ export function ProfileTabs({ activeTab, onTabChange, children }: ProfileTabsPro
   return (
     <div className="w-full">
       <Tabs defaultValue={activeTab} className="w-full">
-        <TabsList className="flex p-0 bg-[#FCFCFC]">
+        <TabsList className="flex p-0 bg-ui-background-subtle">
           {tabItems.map((tab) => (
             <TabsTrigger
               key={tab.id}
@@ -33,8 +33,8 @@ export function ProfileTabs({ activeTab, onTabChange, children }: ProfileTabsPro
               onClick={() => onTabChange(tab.id)}
               className={`px-4 py-2.5 text-sm font-medium rounded-b-sm border-b-2 ${
                 activeTab === tab.id
-                  ? "bg-[#F4F1FE] text-[#6941C6] border-[#6941C6] hover:bg-[#F4F1FE] hover:text-[#6941C6]"
-                  : "text-[#475467] border-transparent hover:text-gray-900 hover:bg-gray-50"
+                  ? "bg-ui-background-purple text-ui-icon-purple border-ui-icon-purple hover:bg-ui-background-purple hover:text-ui-icon-purple"
+                  : "text-text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
               }`}
             >
               {tab.label}

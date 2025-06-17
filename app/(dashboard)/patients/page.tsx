@@ -73,10 +73,10 @@ export default function PatientsPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-semibold text-[#111827]">Patients</h1>
-            <p className="text-sm text-[#6B7280]">Manage all patients and their data</p>
+            <h1 className="text-2xl font-semibold text-text-gray-900">Patients</h1>
+            <p className="text-sm text-text-gray-500">Manage all patients and their data</p>
           </div>
-          <Button className="bg-[#8A03D3] hover:bg-[#8A03D3]/90 h-10 px-4 py-2">
+          <Button className="bg-brand-purple-dark hover:bg-brand-purple-dark/90 h-10 px-4 py-2">
             <Plus className="h-4 w-4 mr-2" />
             Add New
           </Button>
@@ -93,31 +93,31 @@ export default function PatientsPage() {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setSearchQuery(e.target.value)
                   }
-                  className="pl-10 py-2 border-[#E5E7EB] h-10 w-[350px] bg-white"
+                  className="pl-10 py-2 border-ui-border-subtle h-10 w-22 bg-white"
                 />
                 <div className="absolute left-3 pointer-events-none">
-                  <Search className="h-[18px] w-[18px] text-[#9CA3AF]" />
+                  <Search className="h-4.5 w-4.5 text-ui-icon-gray" />
                 </div>
               </div>
-              <Button variant="outline" size="icon" className="h-10 w-10 border-[#E2E8F0]">
-                <Filter className="h-[18px] w-[18px] text-[#6B7280]" />
+              <Button variant="outline" size="icon" className="h-10 w-10 border-ui-border">
+                <Filter className="h-4.5 w-4.5 text-text-gray-500" />
               </Button>
-              <Button variant="outline" className="h-10 px-4 py-2 border-[#E2E8F0]">
+              <Button variant="outline" className="h-10 px-4 py-2 border-ui-border">
                 All Status
-                <ChevronDownIcon className="h-4 w-4 ml-2 text-[#6B7280]" />
+                <ChevronDownIcon className="h-4 w-4 ml-2 text-text-gray-500" />
               </Button>
             </div>
           </div>
-          <div className="mt-1.5 text-right text-[#71717A]">{filteredPatients.length} records</div>
+          <div className="mt-1.5 text-right text-text-muted">{filteredPatients.length} records</div>
         </div>
       </div>
 
       {/* Table with fixed header and scrollable body */}
       <div className="flex-1 pb-6">
-        <div className="bg-white rounded-lg border border-[#E2E8F0] h-full border-l-0">
+        <div className="bg-white rounded-lg border border-ui-border h-full border-l-0">
           <Table>
             <TableHeader className="sticky top-0 bg-white z-10">
-              <TableRow className="border-b border-[#E2E8F0] hover:bg-white">
+              <TableRow className="border-b border-ui-border hover:bg-white">
                 <TableHead className="text-xs uppercase pl-4">ID</TableHead>
                 <TableHead className="text-xs uppercase">Name</TableHead>
                 <TableHead className="text-xs uppercase">Phone Number</TableHead>
@@ -132,26 +132,26 @@ export default function PatientsPage() {
             <TableBody className="overflow-y-auto">
               {filteredPatients.map((patient) => (
                 <TableRow key={patient.patientId} onClick={() => handleRowClick(patient.patientId)}>
-                  <TableCell className="text-sm text-[#09090B] pl-4">{patient.patientId}</TableCell>
-                  <TableCell className="text-sm font-medium text-[#111827]">
+                  <TableCell className="text-sm text-text pl-4">{patient.patientId}</TableCell>
+                  <TableCell className="text-sm font-medium text-text-gray-900">
                     {patient.provider}
                   </TableCell>
-                  <TableCell className="text-sm text-[#09090B]">{patient.phoneNumber}</TableCell>
-                  <TableCell className="text-sm text-[#09090B]">{patient.email}</TableCell>
-                  <TableCell className="text-sm text-[#09090B]">{patient.followUpDate}</TableCell>
-                  <TableCell className="text-sm text-[#09090B]">{patient.visitDate}</TableCell>
+                  <TableCell className="text-sm text-text">{patient.phoneNumber}</TableCell>
+                  <TableCell className="text-sm text-text">{patient.email}</TableCell>
+                  <TableCell className="text-sm text-text">{patient.followUpDate}</TableCell>
+                  <TableCell className="text-sm text-text">{patient.visitDate}</TableCell>
                   <TableCell>
                     {patient.alerts.length > 0 ? (
                       patient.alerts.map((alert) => (
                         <Badge
                           key={alert}
-                          className="bg-[#EFF6FF] text-[#2563EB] hover:bg-[#EFF6FF] mr-1"
+                          className="bg-brand-blue-light text-brand-blue hover:bg-brand-blue-light mr-1"
                         >
                           {alert}
                         </Badge>
                       ))
                     ) : (
-                      <Badge className="bg-[#EFF6FF] text-[#2563EB] hover:bg-[#EFF6FF]">
+                      <Badge className="bg-brand-blue-light text-brand-blue hover:bg-brand-blue-light">
                         {patient.providerSpecialty}
                       </Badge>
                     )}
@@ -160,8 +160,8 @@ export default function PatientsPage() {
                     <Badge
                       className={
                         patient.treatmentOutcome === "Positive"
-                          ? "bg-[#F0FDF4] text-[#047857] hover:bg-[#F0FDF4]"
-                          : "bg-[#F4F4F5] text-[#09090B] hover:bg-[#F4F4F5]"
+                          ? "bg-brand-green-light text-brand-green hover:bg-brand-green-light"
+                          : "bg-secondary text-text hover:bg-secondary"
                       }
                     >
                       {patient.treatmentOutcome}
@@ -169,7 +169,7 @@ export default function PatientsPage() {
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontalIcon className="h-[17px] w-[17px] text-[#9CA3AF]" />
+                      <MoreHorizontalIcon className="h-[17px] w-[17px] text-ui-icon-gray" />
                     </Button>
                   </TableCell>
                 </TableRow>

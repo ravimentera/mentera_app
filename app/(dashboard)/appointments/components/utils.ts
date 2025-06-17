@@ -17,39 +17,39 @@ export const getAppointmentStatusColors = (status: Appointment["status"]) => {
 export const getAppointmentColors = (type: Appointment["type"]) => {
   switch (type) {
     case "therapy":
-      return "bg-[#8A03D3]/10 hover:bg-[#8A03D3]/20 border-[#8A03D3]/20 group-hover:bg-[#8A03D3]/20";
+      return "bg-brand-purple-background hover:bg-brand-purple/20 border-brand-purple/20 group-hover:bg-brand-purple/20";
     case "consultation":
-      return "bg-[#035DD3]/10 hover:bg-[#035DD3]/20 border-[#035DD3]/20 group-hover:bg-[#035DD3]/20";
+      return "bg-brand-blue-background hover:bg-brand-blue/20 border-brand-blue/20 group-hover:bg-brand-blue/20";
     case "followup":
-      return "bg-[#D36203]/10 hover:bg-[#D36203]/20 border-[#D36203]/20 group-hover:bg-[#D36203]/20";
+      return "bg-brand-amber-background hover:bg-brand-amber/20 border-brand-amber/20 group-hover:bg-brand-amber/20";
     default:
-      return "bg-[#03A10B]/10 hover:bg-[#03A10B]/20 border-[#03A10B]/20 group-hover:bg-[#03A10B]/20";
+      return "bg-brand-green-background hover:bg-brand-green/20 border-brand-green/20 group-hover:bg-brand-green/20";
   }
 };
 
 export const getAvatarColors = (type: Appointment["type"]) => {
   switch (type) {
     case "therapy":
-      return "bg-[#8A03D3] text-white";
+      return "bg-brand-purple-dark text-white";
     case "consultation":
-      return "bg-[#035DD3] text-white";
+      return "bg-brand-blue text-white";
     case "followup":
-      return "bg-[#D36203] text-white";
+      return "bg-brand-amber text-white";
     default:
-      return "bg-[#03A10B] text-white";
+      return "bg-brand-green text-white";
   }
 };
 
 export const getAppointmentTextColor = (type: Appointment["type"]) => {
   switch (type) {
     case "therapy":
-      return "text-[#8A03D3]";
+      return "text-brand-purple-dark";
     case "consultation":
-      return "text-[#035DD3]";
+      return "text-brand-blue";
     case "followup":
-      return "text-[#D36203]";
+      return "text-brand-amber";
     default:
-      return "text-[#03A10B]";
+      return "text-brand-green";
   }
 };
 
@@ -162,7 +162,7 @@ export const generateCareInstructions = (appointment: Appointment) => {
     return {
       message: `Hi ${patientName},
 
-It’s Meghan here 😊—excited to see you for your ${patientName !== "Emiley" && patientName !== "Erica" ? "Botox" : "microneedling"} on ${appointmentDate}! A couple quick reminders: try to avoid sun/tanning this week, skip alcohol/caffeine 24–48 hrs before, and stay extra hydrated. Let me know if you have any questions before we start 💖.`,
+It's Meghan here 😊—excited to see you for your ${patientName !== "Emiley" && patientName !== "Erica" ? "Botox" : "microneedling"} on ${appointmentDate}! A couple quick reminders: try to avoid sun/tanning this week, skip alcohol/caffeine 24–48 hrs before, and stay extra hydrated. Let me know if you have any questions before we start 💖.`,
       type: "pre-care" as const,
     };
   }
@@ -178,9 +178,54 @@ You should begin noticing improvements within a few days, with full results beco
 • Keep your skin moisturized and avoid harsh products.  
 • Protect your skin from direct sunlight and use a gentle SPF.
 
-We’ve tentatively scheduled your next appointment for 13 May 2025 to follow up and ensure your skin is healing as expected. Let us know if you’d like to confirm or adjust the timing.
+We've tentatively scheduled your next appointment for 13 May 2025 to follow up and ensure your skin is healing as expected. Let us know if you'd like to confirm or adjust the timing.
 
-Take care, and don’t hesitate to reach out if you need anything in the meantime.`,
+Take care, and don't hesitate to reach out if you need anything in the meantime.`,
     type: "post-care" as const,
   };
 };
+
+export function getAppointmentTypeStyles(type: Appointment["type"]) {
+  switch (type) {
+    case "consultation":
+      return "bg-brand-purple-background hover:bg-brand-purple-dark/20 border-brand-purple-dark/20 group-hover:bg-brand-purple-dark/20";
+    case "followup":
+      return "bg-brand-blue-background hover:bg-brand-blue/20 border-brand-blue/20 group-hover:bg-brand-blue/20";
+    case "therapy":
+      return "bg-brand-amber-background hover:bg-brand-amber/20 border-brand-amber/20 group-hover:bg-brand-amber/20";
+    case "general":
+      return "bg-brand-green-background hover:bg-brand-green/20 border-brand-green/20 group-hover:bg-brand-green/20";
+    default:
+      return "";
+  }
+}
+
+export function getAppointmentTypeColor(type: Appointment["type"]) {
+  switch (type) {
+    case "consultation":
+      return "bg-brand-purple-dark text-white";
+    case "followup":
+      return "bg-brand-blue text-white";
+    case "therapy":
+      return "bg-brand-amber text-white";
+    case "general":
+      return "bg-brand-green text-white";
+    default:
+      return "";
+  }
+}
+
+export function getAppointmentTypeTextColor(type: Appointment["type"]) {
+  switch (type) {
+    case "consultation":
+      return "text-brand-purple-dark";
+    case "followup":
+      return "text-brand-blue";
+    case "therapy":
+      return "text-brand-amber";
+    case "general":
+      return "text-brand-green";
+    default:
+      return "";
+  }
+}

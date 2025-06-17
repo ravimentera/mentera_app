@@ -10,13 +10,13 @@ interface ProfileCardProps {
 
 export function ProfileCard({ patient }: ProfileCardProps) {
   return (
-    <div className="bg-[#FCFCFC] overflow-hidden">
+    <div className="bg-ui-background-subtle overflow-hidden">
       {/* Profile Info */}
       <div className="p-6 space-y-6">
         <div className="flex flex-col items-center text-center">
           <div className="relative mb-4">
-            <div className="h-16 w-16 rounded-full bg-[#F4F1FE] flex items-center justify-center">
-              <span className="text-xl font-medium text-[#6941C6]">
+            <div className="h-16 w-16 rounded-full bg-ui-background-purple flex items-center justify-center">
+              <span className="text-xl font-medium text-ui-icon-purple">
                 {patient.firstName[0]}
                 {patient.lastName[0]}
               </span>
@@ -63,8 +63,8 @@ export function ProfileCard({ patient }: ProfileCardProps) {
                 variant={tag.toLowerCase() === "vip" ? "success" : "secondary"}
                 className={
                   tag.toLowerCase() === "vip"
-                    ? "bg-[#ECFDF3] text-[#027A48] hover:bg-[#ECFDF3]/80"
-                    : "bg-[#FDF2FA] text-[#C11574] hover:bg-[#FDF2FA]/80"
+                    ? "bg-ui-status-success-light text-ui-status-success hover:bg-ui-status-success-light/80"
+                    : "bg-ui-status-warning-light text-ui-status-warning hover:bg-ui-status-warning-light/80"
                 }
               >
                 {tag}

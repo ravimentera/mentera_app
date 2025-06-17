@@ -47,8 +47,8 @@ export function ChatDrawer() {
       <DrawerTrigger asChild>
         <Button
           type="button"
-          className="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full z-50 shadow-lg hover:bg-blue-700 transition 
-                     p-0 w-[54px] h-[54px] flex items-center justify-center"
+          className="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full z-50 shadow-lg hover:bg-blue-700 transition
+                     p-0 w-13.5 h-13.5 flex items-center justify-center"
           aria-label="Open chat"
         >
           <Image

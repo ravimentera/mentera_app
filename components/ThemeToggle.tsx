@@ -108,7 +108,7 @@ export function ThemeToggle() {
             "pointer-events-none absolute flex h-5 w-5 items-center justify-center rounded-full shadow-md ring-0 z-10",
             "transition-transform duration-300 ease-in-out",
             isDark
-              ? "translate-x-[22px] bg-purple-500 border border-purple-600"
+              ? "translate-x-5.5 bg-purple-500 border border-purple-600"
               : "translate-x-[1px] bg-amber-400 border border-amber-500",
           )}
         >

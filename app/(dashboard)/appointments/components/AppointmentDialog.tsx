@@ -153,7 +153,7 @@ export function AppointmentDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-150">
         <DialogHeader>
           <DialogTitle>{mode === "new" ? "New Appointment" : "View Appointment"}</DialogTitle>
         </DialogHeader>
@@ -174,7 +174,7 @@ export function AppointmentDialog({
                   type="time"
                   id="new-start-time"
                   step="900"
-                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#8A03D3] [&::-webkit-calendar-picker-indicator]:text-[#8A03D3] [&::-webkit-time-picker-indicator]:text-[#8A03D3]"
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-purple-dark [&::-webkit-calendar-picker-indicator]:text-brand-purple-dark [&::-webkit-time-picker-indicator]:text-brand-purple-dark"
                   value={format(formData.startTime, "HH:mm")}
                   onChange={(e) => {
                     const [hours, minutes] = e.target.value.split(":").map(Number);
@@ -190,7 +190,7 @@ export function AppointmentDialog({
                   type="time"
                   id="new-end-time"
                   step="900"
-                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#8A03D3] [&::-webkit-calendar-picker-indicator]:text-[#8A03D3] [&::-webkit-time-picker-indicator]:text-[#8A03D3]"
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-purple-dark [&::-webkit-calendar-picker-indicator]:text-brand-purple-dark [&::-webkit-time-picker-indicator]:text-brand-purple-dark"
                   value={format(formData.endTime, "HH:mm")}
                   onChange={(e) => {
                     const [hours, minutes] = e.target.value.split(":").map(Number);
@@ -256,13 +256,13 @@ export function AppointmentDialog({
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="flex p-0 bg-[#FCFCFC]">
+            <TabsList className="flex p-0 bg-ui-background-subtle">
               <TabsTrigger
                 value="notify"
                 className={`px-4 py-2.5 text-sm font-medium rounded-b-sm border-b-2 ${
                   activeTab === "notify"
-                    ? "bg-[#F4F1FE] text-[#6941C6] border-[#6941C6] hover:bg-[#F4F1FE] hover:text-[#6941C6]"
-                    : "text-[#475467] border-transparent hover:text-gray-900 hover:bg-gray-50"
+                    ? "bg-ui-background-purple text-ui-icon-purple border-ui-icon-purple hover:bg-ui-background-purple hover:text-ui-icon-purple"
+                    : "text-text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
                 Notify
@@ -271,8 +271,8 @@ export function AppointmentDialog({
                 value="edit"
                 className={`px-4 py-2.5 text-sm font-medium rounded-b-sm border-b-2 ${
                   activeTab === "edit"
-                    ? "bg-[#F4F1FE] text-[#6941C6] border-[#6941C6] hover:bg-[#F4F1FE] hover:text-[#6941C6]"
-                    : "text-[#475467] border-transparent hover:text-gray-900 hover:bg-gray-50"
+                    ? "bg-ui-background-purple text-ui-icon-purple border-ui-icon-purple hover:bg-ui-background-purple hover:text-ui-icon-purple"
+                    : "text-text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
                 Edit
@@ -285,7 +285,7 @@ export function AppointmentDialog({
                   <div className="relative">
                     {/* Only show Tera Compose label for pending notifications */}
                     {appointment.notificationStatus?.status === "pending" && (
-                      <div className="absolute -top-3 -right-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-[6px] bg-[#6941C6] text-white text-sm">
+                      <div className="absolute -top-3 -right-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-[6px] bg-ui-icon-purple text-white text-sm">
                         <Sparkles className="h-4 w-4" />
                         Tera Compose
                       </div>
@@ -389,10 +389,10 @@ export function AppointmentDialog({
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal ring-offset-background focus-visible:ring-[#8A03D3] focus-visible:ring-offset-2",
+                        "w-full justify-start text-left font-normal ring-offset-background focus-visible:ring-brand-purple-dark focus-visible:ring-offset-2",
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4 text-[#8A03D3]" />
+                      <CalendarIcon className="mr-2 h-4 w-4 text-brand-purple-dark" />
                       {format(formData.startTime, "MMM dd, yyyy")}
                     </Button>
                   </PopoverTrigger>
@@ -427,7 +427,7 @@ export function AppointmentDialog({
                         caption_label: "text-sm font-medium",
                         nav: "space-x-1 flex items-center",
                         nav_button:
-                          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-[#8A03D3]/10",
+                          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-brand-purple-dark/10",
                         nav_button_previous: "absolute left-1",
                         nav_button_next: "absolute right-1",
                         table: "w-full border-collapse space-y-1",
@@ -435,10 +435,10 @@ export function AppointmentDialog({
                         head_cell:
                           "text-gray-500 rounded-md w-9 font-normal text-[0.8rem] dark:text-gray-400",
                         row: "flex w-full mt-2",
-                        cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-[#8A03D3]/5 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
-                        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-[#8A03D3]/10 rounded-md",
+                        cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-brand-purple-dark/5 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+                        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-brand-purple-dark/10 rounded-md",
                         day_selected:
-                          "bg-[#8A03D3] text-white hover:bg-[#8A03D3]/90 hover:text-white focus:bg-[#8A03D3] focus:text-white",
+                          "bg-brand-purple-dark text-white hover:bg-brand-purple-dark/90 hover:text-white focus:bg-brand-purple-dark focus:text-white",
                         day_today: "bg-accent text-accent-foreground",
                         day_outside:
                           "text-gray-500 opacity-50 aria-selected:bg-accent/50 aria-selected:text-gray-500 aria-selected:opacity-30",
@@ -460,7 +460,7 @@ export function AppointmentDialog({
                     type="time"
                     id="edit-start-time"
                     step="900"
-                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#8A03D3] [&::-webkit-calendar-picker-indicator]:text-[#8A03D3] [&::-webkit-time-picker-indicator]:text-[#8A03D3]"
+                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-purple-dark [&::-webkit-calendar-picker-indicator]:text-brand-purple-dark [&::-webkit-time-picker-indicator]:text-brand-purple-dark"
                     value={format(formData.startTime, "HH:mm")}
                     onChange={(e) => {
                       const [hours, minutes] = e.target.value.split(":").map(Number);
@@ -476,7 +476,7 @@ export function AppointmentDialog({
                     type="time"
                     id="edit-end-time"
                     step="900"
-                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#8A03D3] [&::-webkit-calendar-picker-indicator]:text-[#8A03D3] [&::-webkit-time-picker-indicator]:text-[#8A03D3]"
+                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-purple-dark [&::-webkit-calendar-picker-indicator]:text-brand-purple-dark [&::-webkit-time-picker-indicator]:text-brand-purple-dark"
                     value={format(formData.endTime, "HH:mm")}
                     onChange={(e) => {
                       const [hours, minutes] = e.target.value.split(":").map(Number);

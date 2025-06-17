@@ -49,10 +49,10 @@ export default function InboxPage() {
             placeholder="Search by name, phone number"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 py-2 border-[#E5E7EB] h-10 w-[350px] bg-white"
+            className="pl-10 py-2 border-ui-border-subtle h-10 w-22 bg-white"
           />
           <div className="absolute left-3 pointer-events-none">
-            <Search className="h-[18px] w-[18px] text-[#9CA3AF]" />
+            <Search className="h-4.5 w-4.5 text-ui-icon-gray" />
           </div>
         </div>
         <span className="text-gray-500">{chatData.length} records</span>
@@ -117,7 +117,7 @@ export default function InboxPage() {
 
       {/* Chat Drawer */}
       <Drawer direction="right" open={!!selectedChat} onOpenChange={handleCloseChat}>
-        <DrawerContent direction="right" className="w-[500px]">
+        <DrawerContent direction="right" className="w-32">
           {selectedChatData && (
             <>
               {/* Chat header */}
@@ -173,7 +173,7 @@ export default function InboxPage() {
                   />
                   <Button
                     onClick={handleSendMessage}
-                    className="bg-gradient-to-r from-[#BD05DD] to-[#111A53] text-white hover:opacity-90"
+                    className="bg-brand-gradient text-white hover:opacity-90"
                   >
                     <Send className="h-5 w-5" />
                   </Button>
