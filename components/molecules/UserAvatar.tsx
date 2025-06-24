@@ -61,7 +61,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       {imageUrl ? (
         <Image
           src={imageUrl}
-          alt={`${name}'s avatar`}
+          alt={`${name}&apos;s avatar`}
           width={sizeInPixels}
           height={sizeInPixels}
           className={`${sizeClasses[size]} rounded-full object-cover border-2 border-gray-200`}

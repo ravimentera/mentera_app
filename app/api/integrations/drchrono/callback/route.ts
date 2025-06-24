@@ -349,44 +349,4 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Helper function to create state parameter for OAuth initiation
-export function createOAuthState(
-  organizationId: string,
-  userId?: string,
-  returnUrl?: string,
-): string {
-  const state: OAuthState = {
-    organizationId,
-    userId,
-    returnUrl,
-    timestamp: Date.now(),
-  };
-
-  return Buffer.from(JSON.stringify(state)).toString("base64");
-}
-
-// Helper function to build OAuth authorization URL
-export function buildOAuthUrl(
-  organizationId: string,
-  clientId?: string,
-  userId?: string,
-  returnUrl?: string,
-  host?: string,
-): string {
-  const state = createOAuthState(organizationId, userId, returnUrl);
-  const protocol = host?.startsWith("localhost") ? "http" : "https";
-  const redirectUri = `${protocol}://${host || "mentera-app.vercel.app"}/api/integrations/drchrono/callback`;
-
-  // TODO: Remove hardcoded client ID once database integration is complete
-  const testClientId = clientId || "uUOjU7TwLqxq2bTrP332jhrq4nWDm5ZJfgG2c0FC";
-
-  const params = new URLSearchParams({
-    response_type: "code",
-    client_id: testClientId,
-    redirect_uri: redirectUri,
-    scope: "patients:read patients:write clinical:read clinical:write",
-    state: state,
-  });
-
-  return `https://drchrono.com/o/authorize/?${params.toString()}`;
-} 
+ 

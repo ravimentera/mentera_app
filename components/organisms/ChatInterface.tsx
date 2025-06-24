@@ -52,7 +52,7 @@ export function ChatInterface({
       setTimeout(() => {
         const botResponse: Message = {
           id: (Date.now() + 1).toString(),
-          text: "Sure, select patient first, i'll give you the summary",
+          text: "Sure, select patient first, I&apos;ll give you the summary",
           isUser: false,
           timestamp: new Date(),
         };
