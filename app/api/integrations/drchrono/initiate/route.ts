@@ -1,9 +1,14 @@
-// app/api/integrations/drchrono/triggers/route.ts
+// Initiate DrChrono OAuth flow with user's credentials
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 
-const KERAGON_TRIGGER_URL =
-  "https://webhooks.us-1.keragon.com/v1/workflows/d9bdbdc1-31f9-4b6a-9f23-a32883891e7d/EYfPtmVpqSzvAFjpqh7Km/signal";
+interface OAuthState {
+  organizationId: string;
+  clientId: string;
+  clientSecret: string;
+  timestamp: number;
+  returnUrl?: string;
+}
 
 // Encryption helper
 function encrypt(text: string): string {
@@ -22,29 +27,26 @@ function encrypt(text: string): string {
 }
 
 export async function POST(request: NextRequest) {
-  console.log("🚀 DrChrono trigger endpoint hit - DEFAULT FLOW: OAuth + Token");
+  console.log("🚀 Initiate DrChrono OAuth flow endpoint hit");
   
   try {
     const body = await request.json();
-    console.log("📋 Request body:", body);
-    
     const { organizationId, clientId, clientSecret, returnUrl } = body;
 
     if (!organizationId || !clientId || !clientSecret) {
-      console.error("❌ Missing required fields for OAuth flow");
       return NextResponse.json({ 
         error: "Missing required fields: organizationId, clientId, clientSecret" 
       }, { status: 400 });
     }
 
-    console.log(`🏢 Initiating OAuth flow for organization: ${organizationId}`);
+    console.log(`🏢 Initiating OAuth for organization: ${organizationId}`);
     console.log(`🔑 Using client ID: ${clientId}`);
 
     // Create encrypted state with user's credentials
-    const state = {
+    const state: OAuthState = {
       organizationId,
       clientId,
-      clientSecret: encrypt(clientSecret),
+      clientSecret: encrypt(clientSecret), // Encrypt the secret in state
       timestamp: Date.now(),
       returnUrl: returnUrl || "/dashboard"
     };
@@ -59,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const oauthParams = new URLSearchParams({
       response_type: "code",
-      client_id: clientId,
+      client_id: clientId, // Use the user's client ID
       redirect_uri: redirectUri,
       scope: "patients:read patients:write clinical:read clinical:write",
       state: stateParam,
@@ -67,22 +69,20 @@ export async function POST(request: NextRequest) {
 
     const oauthUrl = `https://drchrono.com/o/authorize/?${oauthParams.toString()}`;
 
-    console.log("🔗 Generated OAuth URL for token acquisition");
+    console.log("🔗 Generated OAuth URL");
     console.log("🌐 Redirect URI:", redirectUri);
 
     return NextResponse.json({
       success: true,
-      message: "OAuth flow initiated - user must authorize to get real token",
-      flow: "oauth_required",
+      message: "OAuth flow initiated",
       oauthUrl,
       organizationId,
-      instructions: "Visit the oauthUrl to authorize. After authorization, DrChrono will redirect back and automatically trigger Keragon with the real access token."
+      redirectUri,
+      instructions: "User should visit the oauthUrl to authorize the integration"
     });
+
   } catch (error) {
-    console.error("💥 Trigger error:", error);
-    if (error instanceof Error) {
-      console.error("💥 Error stack:", error.stack);
-    }
+    console.error("💥 Error initiating OAuth flow:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+} 

@@ -30,6 +30,16 @@ export default function RegisterPage() {
                 Start Registration
               </Button>
             </Link>
+            
+            {/* Development/Test Link */}
+            <div className="pt-4 border-t border-gray-200">
+              <p className="text-xs text-gray-500 mb-2">🧪 Development Testing</p>
+              <Link href="/register/test-ehr">
+                <Button variant="outline" className="w-full text-sm">
+                  Test EHR Integration Flow
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       ) : (
