@@ -197,7 +197,7 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-semibold text-blue-800 mb-2">DrChrono Integration Setup</h3>
             <div className="text-sm text-blue-700 space-y-2">
-              <p>Before continuing, you'll need to:</p>
+                             <p>Before continuing, you&apos;ll need to:</p>
               <ol className="list-decimal list-inside space-y-1 ml-2">
                 <li>Sign in to your DrChrono account</li>
                 <li>Go to <a href="https://app.drchrono.com/api-management/" target="_blank" className="underline">API Management</a></li>

@@ -53,7 +53,7 @@ export default function TestEHRRegistrationPage() {
         <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Register Your Med Spa</h1>
-            <p className="text-gray-600 mt-2">Let's start with your business information</p>
+            <p className="text-gray-600 mt-2">Let&apos;s start with your business information</p>
           </div>
 
           <form onSubmit={handleBusinessInfoSubmit} className="space-y-4">

@@ -159,7 +159,7 @@ export function DrChronoIntegration({ organizationId }: DrChronoIntegrationProps
             onClick={() => setStep('credentials')} 
             className="w-full"
           >
-            I've completed the setup →
+            I&apos;ve completed the setup →
           </Button>
         </div>
       </div>
@@ -231,7 +231,7 @@ export function DrChronoIntegration({ organizationId }: DrChronoIntegrationProps
       <div className="p-6 border rounded-lg bg-white text-center">
         <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
         <h3 className="text-lg font-semibold mb-2">Connecting to DrChrono</h3>
-        <p className="text-gray-600">You'll be redirected to authorize the integration...</p>
+        <p className="text-gray-600">You&apos;ll be redirected to authorize the integration...</p>
       </div>
     );
   }
