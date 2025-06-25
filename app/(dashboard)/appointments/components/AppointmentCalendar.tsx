@@ -15,14 +15,14 @@ import { toast } from "sonner";
 
 import type { AppDispatch } from "@/lib/store";
 import {
-  Appointment,
   addAppointment,
   deleteAppointment,
   selectAllAppointments,
   setAppointments,
   updateAppointment,
   updateAppointmentNotification,
-} from "@/lib/store/appointmentsSlice";
+} from "@/lib/store/slices/appointmentsSlice";
+import type { Appointment } from "@/lib/store/types";
 // Redux imports
 import { useDispatch, useSelector } from "react-redux";
 

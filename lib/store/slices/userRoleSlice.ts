@@ -1,14 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import type { RootState } from "./index";
-
-// Define the user role types
-export type UserRole = "admin" | "provider";
-
-// Define the state structure for this slice
-export interface UserRoleState {
-  role: UserRole;
-  isInitialized: boolean;
-}
+import type { RootState } from "../index";
+import type { UserRole, UserRoleState } from "../types";
 
 // Helper function to get role from localStorage
 const getRoleFromLocalStorage = (): UserRole => {

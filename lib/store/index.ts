@@ -1,24 +1,40 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
-import appointmentsReducer from "./appointmentsSlice";
-import approvalsReducer from "./approvalsSlice";
-import dynamicLayoutReducer from "./dynamicLayoutSlice";
-import globalStateReducer from "./globalStateSlice";
-import messagesReducer from "./messagesSlice";
-import { usersApi } from "./services/userApi";
-import userRoleReducer from "./userRoleSlice";
+
+// Import APIs
+import { authApi, patientsApi, usersApi } from "./api";
+
+// Import slices
+import {
+  appointmentsReducer,
+  approvalsReducer,
+  authReducer,
+  dynamicLayoutReducer,
+  globalStateReducer,
+  messagesReducer,
+  patientsReducer,
+  userRoleReducer,
+} from "./slices";
 
 export const store = configureStore({
   reducer: {
+    // RTK Query APIs
+    [authApi.reducerPath]: authApi.reducer,
     [usersApi.reducerPath]: usersApi.reducer,
+    [patientsApi.reducerPath]: patientsApi.reducer,
+
+    // Regular slices
+    auth: authReducer,
     messages: messagesReducer,
     dynamicLayout: dynamicLayoutReducer,
     globalState: globalStateReducer,
     appointments: appointmentsReducer,
     approvals: approvalsReducer,
     userRole: userRoleReducer,
+    patients: patientsReducer,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(usersApi.middleware),
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(authApi.middleware, usersApi.middleware, patientsApi.middleware),
 });
 
 setupListeners(store.dispatch);

@@ -9,62 +9,79 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/atoms/table";
-import { patients } from "@/mock/patients.data";
+import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { ChevronDownIcon, Filter, MoreHorizontalIcon, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PatientFilters } from "./types";
 
-// Function to generate dummy contact info
-const generateDummyContacts = () => {
-  const phoneNumbers = [
-    "(555) 123-4567",
-    "(555) 234-5678",
-    "(555) 345-6789",
-    "(555) 456-7890",
-    "(555) 567-8901",
-  ];
+// Define skeleton column configuration for patients table
+const patientTableSkeletonColumns = [
+  { width: "w-16" }, // ID
+  { width: "w-32" }, // Name
+  { width: "w-28" }, // Phone Number
+  { width: "w-40" }, // Email
+  { width: "w-24" }, // Next Session
+  { width: "w-24" }, // Last Visit Date
+  { width: "w-20", shape: "rounded-full" as const }, // Tags
+  { width: "w-16", shape: "rounded-full" as const }, // Status
+  { width: "w-8", shape: "square" as const }, // Action
+];
 
-  const emailDomains = ["gmail.com", "yahoo.com", "outlook.com", "icloud.com"];
-
-  const getRandomPhone = () => phoneNumbers[Math.floor(Math.random() * phoneNumbers.length)];
-  const getRandomEmail = (name: string) => {
-    const domain = emailDomains[Math.floor(Math.random() * emailDomains.length)];
-    return `${name.toLowerCase().replace(/\s+/g, ".")}@${domain}`;
-  };
-
-  return patients.map((patient) => ({
-    ...patient,
-    phoneNumber: getRandomPhone(),
-    email: getRandomEmail(patient.provider),
-  }));
+// Patient interface is imported from API types
+type Patient = {
+  id: string;
+  patientId: string;
+  phone: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  tags: string[];
+  status: string;
+  lastVisitDate: string | null;
+  nextAppointment: string | null;
 };
-
-// Generate patients with contact info
-const patientsWithContacts = generateDummyContacts();
 
 export default function PatientsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState<PatientFilters>({
-    status: "All",
-  });
+
+  // API call to fetch patients from slice
+  const { data: apiPatients, isLoading: apiLoading } = useGetPatientsByProviderQuery("NR-2001");
+
+  // Use API data or fallback to empty array
+  const patientsData = apiPatients || [];
 
   // Filter patients based on search query
-  const filteredPatients = patientsWithContacts.filter((patient) => {
+  const filteredPatients = patientsData.filter((patient: Patient) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
+    const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
     return (
       patient.patientId.toLowerCase().includes(query) ||
-      patient.provider.toLowerCase().includes(query) ||
-      patient.treatmentNotes.procedure.toLowerCase().includes(query) ||
+      fullName.includes(query) ||
       patient.email.toLowerCase().includes(query) ||
-      patient.phoneNumber.includes(query)
+      patient.phone.includes(query)
     );
   });
 
   const handleRowClick = (patientId: string) => {
     router.push(`/patients/${patientId}`);
+  };
+
+  // Format date helper
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  // Format phone helper
+  const formatPhone = (phone: string) => {
+    // Remove +1 and format as (xxx) xxx-xxxx
+    const cleaned = phone.replace(/^\+1/, "");
+    if (cleaned.length === 10) {
+      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+    }
+    return phone;
   };
 
   return (
@@ -88,7 +105,7 @@ export default function PatientsPage() {
             <div className="flex gap-2">
               <div className="relative flex items-center">
                 <Input
-                  placeholder="Search by ID, provider, email, or phone"
+                  placeholder="Search by ID, name, email, or phone"
                   value={searchQuery}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setSearchQuery(e.target.value)
@@ -108,14 +125,24 @@ export default function PatientsPage() {
               </Button>
             </div>
           </div>
-          <div className="mt-1.5 text-right text-text-muted">{filteredPatients.length} records</div>
+          <div className="mt-1.5 text-right text-text-muted">
+            {apiLoading ? (
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-20 inline-block"></div>
+            ) : (
+              `${filteredPatients.length} records`
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Table with fixed header and scrollable body */}
+      {/* Dynamic Table with Skeleton Loading */}
       <div className="flex-1 pb-6">
         <div className="bg-white rounded-lg border border-ui-border h-full border-l-0">
-          <Table>
+          <Table
+            isLoading={apiLoading}
+            skeletonRows={8}
+            skeletonColumns={patientTableSkeletonColumns}
+          >
             <TableHeader className="sticky top-0 bg-white z-10">
               <TableRow className="border-b border-ui-border hover:bg-white">
                 <TableHead className="text-xs uppercase pl-4">ID</TableHead>
@@ -130,41 +157,43 @@ export default function PatientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody className="overflow-y-auto">
-              {filteredPatients.map((patient) => (
+              {filteredPatients.map((patient: Patient) => (
                 <TableRow key={patient.patientId} onClick={() => handleRowClick(patient.patientId)}>
                   <TableCell className="text-sm text-text pl-4">{patient.patientId}</TableCell>
                   <TableCell className="text-sm font-medium text-text-gray-900">
-                    {patient.provider}
+                    {`${patient.firstName} ${patient.lastName}`}
                   </TableCell>
-                  <TableCell className="text-sm text-text">{patient.phoneNumber}</TableCell>
+                  <TableCell className="text-sm text-text">{formatPhone(patient.phone)}</TableCell>
                   <TableCell className="text-sm text-text">{patient.email}</TableCell>
-                  <TableCell className="text-sm text-text">{patient.followUpDate}</TableCell>
-                  <TableCell className="text-sm text-text">{patient.visitDate}</TableCell>
+                  <TableCell className="text-sm text-text">
+                    {formatDate(patient.nextAppointment)}
+                  </TableCell>
+                  <TableCell className="text-sm text-text">
+                    {formatDate(patient.lastVisitDate)}
+                  </TableCell>
                   <TableCell>
-                    {patient.alerts.length > 0 ? (
-                      patient.alerts.map((alert) => (
+                    {patient.tags.length > 0 ? (
+                      patient.tags.map((tag) => (
                         <Badge
-                          key={alert}
+                          key={tag}
                           className="bg-brand-blue-light text-brand-blue hover:bg-brand-blue-light mr-1"
                         >
-                          {alert}
+                          {tag}
                         </Badge>
                       ))
                     ) : (
-                      <Badge className="bg-brand-blue-light text-brand-blue hover:bg-brand-blue-light">
-                        {patient.providerSpecialty}
-                      </Badge>
+                      <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100">No Tags</Badge>
                     )}
                   </TableCell>
                   <TableCell>
                     <Badge
                       className={
-                        patient.treatmentOutcome === "Positive"
+                        patient.status === "active"
                           ? "bg-brand-green-light text-brand-green hover:bg-brand-green-light"
                           : "bg-secondary text-text hover:bg-secondary"
                       }
                     >
-                      {patient.treatmentOutcome}
+                      {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell>

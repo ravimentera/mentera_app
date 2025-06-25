@@ -97,7 +97,7 @@ function encrypt(text: string): string {
   if (!secretKey) throw new Error("ENCRYPTION_KEY not configured");
 
   // Create a proper 32-byte key from the secret
-  const key = crypto.createHash('sha256').update(secretKey).digest();
+  const key = crypto.createHash("sha256").update(secretKey).digest();
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(algorithm, key, iv);
 
@@ -118,7 +118,7 @@ function decrypt(encryptedText: string): string {
   }
 
   // Create a proper 32-byte key from the secret
-  const key = crypto.createHash('sha256').update(secretKey).digest();
+  const key = crypto.createHash("sha256").update(secretKey).digest();
   const iv = Buffer.from(ivHex, "hex");
   const decipher = crypto.createDecipheriv(algorithm, key, iv);
 
@@ -149,13 +149,13 @@ function parseState(stateParam: string | string[] | undefined): OAuthState | nul
 
 async function triggerKeragonWorkflow(orgId: string, accessToken: string) {
   console.log("🚀 Starting Keragon workflow trigger for org:", orgId);
-  
+
   // Debug token info (first/last 4 chars for security)
-  const tokenPreview = accessToken ? 
-    `${accessToken.substring(0, 4)}...${accessToken.substring(accessToken.length - 4)}` : 
-    "MISSING";
+  const tokenPreview = accessToken
+    ? `${accessToken.substring(0, 4)}...${accessToken.substring(accessToken.length - 4)}`
+    : "MISSING";
   console.log("🔑 Token preview:", tokenPreview, "Length:", accessToken?.length || 0);
-  
+
   const payload = {
     inputs: {
       organizationId: orgId,
@@ -163,7 +163,7 @@ async function triggerKeragonWorkflow(orgId: string, accessToken: string) {
       ehrType: "drchrono",
     },
   };
-  
+
   console.log("📦 Payload structure:", {
     inputs: {
       organizationId: orgId,
@@ -171,21 +171,24 @@ async function triggerKeragonWorkflow(orgId: string, accessToken: string) {
       ehrType: "drchrono",
     },
   });
-  
+
   console.log("📝 Full payload JSON length:", JSON.stringify(payload).length);
-  
-  const response = await fetch("https://webhooks.us-1.keragon.com/v1/workflows/d9bdbdc1-31f9-4b6a-9f23-a32883891e7d/EYfPtmVpqSzvAFjpqh7Km/signal", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-medspa-id": orgId,
+
+  const response = await fetch(
+    "https://webhooks.us-1.keragon.com/v1/workflows/d9bdbdc1-31f9-4b6a-9f23-a32883891e7d/EYfPtmVpqSzvAFjpqh7Km/signal",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-medspa-id": orgId,
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
-  
+  );
+
   console.log("📡 Keragon response status:", response.status);
   console.log("📡 Keragon response headers:", Object.fromEntries(response.headers.entries()));
-  
+
   let result;
   try {
     const responseText = await response.text();
@@ -195,7 +198,7 @@ async function triggerKeragonWorkflow(orgId: string, accessToken: string) {
     console.error("❌ Failed to parse Keragon response:", parseError);
     result = { error: "Failed to parse response" };
   }
-  
+
   console.log("✅ Keragon workflow triggered:", result);
   return result;
 }
@@ -214,13 +217,20 @@ export async function GET(request: NextRequest) {
   const stateParam = searchParams.get("state");
   const oauthError = searchParams.get("error");
 
-  console.log("📋 Query params:", { code: code ? "present" : "missing", state: stateParam ? "present" : "missing", error: oauthError });
+  console.log("📋 Query params:", {
+    code: code ? "present" : "missing",
+    state: stateParam ? "present" : "missing",
+    error: oauthError,
+  });
 
   // Handle OAuth errors
   if (oauthError) {
     console.error("❌ OAuth error:", oauthError);
     return NextResponse.redirect(
-      new URL(`/dashboard?error=oauth_failed&details=${encodeURIComponent(String(oauthError))}`, request.url)
+      new URL(
+        `/dashboard?error=oauth_failed&details=${encodeURIComponent(String(oauthError))}`,
+        request.url,
+      ),
     );
   }
 
@@ -285,8 +295,8 @@ export async function GET(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/json",
-        "User-Agent": "Mentera Integration/1.0"
+        Accept: "application/json",
+        "User-Agent": "Mentera Integration/1.0",
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
@@ -303,7 +313,10 @@ export async function GET(request: NextRequest) {
       const errorData: DrChronoTokenError = await tokenResponse.json();
       console.error("❌ Token exchange failed:", errorData);
       return NextResponse.redirect(
-        new URL(`${returnUrl}?error=token_exchange_failed&details=${encodeURIComponent(errorData.error)}`, request.url)
+        new URL(
+          `${returnUrl}?error=token_exchange_failed&details=${encodeURIComponent(errorData.error)}`,
+          request.url,
+        ),
       );
     }
 
@@ -311,16 +324,18 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ Successfully obtained access token for organization: ${organizationId}`);
     console.log("🔍 Token data structure:", {
-      access_token: tokenData.access_token ? `${tokenData.access_token.substring(0, 4)}...${tokenData.access_token.substring(tokenData.access_token.length - 4)}` : "MISSING",
+      access_token: tokenData.access_token
+        ? `${tokenData.access_token.substring(0, 4)}...${tokenData.access_token.substring(tokenData.access_token.length - 4)}`
+        : "MISSING",
       token_type: tokenData.token_type,
       expires_in: tokenData.expires_in,
       scope: tokenData.scope,
-      refresh_token: tokenData.refresh_token ? "present" : "missing"
+      refresh_token: tokenData.refresh_token ? "present" : "missing",
     });
 
     // 🚨 DEBUG MODE - Remove this in production! 🚨
     // Temporarily log full token for testing purposes
-    if (process.env.NODE_ENV === 'development' && process.env.DEBUG_TOKENS === 'true') {
+    if (process.env.NODE_ENV === "development" && process.env.DEBUG_TOKENS === "true") {
       console.log("🚨 DEBUG: Full access token:", tokenData.access_token);
       console.log("🚨 WARNING: Full token logged above - remove in production!");
     }
@@ -348,5 +363,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(errorUrl);
   }
 }
-
- 

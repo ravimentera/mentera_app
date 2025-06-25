@@ -1,43 +1,7 @@
-import { PayloadAction, SerializedError, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-
+import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { RootState } from "../index";
+import type { ApiLayoutResponse, DynamicLayoutState, LayoutEntry, ThunkApiConfig } from "../types";
 import { getStreamingUISessionId, setSidePanelExpanded } from "./globalStateSlice";
-import type { AppDispatch, RootState } from "./index";
-
-interface LayoutComponent {
-  type: "Component";
-  name: string;
-  props: Record<string, any>;
-}
-
-interface LayoutRow {
-  type: "Row";
-  components: LayoutComponent[];
-}
-
-interface LayoutGrid {
-  type: "Grid";
-  columns: number;
-  gap: number;
-  rows: LayoutRow[];
-}
-
-export interface ApiLayoutResponse {
-  type: "Layout";
-  layout: LayoutGrid[];
-  title: string;
-}
-
-export interface LayoutEntry {
-  key: string;
-  data: ApiLayoutResponse;
-}
-
-export interface DynamicLayoutState {
-  layouts: LayoutEntry[];
-  isLoading: boolean;
-  error: string | null;
-  currentMarkdownKey: string | null;
-}
 
 const initialState: DynamicLayoutState = {
   layouts: [],
@@ -45,13 +9,6 @@ const initialState: DynamicLayoutState = {
   error: null,
   currentMarkdownKey: null,
 };
-
-// Define the type for the thunk API
-interface ThunkApiConfig {
-  dispatch: AppDispatch; // Use AppDispatch if available and correctly typed
-  state: RootState;
-  rejectValue: string; // The type of the value returned by rejectWithValue
-}
 
 export const fetchDynamicLayout = createAsyncThunk<
   LayoutEntry, // Return type of the payload creator

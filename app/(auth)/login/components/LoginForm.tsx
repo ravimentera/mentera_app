@@ -1,6 +1,7 @@
 import { LOGIN_INITIAL_VALUES } from "@/app/constants/auth-constants";
 import { AUTH_ROUTES, REDIRECT_PATHS } from "@/app/constants/route-constants";
 import { Button, Input, Label, PasswordInput } from "@/components/atoms";
+import { useLazyGenerateTokenQuery } from "@/lib/store/api";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,6 +20,7 @@ export function LoginForm() {
   const returnUrl = searchParams?.get("returnUrl") || REDIRECT_PATHS.AFTER_LOGIN;
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>(LOGIN_INITIAL_VALUES);
+  const [generateToken] = useLazyGenerateTokenQuery();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -35,10 +37,13 @@ export function LoginForm() {
       // Simulate API call (1 second delay)
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Set a cookie that expires in 1 day
+      // Set a cookie that expires in 1 day (existing dummy flow)
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + 1);
       document.cookie = `auth_session=demo_authenticated; expires=${expiryDate.toUTCString()}; path=/`;
+
+      // Generate and store token in Redux
+      await generateToken();
 
       toast.success("Login successful! Welcome to Mentera.");
       router.push(returnUrl);

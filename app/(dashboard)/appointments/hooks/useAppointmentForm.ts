@@ -1,4 +1,4 @@
-import { Appointment } from "@/lib/store/appointmentsSlice";
+import type { Appointment } from "@/lib/store/types";
 import { useState } from "react";
 
 interface NewAppointmentForm {

@@ -1,5 +1,5 @@
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
-import { addMessage } from "@/lib/store/messagesSlice";
+import { addMessage } from "@/lib/store/slices/messagesSlice";
 import { sanitizeMarkdown } from "@/lib/utils";
 import { patientDatabase, testMedSpa, testNurse } from "@/mock/chat.data";
 import WebSocket from "isomorphic-ws";
@@ -11,7 +11,7 @@ import { ChatMessage, WebSocketResponseMessage } from "./types";
 import { extractChunk, logMetadata } from "./utils";
 
 import type { AppDispatch } from "@/lib/store";
-import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
+import { fetchDynamicLayout } from "@/lib/store/slices/dynamicLayoutSlice";
 
 // Import the new mock handler hook
 import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
