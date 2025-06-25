@@ -1,6 +1,6 @@
+import crypto from "node:crypto";
 // app/api/integrations/drchrono/triggers/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "node:crypto";
 
 const KERAGON_TRIGGER_URL =
   "https://webhooks.us-1.keragon.com/v1/workflows/d9bdbdc1-31f9-4b6a-9f23-a32883891e7d/EYfPtmVpqSzvAFjpqh7Km/signal";
@@ -12,10 +12,10 @@ function encrypt(text: string): string {
   if (!secretKey) throw new Error("ENCRYPTION_KEY not configured");
 
   // Create a proper 32-byte key from the secret
-  const key = crypto.createHash('sha256').update(secretKey).digest();
+  const key = crypto.createHash("sha256").update(secretKey).digest();
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(algorithm, key, iv);
-  
+
   let encrypted = cipher.update(text, "utf8", "hex");
   encrypted += cipher.final("hex");
   return iv.toString("hex") + ":" + encrypted;
@@ -23,18 +23,21 @@ function encrypt(text: string): string {
 
 export async function POST(request: NextRequest) {
   console.log("🚀 DrChrono trigger endpoint hit - DEFAULT FLOW: OAuth + Token");
-  
+
   try {
     const body = await request.json();
     console.log("📋 Request body:", body);
-    
+
     const { organizationId, clientId, clientSecret, returnUrl } = body;
 
     if (!organizationId || !clientId || !clientSecret) {
       console.error("❌ Missing required fields for OAuth flow");
-      return NextResponse.json({ 
-        error: "Missing required fields: organizationId, clientId, clientSecret" 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Missing required fields: organizationId, clientId, clientSecret",
+        },
+        { status: 400 },
+      );
     }
 
     console.log(`🏢 Initiating OAuth flow for organization: ${organizationId}`);
@@ -46,7 +49,7 @@ export async function POST(request: NextRequest) {
       clientId,
       clientSecret: encrypt(clientSecret),
       timestamp: Date.now(),
-      returnUrl: returnUrl || "/dashboard"
+      returnUrl: returnUrl || "/dashboard",
     };
 
     const stateParam = Buffer.from(JSON.stringify(state)).toString("base64");
@@ -76,7 +79,8 @@ export async function POST(request: NextRequest) {
       flow: "oauth_required",
       oauthUrl,
       organizationId,
-      instructions: "Visit the oauthUrl to authorize. After authorization, DrChrono will redirect back and automatically trigger Keragon with the real access token."
+      instructions:
+        "Visit the oauthUrl to authorize. After authorization, DrChrono will redirect back and automatically trigger Keragon with the real access token.",
     });
   } catch (error) {
     console.error("💥 Trigger error:", error);

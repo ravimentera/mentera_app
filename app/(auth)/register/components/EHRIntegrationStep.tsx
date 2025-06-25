@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Button } from '@/components/atoms/Button';
-import { Input } from '@/components/atoms/Input';
-import { Label } from '@/components/atoms/Label';
+import { Button } from "@/components/atoms/Button";
+import { Input } from "@/components/atoms/Input";
+import { Label } from "@/components/atoms/Label";
+import { useState } from "react";
 
 interface EHRProvider {
   id: string;
@@ -22,110 +22,114 @@ interface EHRIntegrationStepProps {
 
 const EHR_PROVIDERS: EHRProvider[] = [
   {
-    id: 'drchrono',
-    name: 'DrChrono',
-    description: 'Cloud-based EHR for medical practices',
-    logo: 'Dr',
-    popular: true
+    id: "drchrono",
+    name: "DrChrono",
+    description: "Cloud-based EHR for medical practices",
+    logo: "Dr",
+    popular: true,
   },
   {
-    id: 'epic',
-    name: 'Epic',
-    description: 'Enterprise healthcare software',
-    logo: 'E',
-    comingSoon: true
+    id: "epic",
+    name: "Epic",
+    description: "Enterprise healthcare software",
+    logo: "E",
+    comingSoon: true,
   },
   {
-    id: 'cerner',
-    name: 'Cerner',
-    description: 'Health information technology',
-    logo: 'C',
-    comingSoon: true
+    id: "cerner",
+    name: "Cerner",
+    description: "Health information technology",
+    logo: "C",
+    comingSoon: true,
   },
   {
-    id: 'athenahealth',
-    name: 'athenahealth',
-    description: 'Cloud-based healthcare platform',
-    logo: 'A',
-    comingSoon: true
-  }
+    id: "athenahealth",
+    name: "athenahealth",
+    description: "Cloud-based healthcare platform",
+    logo: "A",
+    comingSoon: true,
+  },
 ];
 
-export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIntegrationStepProps) {
-  const [selectedEHR, setSelectedEHR] = useState<string>('');
+export function EHRIntegrationStep({
+  organizationId,
+  onComplete,
+  onSkip,
+}: EHRIntegrationStepProps) {
+  const [selectedEHR, setSelectedEHR] = useState<string>("");
   const [showCredentials, setShowCredentials] = useState(false);
   const [credentials, setCredentials] = useState({
-    clientId: '',
-    clientSecret: ''
+    clientId: "",
+    clientSecret: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleEHRSelect = (ehrId: string) => {
-    if (ehrId === 'drchrono') {
+    if (ehrId === "drchrono") {
       setSelectedEHR(ehrId);
       setShowCredentials(true);
     } else {
       // Coming soon providers
-      alert('This EHR integration is coming soon!');
+      alert("This EHR integration is coming soon!");
     }
   };
 
   const handleConnect = async () => {
     if (!credentials.clientId || !credentials.clientSecret) {
-      setError('Please enter both Client ID and Client Secret');
+      setError("Please enter both Client ID and Client Secret");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       // First get setup instructions
-      const setupResponse = await fetch('/api/integrations/drchrono/connect-ui', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'setup-instructions' })
+      const setupResponse = await fetch("/api/integrations/drchrono/connect-ui", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setup-instructions" }),
       });
 
       const setupData = await setupResponse.json();
-      
+
       if (!setupData.success) {
-        throw new Error('Failed to get setup instructions');
+        throw new Error("Failed to get setup instructions");
       }
 
       // Then initiate connection
-      const connectResponse = await fetch('/api/integrations/drchrono/connect-ui', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const connectResponse = await fetch("/api/integrations/drchrono/connect-ui", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: 'connect',
+          action: "connect",
           organizationId,
           clientId: credentials.clientId,
-          clientSecret: credentials.clientSecret
-        })
+          clientSecret: credentials.clientSecret,
+        }),
       });
-      
+
       const connectData = await connectResponse.json();
-      
+
       if (connectData.success && connectData.oauthUrl) {
         // Store EHR data and redirect to OAuth
         const ehrData = {
-          provider: 'drchrono',
+          provider: "drchrono",
           clientId: credentials.clientId,
-          status: 'connecting',
-          oauthUrl: connectData.oauthUrl
+          status: "connecting",
+          oauthUrl: connectData.oauthUrl,
         };
-        
+
         onComplete(ehrData);
-        
+
         // Redirect to OAuth
         window.location.href = connectData.oauthUrl;
       } else {
-        throw new Error(connectData.error || 'Failed to initiate connection');
+        throw new Error(connectData.error || "Failed to initiate connection");
       }
     } catch (err: any) {
-      setError(err.message || 'Connection failed');
+      setError(err.message || "Connection failed");
     } finally {
       setLoading(false);
     }
@@ -149,14 +153,14 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
       {!showCredentials ? (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Choose your EHR provider:</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {EHR_PROVIDERS.map((provider) => (
               <div
                 key={provider.id}
                 className={`relative p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow ${
-                  provider.comingSoon ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-300'
-                } ${selectedEHR === provider.id ? 'border-blue-500 bg-blue-50' : ''}`}
+                  provider.comingSoon ? "opacity-50 cursor-not-allowed" : "hover:border-blue-300"
+                } ${selectedEHR === provider.id ? "border-blue-500 bg-blue-50" : ""}`}
                 onClick={() => !provider.comingSoon && handleEHRSelect(provider.id)}
               >
                 {provider.popular && (
@@ -169,7 +173,7 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
                     Coming Soon
                   </div>
                 )}
-                
+
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <span className="text-blue-600 font-bold text-lg">{provider.logo}</span>
@@ -197,11 +201,26 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-semibold text-blue-800 mb-2">DrChrono Integration Setup</h3>
             <div className="text-sm text-blue-700 space-y-2">
-                             <p>Before continuing, you&apos;ll need to:</p>
+              <p>Before continuing, you&apos;ll need to:</p>
               <ol className="list-decimal list-inside space-y-1 ml-2">
                 <li>Sign in to your DrChrono account</li>
-                <li>Go to <a href="https://app.drchrono.com/api-management/" target="_blank" className="underline">API Management</a></li>
-                <li>Add this redirect URI: <code className="bg-blue-100 px-1 rounded">https://mentera-app.vercel.app/api/integrations/drchrono/callback</code></li>
+                <li>
+                  Go to{" "}
+                  <a
+                    href="https://app.drchrono.com/api-management/"
+                    target="_blank"
+                    className="underline"
+                    rel="noreferrer"
+                  >
+                    API Management
+                  </a>
+                </li>
+                <li>
+                  Add this redirect URI:{" "}
+                  <code className="bg-blue-100 px-1 rounded">
+                    https://mentera-app.vercel.app/api/integrations/drchrono/callback
+                  </code>
+                </li>
                 <li>Copy your Client ID and Client Secret</li>
               </ol>
             </div>
@@ -215,10 +234,10 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
                 type="text"
                 placeholder="Enter your DrChrono Client ID"
                 value={credentials.clientId}
-                onChange={(e) => setCredentials(prev => ({ ...prev, clientId: e.target.value }))}
+                onChange={(e) => setCredentials((prev) => ({ ...prev, clientId: e.target.value }))}
               />
             </div>
-            
+
             <div>
               <Label htmlFor="clientSecret">DrChrono Client Secret</Label>
               <Input
@@ -226,30 +245,32 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
                 type="password"
                 placeholder="Enter your DrChrono Client Secret"
                 value={credentials.clientSecret}
-                onChange={(e) => setCredentials(prev => ({ ...prev, clientSecret: e.target.value }))}
+                onChange={(e) =>
+                  setCredentials((prev) => ({ ...prev, clientSecret: e.target.value }))
+                }
               />
             </div>
-            
+
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
                 {error}
               </div>
             )}
-            
+
             <div className="flex gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowCredentials(false)}
                 className="flex-1"
               >
                 Back
               </Button>
-              <Button 
-                onClick={handleConnect} 
+              <Button
+                onClick={handleConnect}
                 disabled={loading || !credentials.clientId || !credentials.clientSecret}
                 className="flex-1"
               >
-                {loading ? 'Connecting...' : 'Connect DrChrono'}
+                {loading ? "Connecting..." : "Connect DrChrono"}
               </Button>
             </div>
           </div>
@@ -257,4 +278,4 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
       )}
     </div>
   );
-} 
+}

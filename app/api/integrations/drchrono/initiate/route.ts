@@ -1,6 +1,6 @@
+import crypto from "node:crypto";
 // Initiate DrChrono OAuth flow with user's credentials
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "node:crypto";
 
 interface OAuthState {
   organizationId: string;
@@ -17,10 +17,10 @@ function encrypt(text: string): string {
   if (!secretKey) throw new Error("ENCRYPTION_KEY not configured");
 
   // Create a proper 32-byte key from the secret
-  const key = crypto.createHash('sha256').update(secretKey).digest();
+  const key = crypto.createHash("sha256").update(secretKey).digest();
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(algorithm, key, iv);
-  
+
   let encrypted = cipher.update(text, "utf8", "hex");
   encrypted += cipher.final("hex");
   return iv.toString("hex") + ":" + encrypted;
@@ -28,15 +28,18 @@ function encrypt(text: string): string {
 
 export async function POST(request: NextRequest) {
   console.log("🚀 Initiate DrChrono OAuth flow endpoint hit");
-  
+
   try {
     const body = await request.json();
     const { organizationId, clientId, clientSecret, returnUrl } = body;
 
     if (!organizationId || !clientId || !clientSecret) {
-      return NextResponse.json({ 
-        error: "Missing required fields: organizationId, clientId, clientSecret" 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Missing required fields: organizationId, clientId, clientSecret",
+        },
+        { status: 400 },
+      );
     }
 
     console.log(`🏢 Initiating OAuth for organization: ${organizationId}`);
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
       clientId,
       clientSecret: encrypt(clientSecret), // Encrypt the secret in state
       timestamp: Date.now(),
-      returnUrl: returnUrl || "/dashboard"
+      returnUrl: returnUrl || "/dashboard",
     };
 
     const stateParam = Buffer.from(JSON.stringify(state)).toString("base64");
@@ -78,11 +81,10 @@ export async function POST(request: NextRequest) {
       oauthUrl,
       organizationId,
       redirectUri,
-      instructions: "User should visit the oauthUrl to authorize the integration"
+      instructions: "User should visit the oauthUrl to authorize the integration",
     });
-
   } catch (error) {
     console.error("💥 Error initiating OAuth flow:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-} 
+}
