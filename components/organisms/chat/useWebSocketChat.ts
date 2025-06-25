@@ -221,7 +221,7 @@ export function useWebSocketChat({
           ws.send(
             JSON.stringify({
               type: "auth",
-              token: token.replace(/^Bearer\s+/i, ""),
+              token,
               medSpaId: testMedSpa.medspaId,
             }),
           );

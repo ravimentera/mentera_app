@@ -37,5 +37,5 @@ export async function GET(_req: NextRequest) {
   });
 
   // Return as JSON
-  return NextResponse.json({ token: `Bearer ${token}` });
+  return NextResponse.json({ token });
 }
