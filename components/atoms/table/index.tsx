@@ -2,12 +2,71 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
-      <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
-    </div>
-  ),
+// Skeleton Row Component
+const SkeletonRow = ({
+  columns,
+}: { columns: Array<{ width: string; shape?: "rounded" | "rounded-full" | "square" }> }) => (
+  <TableRow className="hover:bg-white">
+    {columns.map((column) => (
+      <TableCell key={crypto.randomUUID()} className={columns.indexOf(column) === 0 ? "pl-4" : ""}>
+        <div
+          className={cn(
+            "bg-gray-200 animate-pulse",
+            column.width,
+            column.shape === "rounded-full"
+              ? "h-5 rounded-full"
+              : column.shape === "square"
+                ? "h-8 w-8 rounded"
+                : "h-4 rounded",
+          )}
+        />
+      </TableCell>
+    ))}
+  </TableRow>
+);
+
+// Enhanced Table component with skeleton loading
+interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
+  isLoading?: boolean;
+  skeletonRows?: number;
+  skeletonColumns?: Array<{ width: string; shape?: "rounded" | "rounded-full" | "square" }>;
+}
+
+const Table = React.forwardRef<HTMLTableElement, TableProps>(
+  (
+    { className, isLoading = false, skeletonRows = 8, skeletonColumns = [], children, ...props },
+    ref,
+  ) => {
+    if (isLoading && skeletonColumns.length > 0) {
+      // Extract header from children if it exists
+      const childrenArray = React.Children.toArray(children);
+      const header = childrenArray.find(
+        (child) => React.isValidElement(child) && child.type === TableHeader,
+      );
+
+      return (
+        <div className="relative w-full overflow-auto">
+          <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props}>
+            {/* Render the original header */}
+            {header}
+            <TableBody className="overflow-y-auto">
+              {Array.from({ length: skeletonRows }, () => crypto.randomUUID()).map((id) => (
+                <SkeletonRow key={id} columns={skeletonColumns} />
+              ))}
+            </TableBody>
+          </table>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative w-full overflow-auto">
+        <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props}>
+          {children}
+        </table>
+      </div>
+    );
+  },
 );
 Table.displayName = "Table";
 

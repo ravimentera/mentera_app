@@ -1,13 +1,13 @@
 // lib/hooks/useChatMockHandler.ts
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { v4 as uuid } from "uuid";
 
 // Assuming ChatMessage type is defined in a shared location or useWebSocketChat's types.ts
 import type { ChatMessage } from "@/components/organisms/chat/types"; // Adjust path as needed
 import type { AppDispatch } from "@/lib/store";
-import { fetchDynamicLayout } from "@/lib/store/dynamicLayoutSlice";
-import { addMessage } from "@/lib/store/messagesSlice";
+import { fetchDynamicLayout } from "@/lib/store/slices/dynamicLayoutSlice";
+import { addMessage } from "@/lib/store/slices/messagesSlice";
 import { sanitizeMarkdown } from "@/lib/utils"; // Assuming this path is correct
 
 import { patientDatabase as mockPatientDatabase } from "@/mock/chat.data"; // For patient context in mock

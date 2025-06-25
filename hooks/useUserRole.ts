@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch } from "../lib/store";
 import {
-  type UserRole,
   initializeRole,
   selectIsAdmin,
   selectIsProvider,
@@ -10,7 +9,8 @@ import {
   selectUserRole,
   setUserRole,
   toggleUserRole,
-} from "../lib/store/userRoleSlice";
+} from "../lib/store/slices/userRoleSlice";
+import type { UserRole } from "../lib/store/types";
 
 /**
  * Custom hook for managing user roles

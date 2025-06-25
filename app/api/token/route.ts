@@ -16,6 +16,7 @@ export async function GET(_req: NextRequest) {
     id: "test-user-id",
     email: "admin@mentera.ai",
     medspaId: MEDSPA_ID,
+    providerId: "NR-2001",
     role: "admin",
     permissions: [
       "VIEW_PATIENTS",

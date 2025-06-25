@@ -23,7 +23,7 @@ import {
   selectIsSidePanelExpanded,
   setSidePanelExpanded,
   toggleSidePanel,
-} from "@/lib/store/globalStateSlice";
+} from "@/lib/store/slices/globalStateSlice";
 
 export function ChatDrawer() {
   const [isOpen, setIsOpen] = useState(false);

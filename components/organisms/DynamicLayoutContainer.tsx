@@ -14,13 +14,13 @@ import {
   AccordionTrigger,
 } from "@/components/molecules";
 
-// Import relevant selectors/types from the Redux slice
-import type { LayoutEntry } from "@/lib/store/dynamicLayoutSlice"; // Import types
 import {
   selectAllLayouts,
   selectIsLayoutLoading,
   selectLayoutError,
-} from "@/lib/store/dynamicLayoutSlice";
+} from "@/lib/store/slices/dynamicLayoutSlice";
+// Import relevant selectors/types from the Redux slice
+import type { LayoutEntry } from "@/lib/store/types";
 
 export function DynamicLayoutContainer() {
   const allLayouts = useSelector(selectAllLayouts); // Array of LayoutEntry { key: string, data: LayoutAST }

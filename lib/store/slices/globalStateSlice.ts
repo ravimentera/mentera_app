@@ -1,12 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import type { RootState } from "./index";
-
-// Define the state structure for this slice
-export interface GlobalState {
-  isSidePanelExpanded: boolean;
-  streamingUISessionId: string;
-  // You can add other global states here in the future
-}
+import type { RootState } from "../index";
+import type { GlobalState } from "../types";
 
 // Define the initial state
 const initialState: GlobalState = {
