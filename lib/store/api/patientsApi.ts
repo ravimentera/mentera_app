@@ -23,7 +23,7 @@ interface PatientsResponse {
 export const patientsApi = createApi({
   reducerPath: "patientsApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://34.204.48.222:5001/api",
+    baseUrl: "/api/proxy",
     prepareHeaders: (headers, { getState }) => {
       // Get token from Redux state
       const state = getState() as RootState;
