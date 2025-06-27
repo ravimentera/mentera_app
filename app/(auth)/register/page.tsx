@@ -26,7 +26,7 @@ export default function RegisterPage() {
               Complete a simple multi-step process to set up your business account on Mentera
             </p>
             <Link href={`/register/steps${redirect}`}>
-              <Button className="w-full mt-8 bg-brand-purple hover:bg-brand-purple-hover text-white">
+              <Button className="w-full mt-8 bg-brand-blue hover:bg-brand-blue-hover text-white">
                 Start Registration
               </Button>
             </Link>

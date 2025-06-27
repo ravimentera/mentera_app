@@ -2,14 +2,18 @@
 
 import { AUTH_ROUTES, DASHBOARD_PATHS } from "@/app/constants/route-constants";
 import { Tooltip, TooltipProvider } from "@/components/atoms";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  MenteraLogoFull,
-  MenteraLogoIcon,
-} from "@/components/atoms/icons";
+import { MenteraLogoFull, MenteraLogoIcon } from "@/components/atoms/icons";
 import { cn } from "@/lib/utils";
-import { CheckSquare, ChevronRight, Home, LogOut, MessageSquare, Users } from "lucide-react";
+import {
+  CheckSquare,
+  ChevronRight,
+  Home,
+  LogOut,
+  MessageSquare,
+  PanelLeft,
+  PanelRight,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -35,8 +39,8 @@ function SidebarItem({ href, icon, title, isCollapsed, isActive, ...props }: Sid
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-300 ease-in-out relative group whitespace-nowrap",
         isActive
-          ? "bg-brand-purple-background text-brand-purple-dark font-medium"
-          : "text-gray-500 hover:bg-muted hover:text-foreground",
+          ? "bg-sidebar-active text-white font-medium"
+          : "text-slate-300 hover:bg-sidebar-active",
       )}
     >
       <span className="h-5 w-5 shrink-0 transition-transform duration-300 ease-in-out">{icon}</span>
@@ -142,7 +146,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   const sidebarItems = [
     {
-      name: "Dashboard",
+      name: "Home",
       href: DASHBOARD_PATHS.HOME,
       icon: <Home className="h-5 w-5" />,
     },
@@ -173,7 +177,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="relative">
         <div
           className={cn(
-            "border-r bg-background h-full transition-all duration-300 ease-in-out fixed lg:relative",
+            "bg-background h-full transition-all duration-300 ease-in-out fixed lg:relative",
             isCollapsed ? "w-15" : "w-60",
             isMobile && isCollapsed ? "w-15" : "",
             isMobile && !isCollapsed ? "shadow-xl z-30" : "",
@@ -184,7 +188,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             {!isMobile && (
               <div
                 className={cn(
-                  "h-16 flex items-center overflow-hidden bg-slate-50",
+                  "h-16 flex items-center overflow-hidden bg-theme-blue rounded-tr-2xl",
                   isCollapsed ? "justify-center p-2" : "justify-start px-4",
                 )}
               >
@@ -221,7 +225,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               </div>
             )}
             <div
-              className="flex flex-col h-full overflow-hidden bg-slate-50"
+              className="flex flex-col h-full overflow-hidden bg-theme-blue rounded-br-2xl"
               style={{ height: !isMobile ? "calc(100vh - 4rem)" : "100%" }}
             >
               <div className="flex-1 overflow-y-auto p-2 hide-scrollbar">
@@ -248,19 +252,19 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     <UserAvatar avatar={firstProvider.avatar} name={providerName} size="small" />
                   )}
                   {!isCollapsed && (
-                    <span className="text-sm font-medium text-text">{providerName}</span>
+                    <span className="text-sm font-medium text-slate-300">{providerName}</span>
                   )}
                 </div>
                 {!isCollapsed && (
                   <button
                     type="button"
-                    className="p-1 hover:bg-gray-100 rounded-md"
+                    className="p-1 rounded-sm hover:text-slate-200"
                     onClick={() => setShowDropdown(!showDropdown)}
                   >
                     <ChevronRight
                       size={16}
                       className={cn(
-                        "text-ui-icon-muted transition-transform",
+                        "text-slate-300 transition-transform",
                         showDropdown && "rotate-90",
                       )}
                     />
@@ -322,7 +326,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div
           className="absolute z-10"
           style={{
-            top: "80px",
+            top: "50px",
             right: "0",
             transform: "translateX(50%)",
           }}
@@ -332,19 +336,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               type="button"
               onClick={toggleSidebar}
               className={cn(
-                "flex h-6 w-6 items-center justify-center rounded-full border-2 border-border bg-card",
-                "hover:bg-muted hover:text-primary transition-colors",
-                "shadow-[0_2px_10px_rgba(0,0,0,0.1)]",
+                "flex h-6 w-6 items-center justify-center rounded-sm bg-secondary",
+                "hover:bg-muted transition-colors shadow-md",
               )}
-              style={{
-                boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
-              }}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? (
-                <ChevronRightIcon className="h-3 w-3" />
+                <PanelLeft className="h-3 w-3 text-icon" />
               ) : (
-                <ChevronLeftIcon className="h-3 w-3" />
+                <PanelRight className="h-3 w-3 text-icon" />
               )}
             </button>
           </Tooltip>

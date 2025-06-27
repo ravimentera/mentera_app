@@ -97,7 +97,7 @@ export function AdminWeekView({
               <div
                 className={cn(
                   "inline-flex flex-col items-center gap-1 px-3 py-1 rounded-xl",
-                  isSameDay(day, new Date()) && "bg-purple-100 border border-brand-purple-dark",
+                  isSameDay(day, new Date()) && "bg-blue-100 border border-brand-blue-dark",
                 )}
               >
                 <div className="text-lg font-semibold text-zinc-900">{format(day, "d")}</div>
@@ -151,7 +151,7 @@ export function AdminWeekView({
                   key={dayKey}
                   className={cn(
                     "relative min-h-[80px] border-r border-zinc-100 last:border-r-0 p-2",
-                    activeProviderDay === dayKey && "bg-brand-purple-light/10",
+                    activeProviderDay === dayKey && "bg-brand-blue-light/10",
                   )}
                   data-provider-id={provider.providerId}
                   data-day={format(day, "yyyy-MM-dd")}
@@ -182,7 +182,7 @@ export function AdminWeekView({
                   {/* Selection overlay - only show in the active provider-day cell */}
                   {dragStart && dragEnd && activeProviderDay === dayKey && (
                     <div
-                      className="absolute inset-0 bg-brand-purple-dark/10 border border-brand-purple-dark/20 z-20 rounded-md"
+                      className="absolute inset-0 bg-brand-blue-dark/10 border border-brand-blue-dark/20 z-20 rounded-md"
                       style={getSelectionStyles()}
                     />
                   )}

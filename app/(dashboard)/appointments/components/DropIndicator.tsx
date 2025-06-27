@@ -29,8 +29,8 @@ export function DropIndicator({
     switch (type) {
       case "consultation":
         return {
-          border: "bg-brand-purple-dark/40 border-brand-purple-dark/40",
-          background: "bg-brand-purple-dark/30",
+          border: "bg-brand-blue-dark/40 border-brand-blue-dark/40",
+          background: "bg-brand-blue-dark/30",
         };
       case "followup":
         return {

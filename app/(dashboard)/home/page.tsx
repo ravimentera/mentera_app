@@ -1,9 +1,7 @@
 "use client";
 
-import { Button } from "@/components/atoms";
 import { ChatInterface } from "@/components/organisms";
 import { cn } from "@/lib/utils";
-import { Edit, PanelLeft, Search } from "lucide-react";
 import { useState } from "react";
 
 const recentChats = [
@@ -48,15 +46,14 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/40 flex">
+    <div className="min-h-screen bg-white flex">
       {/* Chat Sidebar */}
-      <div
+      {/* <div
         className={cn(
-          "bg-slate-50 border-r border-gray-200 transition-all duration-300 overflow-hidden",
+          "bg-theme-blue border-r border-gray-200 transition-all duration-300 overflow-hidden",
           isChatSidebarOpen ? "w-60" : "w-12",
         )}
       >
-        {/* Toggle Button */}
         <div className="p-2 flex justify-end">
           <Button
             onClick={toggleChatSidebar}
@@ -66,17 +63,15 @@ export default function DashboardPage() {
           >
             <PanelLeft className="h-4 w-4 text-gray-600" />
           </Button>
-        </div>
+        </div> 
 
-        {/* Sidebar Content */}
         {isChatSidebarOpen && (
           <div className="px-2 pb-4 space-y-4">
-            {/* New Chat & Search Chat */}
             <div className="space-y-1">
               <Button
                 onClick={handleNewChat}
                 variant="ghost"
-                className="w-full justify-start gap-2 h-10 px-2 bg-slate-100 text-purple-600 hover:bg-slate-200"
+                className="w-full justify-start gap-2 h-10 px-2 bg-slate-100 text-blue-600 hover:bg-slate-200"
               >
                 <Edit className="h-4 w-4" />
                 <span className="text-sm font-medium">New Chat</span>
@@ -91,7 +86,6 @@ export default function DashboardPage() {
               </Button>
             </div>
 
-            {/* Recents Section */}
             <div className="space-y-1">
               <div className="px-2 py-1">
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -116,7 +110,7 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Main Content Area */}
       <div className="flex-1 flex">

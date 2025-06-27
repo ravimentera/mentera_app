@@ -129,14 +129,14 @@ export default function PatientProfilePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen px-6 pb-6">
       <ProfileHeader patient={patient} />
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex gap-6">
         <ProfileCard patient={patient} />
         <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab}>
           {activeTab === "overview" && (
-            <div className="grid grid-cols-2 gap-6 p-6">
+            <div className="grid grid-cols-2 gap-6">
               <div className="grid grid-cols-1 gap-6">
                 <MedicalAlertsCard
                   alerts={medicalAlerts}

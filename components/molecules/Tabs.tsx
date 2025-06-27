@@ -47,7 +47,7 @@ export function Tabs({
 
   return (
     <TabsContext.Provider value={{ selectedTab: currentTab, setSelectedTab: setCurrentTab }}>
-      <div className={cn("space-y-2", className)} {...props}>
+      <div className={cn("space-y-6", className)} {...props}>
         {children}
       </div>
     </TabsContext.Provider>
@@ -128,7 +128,7 @@ export function TabsContent({ value, children, className, ...props }: TabsConten
     <div
       role="tabpanel"
       className={cn(
-        "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
       {...props}

@@ -138,14 +138,14 @@ export function AdminDayView({
       <div className="flex relative">
         {/* Current time indicator - spans across provider columns only */}
         <div
-          className="absolute border-t-2 border-brand-purple-dark z-20 pointer-events-none"
+          className="absolute border-t-2 border-brand-blue-dark z-20 pointer-events-none"
           style={{
             top: `${((new Date().getHours() * 60 + new Date().getMinutes()) / (24 * 60)) * 100}%`,
             left: "64px", // Start after the time column (w-16 = 64px)
             right: "0",
           }}
         >
-          <div className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-brand-purple-dark" />
+          <div className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-brand-blue-dark" />
         </div>
 
         {/* Time slots column */}
@@ -225,7 +225,7 @@ export function AdminDayView({
                   {/* Selection overlay - only show in the active provider column */}
                   {dragStart && dragEnd && activeProviderId === provider.providerId && (
                     <div
-                      className="absolute left-0 right-0 bg-brand-purple-dark/10 border border-brand-purple-dark/20 z-20"
+                      className="absolute left-0 right-0 bg-brand-blue-dark/10 border border-brand-blue-dark/20 z-20"
                       style={getSelectionStyles()}
                     />
                   )}

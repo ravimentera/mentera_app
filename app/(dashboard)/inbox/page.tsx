@@ -85,9 +85,9 @@ export default function InboxPage() {
               <tr
                 key={chat.id}
                 onClick={() => setSelectedChat(chat.id)}
-                className={`cursor-pointer hover:bg-purple-50 transition-colors ${
-                  !chat.isRead ? "bg-purple-50/50" : ""
-                } ${selectedChat === chat.id ? "bg-purple-100" : ""}`}
+                className={`cursor-pointer hover:bg-blue-50 transition-colors ${
+                  !chat.isRead ? "bg-blue-50/50" : ""
+                } ${selectedChat === chat.id ? "bg-blue-100" : ""}`}
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {format(chat.timestamp, "yyyy-MM-dd hh:mm a")}

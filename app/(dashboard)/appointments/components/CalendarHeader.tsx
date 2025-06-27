@@ -225,7 +225,7 @@ export function CalendarHeader({
             <input
               type="text"
               placeholder="Search by name, email, phone number"
-              className="h-10 w-[293px] pl-10 pr-3 py-2 rounded-lg border border-zinc-200 text-sm focus:outline-none focus:ring-1 focus:ring-brand-purple-dark"
+              className="h-10 w-[293px] pl-10 pr-3 py-2 rounded-lg border border-zinc-200 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-dark"
             />
           </div>
 
@@ -260,7 +260,7 @@ export function CalendarHeader({
                   caption_label: "text-sm font-medium",
                   nav: "space-x-1 flex items-center",
                   nav_button:
-                    "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-brand-purple-dark/10",
+                    "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-brand-blue-dark/10",
                   nav_button_previous: "absolute left-1",
                   nav_button_next: "absolute right-1",
                   table: "w-full border-collapse space-y-1",
@@ -268,10 +268,10 @@ export function CalendarHeader({
                   head_cell:
                     "text-gray-500 rounded-md w-9 font-normal text-[0.8rem] dark:text-gray-400",
                   row: "flex w-full mt-2",
-                  cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-brand-purple-dark/5 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
-                  day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-brand-purple-dark/10 rounded-md",
+                  cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-brand-blue-dark/5 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+                  day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-brand-blue-dark/10 rounded-md",
                   day_selected:
-                    "bg-brand-purple-dark text-white hover:bg-brand-purple-dark/90 hover:text-white focus:bg-brand-purple-dark focus:text-white",
+                    "bg-brand-blue-dark text-white hover:bg-brand-blue-dark/90 hover:text-white focus:bg-brand-blue-dark focus:text-white",
                   day_today: "bg-accent text-accent-foreground",
                   day_outside:
                     "text-gray-500 opacity-50 aria-selected:bg-accent/50 aria-selected:text-gray-500 aria-selected:opacity-30",
@@ -309,7 +309,7 @@ export function CalendarHeader({
                     )}
                   >
                     {/* {isSelected(day) && (
-                    <div className="absolute inset-0 -z-10 h-[36px] w-[36px] rounded-xl bg-brand-purple-light border border-brand-purple-dark mx-auto my-auto" />
+                    <div className="absolute inset-0 -z-10 h-[36px] w-[36px] rounded-xl bg-brand-blue-light border border-brand-blue-dark mx-auto my-auto" />
                   )} */}
                     {isToday(day) && !isSelected(day) && (
                       <div className="absolute inset-0 -z-10 h-[36px] w-[36px] rounded-xl bg-gray-100 mx-auto my-auto" />
@@ -318,7 +318,7 @@ export function CalendarHeader({
                       className={cn(
                         "text-lg font-semibold",
                         isSelected(day)
-                          ? "text-brand-purple-dark"
+                          ? "text-brand-blue-dark bg-brand-blue/90"
                           : isToday(day)
                             ? "text-zinc-700"
                             : "text-zinc-900",
@@ -330,7 +330,7 @@ export function CalendarHeader({
                       className={cn(
                         "text-xs font-semibold uppercase",
                         isSelected(day)
-                          ? "text-brand-purple-dark"
+                          ? "text-brand-blue-dark"
                           : isToday(day)
                             ? "text-zinc-700"
                             : "text-zinc-500",
@@ -381,7 +381,7 @@ export function CalendarHeader({
 
           <div className="w-[104px]">
             <select
-              className="h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-brand-purple-dark"
+              className="h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-dark"
               value={view}
               onChange={(e) => onViewChange(e.target.value as "day" | "week" | "month")}
             >

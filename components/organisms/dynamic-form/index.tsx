@@ -68,7 +68,7 @@ export function DynamicForm({
                             id={field.id}
                             {...formikField}
                             className={cn(
-                              "w-full h-10 rounded-md border border-ui-border-muted px-3 py-2 text-sm text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-transparent appearance-none",
+                              "w-full h-10 rounded-md border border-ui-border-muted px-3 py-2 text-sm text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent appearance-none",
                               errors[field.id] && touched[field.id] && "border-red-500",
                             )}
                           >
@@ -94,7 +94,7 @@ export function DynamicForm({
                             id={`${field.id}.${option.value}`}
                             name={field.id}
                             value={option.value}
-                            className="h-4 w-4 rounded border-gray-300 text-brand-purple focus:ring-brand-purple"
+                            className="h-4 w-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
                           />
                           <label
                             htmlFor={`${field.id}.${option.value}`}
@@ -114,7 +114,7 @@ export function DynamicForm({
                           placeholder={field.placeholder}
                           {...formikField}
                           className={cn(
-                            "h-10 border-ui-border-muted focus:ring-brand-purple focus:border-transparent",
+                            "h-10 border-ui-border-muted focus:ring-brand-blue focus:border-transparent",
                             errors[field.id] && touched[field.id] && "border-red-500",
                           )}
                         />
@@ -147,7 +147,7 @@ export function DynamicForm({
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-brand-purple hover:bg-brand-purple-hover text-white font-medium text-base rounded-lg px-4 py-2"
+                className="bg-brand-blue hover:bg-brand-blue-hover text-white font-medium text-base rounded-lg px-4 py-2"
               >
                 {isLastStep ? "Complete" : "Next"}
               </Button>
