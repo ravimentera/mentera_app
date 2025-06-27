@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         clientId,
         clientSecret: encrypt(clientSecret),
         timestamp: Date.now(),
-        returnUrl: "/dashboard?integration=drchrono&status=connected"
+        returnUrl: "/register/success"
       };
 
       const stateParam = Buffer.from(JSON.stringify(state)).toString("base64");

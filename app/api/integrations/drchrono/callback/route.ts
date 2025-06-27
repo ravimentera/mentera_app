@@ -28,66 +28,30 @@ interface OAuthState {
   timestamp: number;
 }
 
-interface OrganizationCredentials {
-  id: string;
-  clientId: string;
-  clientSecret: string;
-  name: string;
-  isActive: boolean;
-}
+// Removed OrganizationCredentials interface - no database needed
 
-// Mock database functions - replace with your actual database calls
-async function getOrganizationCredentials(orgId: string): Promise<OrganizationCredentials | null> {
-  // TODO: Replace with actual database query
-  // Example: SELECT client_id, client_secret FROM organizations WHERE id = ?
+// Note: No database - credentials come from OAuth state (registration form)
 
-  // For now, returning mock data for testing - replace this with your DB call
-  const query = `
-    SELECT id, drchrono_client_id, drchrono_client_secret, name, is_active 
-    FROM organizations 
-    WHERE id = ? AND drchrono_client_id IS NOT NULL
-  `;
-
-  // Your database call here:
-  // const org = await db.query(query, [orgId]);
-  // return org ? {
-  //   id: org.id,
-  //   clientId: org.drchrono_client_id,
-  //   clientSecret: decrypt(org.drchrono_client_secret), // Decrypt stored secret
-  //   name: org.name,
-  //   isActive: org.is_active
-  // } : null;
-
-  // Temporary mock data for testing
-  return {
-    id: orgId,
-    clientId: "uUOjU7TwLqxq2bTrP332jhrq4nWDm5ZJfgG2c0FC",
-    clientSecret:
-      "o9jSstCH5QcoG1WClmB0KTEzvRuCLgwpv5CVwk94OmNQb0GfBSjDn9K2d02anPcbnSAU8EIFSFaLvKOMWPqfrply1oXFXHq0oRHVhHygEKCUkxmUHjpzle9fLiEWdPGe",
-    name: "Test Organization",
-    isActive: true,
-  };
-}
+// In-memory token storage for demo (replace with database in production)
+const tokenStorage = new Map<string, {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: Date;
+  scope: string;
+}>();
 
 async function storeTokens(orgId: string, tokens: DrChronoTokenResponse): Promise<void> {
-  // TODO: Store encrypted tokens in database
-  const encryptedAccessToken = encrypt(tokens.access_token);
-  const encryptedRefreshToken = encrypt(tokens.refresh_token);
   const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
+  
+  // Store in memory for demo (in production, use a database)
+  tokenStorage.set(orgId, {
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token,
+    expiresAt,
+    scope: tokens.scope,
+  });
 
-  // Example database call:
-  // await db.query(`
-  //   INSERT INTO drchrono_connections (organization_id, access_token, refresh_token, expires_at, scope, created_at)
-  //   VALUES (?, ?, ?, ?, ?, NOW())
-  //   ON DUPLICATE KEY UPDATE
-  //   access_token = VALUES(access_token),
-  //   refresh_token = VALUES(refresh_token),
-  //   expires_at = VALUES(expires_at),
-  //   scope = VALUES(scope),
-  //   updated_at = NOW()
-  // `, [orgId, encryptedAccessToken, encryptedRefreshToken, expiresAt, tokens.scope]);
-
-  console.log(`Tokens stored for organization: ${orgId}`);
+  console.log(`✅ Tokens stored for organization: ${orgId} (expires: ${expiresAt.toISOString()})`);
 }
 
 // Encryption helpers (use your preferred encryption method)
@@ -174,13 +138,17 @@ async function triggerKeragonWorkflow(orgId: string, accessToken: string) {
   
   console.log("📝 Full payload JSON length:", JSON.stringify(payload).length);
   
-  const response = await fetch("https://webhooks.us-1.keragon.com/v1/workflows/d9bdbdc1-31f9-4b6a-9f23-a32883891e7d/EYfPtmVpqSzvAFjpqh7Km/signal", {
+  console.log("🌐 Making request to Keragon...");
+  const KERAGON_URL = "https://webhooks.us-1.keragon.com/v1/workflows/d9bdbdc1-31f9-4b6a-9f23-a32883891e7d/EYfPtmVpqSzvAFjpqh7Km/signal";
+  
+  const response = await fetch(KERAGON_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-medspa-id": orgId,
     },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(30000) // 30 second timeout
   });
   
   console.log("📡 Keragon response status:", response.status);
@@ -220,21 +188,21 @@ export async function GET(request: NextRequest) {
   if (oauthError) {
     console.error("❌ OAuth error:", oauthError);
     return NextResponse.redirect(
-      new URL(`/dashboard?error=oauth_failed&details=${encodeURIComponent(String(oauthError))}`, request.url)
+      new URL(`/register/steps/ehr-integration?error=oauth_failed&details=${encodeURIComponent(String(oauthError))}`, request.url)
     );
   }
 
   // Validate authorization code
   if (!code) {
     console.error("❌ Missing authorization code");
-    return NextResponse.redirect(new URL("/dashboard?error=missing_code", request.url));
+    return NextResponse.redirect(new URL("/register/steps/ehr-integration?error=missing_code", request.url));
   }
 
   // Parse and validate state parameter
   const state = parseState(stateParam || undefined);
   if (!state) {
     console.error("❌ Invalid or missing state parameter");
-    return NextResponse.redirect(new URL("/dashboard?error=invalid_state", request.url));
+    return NextResponse.redirect(new URL("/register/steps/ehr-integration?error=invalid_state", request.url));
   }
 
   const { organizationId, returnUrl = "/dashboard" } = state;
@@ -245,29 +213,16 @@ export async function GET(request: NextRequest) {
     let clientId: string;
     let clientSecret: string;
 
-    // Check if credentials are in the state (new flow) or need to be fetched (old flow)
-    if (state.clientId && state.clientSecret) {
-      console.log("🔑 Using credentials from OAuth state (user-provided)");
-      clientId = state.clientId;
-      clientSecret = decrypt(state.clientSecret); // Decrypt the secret from state
-      console.log(`🔑 Client ID from state: ${clientId}`);
-    } else {
-      console.log("🔍 Fetching credentials from database (fallback to old flow)");
-      // Fallback to database lookup for backward compatibility
-      const orgCredentials = await getOrganizationCredentials(organizationId);
-      if (!orgCredentials) {
-        console.error(`❌ No DrChrono credentials found for organization: ${organizationId}`);
-        return NextResponse.redirect(new URL(`${returnUrl}?error=org_not_configured`, request.url));
-      }
-
-      if (!orgCredentials.isActive) {
-        console.error(`❌ Organization ${organizationId} is not active`);
-        return NextResponse.redirect(new URL(`${returnUrl}?error=org_inactive`, request.url));
-      }
-
-      clientId = orgCredentials.clientId;
-      clientSecret = orgCredentials.clientSecret;
+    // Credentials must come from OAuth state (registration form)
+    if (!state.clientId || !state.clientSecret) {
+      console.error("❌ Missing DrChrono credentials in OAuth state");
+      return NextResponse.redirect(new URL(`${returnUrl}?error=missing_credentials`, request.url));
     }
+
+    console.log("🔑 Using credentials from OAuth state (user-provided)");
+    clientId = state.clientId;
+    clientSecret = decrypt(state.clientSecret); // Decrypt the secret from state
+    console.log(`🔑 Client ID from state: ${clientId}`);
 
     console.log(`✅ Using DrChrono credentials - Client ID: ${clientId}`);
 
@@ -318,19 +273,23 @@ export async function GET(request: NextRequest) {
       refresh_token: tokenData.refresh_token ? "present" : "missing"
     });
 
-    // 🚨 DEBUG MODE - Remove this in production! 🚨
-    // Temporarily log full token for testing purposes
-    if (process.env.NODE_ENV === 'development' && process.env.DEBUG_TOKENS === 'true') {
-      console.log("🚨 DEBUG: Full access token:", tokenData.access_token);
-      console.log("🚨 WARNING: Full token logged above - remove in production!");
-    }
+    // Token security: Never log full tokens in production
 
     // Store tokens securely for this organization
     await storeTokens(organizationId, tokenData);
-    await triggerKeragonWorkflow(organizationId, tokenData.access_token);
+    
+    // Trigger Keragon workflow with error handling
+    try {
+      console.log("🎯 About to trigger Keragon workflow...");
+      await triggerKeragonWorkflow(organizationId, tokenData.access_token);
+      console.log("✅ Keragon workflow trigger completed successfully");
+    } catch (keragonError) {
+      console.error("❌ Keragon workflow trigger failed:", keragonError);
+      // Don't fail the whole flow - user still gets connected even if Keragon fails
+    }
 
     // Redirect back to the application with success
-    const successUrl = new URL(returnUrl, request.url);
+    const successUrl = new URL("/register/success", request.url);
     successUrl.searchParams.set("connected", "true");
     successUrl.searchParams.set("provider", "drchrono");
     successUrl.searchParams.set("org", organizationId);

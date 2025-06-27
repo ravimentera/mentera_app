@@ -20,6 +20,7 @@ export const REGISTRATION_ROUTES = {
   BASE: "/register/steps",
   BUSINESS_INFORMATION: "/register/steps/business-information",
   TREATMENTS_OFFERED: "/register/steps/treatments-offered",
+  EHR_INTEGRATION: "/register/steps/ehr-integration",
   getStepRoute: (stepId: string) => `/register/steps/${stepId}`,
 };
 

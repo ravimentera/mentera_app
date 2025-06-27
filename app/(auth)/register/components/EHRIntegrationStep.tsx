@@ -72,10 +72,19 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
   };
 
   const handleConnect = async () => {
+    // Validate that user explicitly wants to integrate
+    if (!selectedEHR || selectedEHR !== 'drchrono') {
+      setError('Please select DrChrono as your EHR provider first');
+      return;
+    }
+
     if (!credentials.clientId || !credentials.clientSecret) {
       setError('Please enter both Client ID and Client Secret');
       return;
     }
+
+    console.log(`🔗 User explicitly chose to integrate with ${selectedEHR}`);
+    console.log(`🔑 User provided credentials - initiating OAuth flow`);
 
     setLoading(true);
     setError('');
@@ -117,6 +126,18 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
           oauthUrl: connectData.oauthUrl
         };
         
+        // Confirm user wants to proceed with OAuth
+        const confirmed = window.confirm(
+          "You'll be redirected to DrChrono to authorize the integration. Click OK to continue."
+        );
+        
+        if (!confirmed) {
+          setLoading(false);
+          return;
+        }
+
+        console.log(`🚀 Starting OAuth flow for organization: ${organizationId}`);
+        
         onComplete(ehrData);
         
         // Redirect to OAuth
@@ -140,55 +161,37 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Connect Your EHR System</h2>
+        <h2 className="text-2xl font-bold">EHR Integration</h2>
         <p className="text-gray-600">
-          Integrate with your Electronic Health Record system to sync patient data seamlessly
+          Do you want to connect your Electronic Health Record system?
         </p>
       </div>
 
       {!showCredentials ? (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Choose your EHR provider:</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {EHR_PROVIDERS.map((provider) => (
-              <div
-                key={provider.id}
-                className={`relative p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow ${
-                  provider.comingSoon ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-300'
-                } ${selectedEHR === provider.id ? 'border-blue-500 bg-blue-50' : ''}`}
-                onClick={() => !provider.comingSoon && handleEHRSelect(provider.id)}
+        <div className="space-y-6">
+          <div className="text-center space-y-4">
+            <h3 className="text-lg font-semibold">Choose an option:</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowCredentials(true)}
+                className="h-auto p-4 flex flex-col items-center space-y-2"
               >
-                {provider.popular && (
-                  <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                    Popular
-                  </div>
-                )}
-                {provider.comingSoon && (
-                  <div className="absolute -top-2 -right-2 bg-gray-400 text-white text-xs px-2 py-1 rounded-full">
-                    Coming Soon
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 font-bold text-lg">{provider.logo}</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">{provider.name}</h4>
-                    <p className="text-sm text-gray-600">{provider.description}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-between pt-6">
-            <Button variant="outline" onClick={handleSkip}>
-              Skip for now
-            </Button>
-            <div className="text-sm text-gray-500 self-center">
-              You can add EHR integration later from your dashboard
+                <span className="text-2xl">✅</span>
+                <span className="font-semibold">Yes, Integrate Now</span>
+                <span className="text-xs text-gray-500">Connect with DrChrono</span>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={handleSkip}
+                className="h-auto p-4 flex flex-col items-center space-y-2"
+              >
+                <span className="text-2xl">❌</span>
+                <span className="font-semibold">No, Complete Registration</span>
+                <span className="text-xs text-gray-500">Finish without integration</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -197,7 +200,7 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-semibold text-blue-800 mb-2">DrChrono Integration Setup</h3>
             <div className="text-sm text-blue-700 space-y-2">
-                             <p>Before continuing, you&apos;ll need to:</p>
+              <p>Before continuing, you&apos;ll need to:</p>
               <ol className="list-decimal list-inside space-y-1 ml-2">
                 <li>Sign in to your DrChrono account</li>
                 <li>Go to <a href="https://app.drchrono.com/api-management/" target="_blank" className="underline">API Management</a></li>
@@ -236,21 +239,28 @@ export function EHRIntegrationStep({ organizationId, onComplete, onSkip }: EHRIn
               </div>
             )}
             
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowCredentials(false)}
-                className="flex-1"
-              >
-                Back
-              </Button>
-              <Button 
-                onClick={handleConnect} 
-                disabled={loading || !credentials.clientId || !credentials.clientSecret}
-                className="flex-1"
-              >
-                {loading ? 'Connecting...' : 'Connect DrChrono'}
-              </Button>
+            <div className="space-y-3">
+              <div className="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-3">
+                <p className="font-medium">🔒 Authorization Required</p>
+                <p>Clicking "Connect & Authorize" will redirect you to DrChrono&apos;s secure login page to authorize the integration.</p>
+              </div>
+              
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCredentials(false)}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleConnect} 
+                  disabled={loading || !credentials.clientId || !credentials.clientSecret}
+                  className="flex-1"
+                >
+                  {loading ? 'Connecting...' : 'Connect & Authorize DrChrono'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

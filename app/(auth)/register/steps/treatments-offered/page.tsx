@@ -1,6 +1,6 @@
 "use client";
 
-import { AUTH_ROUTES } from "@/app/constants/route-constants";
+import { AUTH_ROUTES, REGISTRATION_ROUTES } from "@/app/constants/route-constants";
 import { Button } from "@/components/atoms";
 import type { TreatmentOption } from "@/components/molecules";
 import { TreatmentPillGroup } from "@/components/molecules";
@@ -39,8 +39,8 @@ export default function TreatmentsOfferedPage() {
 
     toast.success("Treatments saved successfully");
     console.log("Treatments saved successfully", formData);
-    // Navigate to dashboard
-    window.location.href = AUTH_ROUTES.LOGIN;
+    // Navigate to EHR integration step
+    window.location.href = REGISTRATION_ROUTES.EHR_INTEGRATION;
   };
 
   const handleSkip = () => {
@@ -76,9 +76,9 @@ export default function TreatmentsOfferedPage() {
       </div>
 
       <div className="flex justify-center">
-        <Link href={AUTH_ROUTES.LOGIN} onClick={handleSkip}>
+        <Link href={REGISTRATION_ROUTES.EHR_INTEGRATION} onClick={handleSkip}>
           <Button type="button" variant="link" className="text-gray-500 hover:text-gray-700">
-            Skip and go to login
+            Skip this step
           </Button>
         </Link>
       </div>

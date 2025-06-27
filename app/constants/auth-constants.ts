@@ -73,6 +73,12 @@ export const TREATMENTS_VALIDATION_SCHEMA = Yup.object({
   specificTreatments: Yup.array(),
 });
 
+export const EHR_INTEGRATION_VALIDATION_SCHEMA = Yup.object({
+  ehrProvider: Yup.string(),
+  clientId: Yup.string(),
+  clientSecret: Yup.string(),
+});
+
 // Define the steps for the registration process
 export const REGISTRATION_STEPS: FormStep[] = [
   {
@@ -156,6 +162,44 @@ export const REGISTRATION_STEPS: FormStep[] = [
       },
     ],
     validationSchema: TREATMENTS_VALIDATION_SCHEMA,
+    isOptional: true,
+  },
+  {
+    id: "ehr-integration",
+    title: "EHR Integration",
+    description: "Connect your Electronic Health Record system (optional)",
+    fields: [
+      {
+        id: "ehrProvider",
+        label: "EHR Provider",
+        type: "select",
+        required: false,
+        width: "full",
+        options: [
+          { value: "", label: "Skip EHR Integration" },
+          { value: "drchrono", label: "DrChrono" },
+          { value: "epic", label: "Epic (Coming Soon)" },
+          { value: "cerner", label: "Cerner (Coming Soon)" },
+        ],
+      },
+      {
+        id: "clientId",
+        label: "Client ID",
+        type: "text",
+        placeholder: "Enter your EHR Client ID",
+        required: false,
+        width: "full",
+      },
+      {
+        id: "clientSecret",
+        label: "Client Secret",
+        type: "password",
+        placeholder: "Enter your EHR Client Secret",
+        required: false,
+        width: "full",
+      },
+    ],
+    validationSchema: EHR_INTEGRATION_VALIDATION_SCHEMA,
     isOptional: true,
   },
 ];
