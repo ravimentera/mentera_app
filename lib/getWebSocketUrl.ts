@@ -3,6 +3,7 @@
 export function getWebSocketUrl(): string {
   // Check if running in a development environment
   // In Next.js, NODE_ENV is 'development' during `next dev`
+  // const isDevelopment = process.env.NODE_ENV === "prod";
   const isDevelopment = process.env.NODE_ENV === "development";
 
   if (isDevelopment) {
@@ -15,7 +16,7 @@ export function getWebSocketUrl(): string {
   }
 
   // Production or other environments: use the provided host or default
-  const productionHost = process.env.NEXT_PUBLIC_WS_HOST || "api.mentera.ai";
+  const productionHost = process.env.NEXT_PUBLIC_WS_HOST || "34.204.48.222";
   // Your production WebSocket endpoint might be at a specific path like /ws
   return `wss://${productionHost}/ws`;
 }

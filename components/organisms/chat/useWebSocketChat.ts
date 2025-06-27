@@ -93,7 +93,7 @@ export function useWebSocketChat({
         timestamp: ai.createdAt,
       }),
     );
-    if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
+    // if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
     logMetadata(meta);
   };
 
