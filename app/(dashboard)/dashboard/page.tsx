@@ -11,11 +11,14 @@ import {
   SendHorizontalIcon,
   PaperclipIcon,
   ArrowDownIcon,
+  CheckIcon,
+  CopyIcon,
 } from "lucide-react";
 
 import {
   AssistantRuntimeProvider as AUIProvider,
   ThreadPrimitive,
+  ActionBarPrimitive,
   ComposerPrimitive,
   MessagePrimitive,
   useExternalStoreRuntime,
@@ -36,6 +39,7 @@ import {
 import { Message as ReduxMessage, addMessage } from "@/lib/store/slices/messagesSlice";
 import { clear as clearFiles, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
+import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 
 const toAUIMessage = (msg: ReduxMessage) => ({
   id: msg.id,
@@ -153,13 +157,42 @@ const UserMessage: React.FC = () => (
 const AssistantMessage: React.FC = () => (
   <MessagePrimitive.Root className="grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] relative w-full max-w-2xl py-4 gap-x-3">
     <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-xs row-span-2 shrink-0">
-      R
+      T
     </div>
     <div className="text-foreground max-w-full break-words leading-7 col-start-2 row-start-1 my-1.5">
       <MessagePrimitive.Content components={{ Text: MarkdownText }} />
     </div>
+
+    <AssistantActionBar />
   </MessagePrimitive.Root>
 );
+
+const AssistantActionBar: React.FC = () => {
+  return (
+    <ActionBarPrimitive.Root
+      hideWhenRunning
+      autohide="not-last"
+      autohideFloat="single-branch"
+      className="text-muted-foreground flex gap-1 col-start-3 row-start-2 -ml-1 data-[floating]:bg-background data-[floating]:absolute data-[floating]:rounded-md data-[floating]:border data-[floating]:p-1 data-[floating]:shadow-sm"
+    >
+      <ActionBarPrimitive.Copy asChild>
+        <TooltipIconButton tooltip="Copy">
+          <MessagePrimitive.If copied>
+            <CheckIcon />
+          </MessagePrimitive.If>
+          <MessagePrimitive.If copied={false}>
+            <CopyIcon />
+          </MessagePrimitive.If>
+        </TooltipIconButton>
+      </ActionBarPrimitive.Copy>
+      <ActionBarPrimitive.Reload asChild>
+        {/* <TooltipIconButton tooltip="Refresh"> // @TODO: Tera Agent doesn support retry again
+          <RefreshCwIcon />
+        </TooltipIconButton> */}
+      </ActionBarPrimitive.Reload>
+    </ActionBarPrimitive.Root>
+  );
+};
 
 const NewChatForm = ({ onStartChat }) => {
   const [input, setInput] = useState("");
