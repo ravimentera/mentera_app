@@ -1,7 +1,11 @@
 "use client";
 
 import { GoogleIcon } from "./GoogleIcon";
+import { MailIcon } from "./MailIcon";
 import { MenteraLogoIcon } from "./MenteraLogoIcon";
+import { MessageSquareIcon } from "./MessageSquareIcon";
+import { RobotIcon } from "./RobotIcon";
+import { ScheduleIcon } from "./ScheduleIcon";
 import { StarIcon } from "./StarIcon";
 import { SuccessIcon } from "./SuccessIcon";
 import { IconName } from "./types";
@@ -40,6 +44,14 @@ export function Icon({
       return <SuccessIcon {...props} />;
     case IconName.GOOGLE:
       return <GoogleIcon {...props} />;
+    case IconName.ROBOT:
+      return <RobotIcon {...props} />;
+    case IconName.MESSAGE_SQUARE:
+      return <MessageSquareIcon {...props} />;
+    case IconName.MAIL:
+      return <MailIcon {...props} />;
+    case IconName.SCHEDULE:
+      return <ScheduleIcon {...props} />;
     default:
       console.warn(`Icon '${name}' not found`);
       return null;
