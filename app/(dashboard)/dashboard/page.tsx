@@ -35,6 +35,7 @@ import {
 } from "@/lib/store/slices/globalStateSlice";
 import { Message as ReduxMessage, addMessage } from "@/lib/store/slices/messagesSlice";
 import { clear as clearFiles, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
+import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 
 const toAUIMessage = (msg: ReduxMessage) => ({
   id: msg.id,
@@ -56,6 +57,11 @@ const ChatTopbar = ({
   setCacheDebug,
   patientDB,
 }) => {
+  const { data: apiPatients, isLoading: apiLoading } = useGetPatientsByProviderQuery("NR-2001");
+
+  // Use API data or fallback to empty array
+  const patientsData = apiPatients || [];
+  
   return (
     <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white h-16 shrink-0 z-10">
       <div className="flex items-center gap-4">
@@ -65,40 +71,16 @@ const ChatTopbar = ({
         <label className="flex items-center gap-2">
           <span className="font-medium">Patient:</span>
           <select
-            className="ml-2 border rounded px-2 py-1 bg-white text-black"
+            className="ml-2 border rounded px-2 py-1 bg-white text-black relative z-50"
             value={currentPatientId}
             onChange={(e) => setCurrentPatientId(e.target.value)}
           >
-            {Object.keys(patientDB).map((id) => (
-              <option key={id} value={id}>
-                {id}
+            {patientsData.map((patient) => (
+              <option key={patient.id} value={patient.patientId}>
+                {patient.firstName} {patient.lastName}
               </option>
             ))}
           </select>
-        </label>
-        <label className="flex items-center gap-1 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isPatientContextEnabled}
-            onChange={(e) => setIsPatientContextEnabled(e.target.checked)}
-          />
-          <span>Context</span>
-        </label>
-        <label className="flex items-center gap-1 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={forceFresh}
-            onChange={(e) => setForceFresh(e.target.checked)}
-          />
-          <span>No Cache</span>
-        </label>
-        <label className="flex items-center gap-1 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={cacheDebug}
-            onChange={(e) => setCacheDebug(e.target.checked)}
-          />
-          <span>Cache Debug</span>
         </label>
       </div>
     </div>
@@ -476,27 +458,7 @@ export default function ChatClient() {
         </div>
       </main>
 
-      <div className="absolute bottom-6 right-6">
-        <Button
-          size="icon"
-          className="rounded-full w-14 h-14 bg-purple-600 hover:bg-purple-700 shadow-lg"
-        >
-          <svg
-            className="w-7 h-7 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
-            />
-          </svg>
-        </Button>
-      </div>
+      
     </div>
   );
 }
