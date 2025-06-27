@@ -15,7 +15,7 @@ export function ChatInput({ message, onMessageChange, onSend, onKeyUp }: ChatInp
   };
 
   return (
-    <div className="relative bg-white border border-gradient-purple rounded-2xl overflow-hidden">
+    <div className="relative bg-white border border-gradient-blue rounded-2xl overflow-hidden shadow-md">
       <div className="py-3">
         <Input
           value={message}
@@ -39,7 +39,7 @@ export function ChatInput({ message, onMessageChange, onSend, onKeyUp }: ChatInp
 
         <div
           onClick={onSend}
-          className="text-brand-purple cursor-pointer bg-transparent rounded-lg p-2"
+          className="text-brand-blue cursor-pointer bg-transparent rounded-lg p-2"
         >
           <SendHorizonalIcon className="h-5 w-5" />
         </div>

@@ -67,7 +67,7 @@ export default function TreatmentsOfferedPage() {
           <div className="flex justify-end pt-4">
             <Button
               onClick={handleSubmit}
-              className="bg-brand-purple hover:bg-brand-purple-hover text-white font-medium text-base rounded-lg px-4 py-2"
+              className="bg-brand-blue hover:bg-brand-blue-hover text-white font-medium text-base rounded-lg px-4 py-2"
             >
               Submit
             </Button>

@@ -134,7 +134,7 @@ export function RegistrationForm({
             <p className="text-text-gray-500 text-md text-right">{labels.loginText}</p>
             <Link
               href={AUTH_ROUTES.LOGIN}
-              className="text-brand-purple font-semibold text-sm ml-1 hover:underline"
+              className="text-brand-blue font-semibold text-sm ml-1 hover:underline"
             >
               {labels.loginLink}
             </Link>
@@ -224,7 +224,7 @@ export function RegistrationForm({
 
           <Button
             type="submit"
-            className="w-full mt-2 bg-brand-purple hover:bg-brand-purple-hover"
+            className="w-full mt-2 bg-brand-blue hover:bg-brand-blue-hover"
             disabled={
               isLoading ||
               !formData.email ||

@@ -10,13 +10,13 @@ interface ProfileCardProps {
 
 export function ProfileCard({ patient }: ProfileCardProps) {
   return (
-    <div className="bg-ui-background-subtle overflow-hidden">
+    <div className="bg-ui-background-subtle overflow-hidden rounded-2xl">
       {/* Profile Info */}
       <div className="p-6 space-y-6">
         <div className="flex flex-col items-center text-center">
           <div className="relative mb-4">
-            <div className="h-16 w-16 rounded-full bg-ui-background-purple flex items-center justify-center">
-              <span className="text-xl font-medium text-ui-icon-purple">
+            <div className="h-16 w-16 rounded-full bg-brand-blue-light flex items-center justify-center">
+              <span className="text-xl font-medium text-brand-blue">
                 {patient.firstName[0]}
                 {patient.lastName[0]}
               </span>
@@ -28,7 +28,7 @@ export function ProfileCard({ patient }: ProfileCardProps) {
               </div>
             )}
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-text">
             {patient.firstName} {patient.lastName}
           </h2>
         </div>

@@ -25,7 +25,7 @@ export const REGISTRATION_ROUTES = {
 
 // Dashboard Routes - matching actual folder structure in (dashboard) group
 export const DASHBOARD_PATHS = {
-  HOME: "/dashboard", // This is a special case - it's at /dashboard path but in (dashboard)/dashboard folder
+  HOME: "/home",
   PATIENTS: "/patients",
   APPOINTMENTS: "/appointments",
   APPROVALS: "/approvals",

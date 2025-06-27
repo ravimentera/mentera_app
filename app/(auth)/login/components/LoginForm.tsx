@@ -75,7 +75,7 @@ export function LoginForm() {
             <p className="text-text-gray-500 text-md text-right">New member?</p>
             <Link
               href={AUTH_ROUTES.REGISTER}
-              className="text-brand-purple font-semibold text-sm ml-1 hover:underline"
+              className="text-brand-blue font-semibold text-sm ml-1 hover:underline"
             >
               Create Account here
             </Link>
@@ -127,7 +127,7 @@ export function LoginForm() {
 
           <Button
             type="submit"
-            className="w-full mt-2 bg-brand-purple hover:bg-brand-purple-hover"
+            className="w-full mt-2 bg-brand-blue hover:bg-brand-blue-hover"
             disabled={isLoading || !formData.email || !formData.password}
           >
             {isLoading ? "Please wait..." : "Login"}

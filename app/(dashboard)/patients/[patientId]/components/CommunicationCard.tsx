@@ -16,10 +16,10 @@ export function CommunicationCard({ preferences, onToggle }: CommunicationCardPr
         {/* Header */}
         <div className="flex items-center gap-2">
           <div className=" flex items-center justify-center">
-            <MessageSquare className="h-4 w-4 text-ui-icon-purple" />
+            <MessageSquare className="h-4 w-4 text-brand-blue" />
           </div>
           <h3 className="text-sm font-medium text-gray-900">Communication</h3>
-          <button type="button" className="ml-auto text-sm font-medium text-blue-600">
+          <button type="button" className="ml-auto text-sm font-medium text-blue-700">
             Edit
           </button>
         </div>

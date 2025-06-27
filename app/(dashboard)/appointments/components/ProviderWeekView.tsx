@@ -87,9 +87,9 @@ export function ProviderWeekView({
                 className={cn(
                   "text-sm font-medium mb-0.5",
                   isSameDay(day, new Date())
-                    ? "text-brand-purple-dark"
+                    ? "text-brand-blue-dark"
                     : draggingAppointment && isSameDay(day, dropIndicator.date)
-                      ? "text-brand-purple"
+                      ? "text-brand-blue"
                       : "text-gray-600",
                 )}
               >
@@ -99,9 +99,9 @@ export function ProviderWeekView({
                 className={cn(
                   "w-7 h-7 rounded-full flex items-center justify-center text-sm font-medium mx-auto",
                   isSameDay(day, new Date())
-                    ? "bg-brand-purple-dark text-white"
+                    ? "bg-brand-blue-dark text-white"
                     : draggingAppointment && isSameDay(day, dropIndicator.date)
-                      ? "bg-brand-purple-light/40 text-brand-purple-dark"
+                      ? "bg-brand-blue-light/40 text-brand-blue-dark"
                       : "text-gray-900 hover:bg-gray-100",
                 )}
               >
@@ -131,7 +131,7 @@ export function ProviderWeekView({
                 dayIndex < 6 && "border-r border-gray-100",
                 draggingAppointment &&
                   isSameDay(day, dropIndicator.date) &&
-                  "bg-brand-purple-light/20",
+                  "bg-brand-blue-light/20",
               )}
               onMouseDown={(e) => onMouseDown(e, day)}
               onMouseMove={(e) => {
@@ -163,7 +163,7 @@ export function ProviderWeekView({
               {/* Selection overlay */}
               {isSameDay(day, date) && dragStart && dragEnd && (
                 <div
-                  className="absolute left-0 right-0 bg-brand-purple-dark/10 border border-brand-purple-dark/20 z-20"
+                  className="absolute left-0 right-0 bg-brand-blue-dark/10 border border-brand-blue-dark/20 z-20"
                   style={getSelectionStyles()}
                 />
               )}
@@ -183,12 +183,12 @@ export function ProviderWeekView({
               {/* Current time indicator */}
               {isSameDay(day, new Date()) && (
                 <div
-                  className="absolute left-0 right-0 border-t-2 border-brand-purple-dark z-10"
+                  className="absolute left-0 right-0 border-t-2 border-brand-blue-dark z-10"
                   style={{
                     top: `${((new Date().getHours() * 60 + new Date().getMinutes()) / (24 * 60)) * 100}%`,
                   }}
                 >
-                  <div className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-brand-purple-dark" />
+                  <div className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-brand-blue-dark" />
                 </div>
               )}
 

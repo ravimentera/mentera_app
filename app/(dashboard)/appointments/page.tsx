@@ -177,7 +177,7 @@ export default function AppointmentsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "upcoming":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100";
+        return "bg-blue-100 text-blue-800 dark:bg-brand-blue dark:text-blue-100";
       case "completed":
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
       case "cancelled":
@@ -217,7 +217,7 @@ export default function AppointmentsPage() {
           </div>
           {isLoading ? (
             <div className="flex justify-center items-center h-[200px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-purple"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue"></div>
             </div>
           ) : (
             <LineChart data={trendData} title="Daily Appointments" height={200} />
@@ -228,7 +228,7 @@ export default function AppointmentsPage() {
           <h3 className="text-lg font-medium mb-4">Appointment Stats</h3>
           {isLoading ? (
             <div className="flex justify-center items-center h-[200px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-purple"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue"></div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -311,7 +311,7 @@ export default function AppointmentsPage() {
                   <tr>
                     <td colSpan={7} className="py-20 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-brand-purple"></div>
+                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-brand-blue"></div>
                         <p className="mt-4 text-gray-500">Loading appointments...</p>
                       </div>
                     </td>

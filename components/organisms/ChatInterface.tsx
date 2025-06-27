@@ -120,18 +120,18 @@ export function ChatInterface({
         <div className="text-center space-y-6">
           <h1 className="text-4xl font-bold text-brand-gradient">Hello, {username}</h1>
 
-          <div className="max-w-md mx-auto bg-white shadow-sm rounded-2xl px-6 py-5 text-left border border-gray-200 space-y-5">
+          <div className="max-w-md mx-auto bg-subtle shadow-sm rounded-2xl px-5 py-3 text-left space-y-5">
             <div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Today</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Today</p>
               <p className="text-base text-gray-800">
-                <span className="font-medium">8 appointments</span> — first at{" "}
-                <span className="font-medium">9:00 AM</span>, last at{" "}
-                <span className="font-medium">4:30 PM</span>
+                <span className="font-normal">8 appointments</span> — first at{" "}
+                <span className="font-normal">9:00 AM</span>, last at{" "}
+                <span className="font-normal">4:30 PM</span>
               </p>
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 Reminders
               </p>
               <ul className="text-base text-gray-800 space-y-1 list-disc list-inside">

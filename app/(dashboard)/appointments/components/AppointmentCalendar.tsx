@@ -530,7 +530,7 @@ export function AppointmentCalendar({
       <div className="overflow-auto max-h-[calc(100vh-16rem)] relative rounded-lg border border-gray-300">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-purple"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-blue"></div>
           </div>
         )}
 

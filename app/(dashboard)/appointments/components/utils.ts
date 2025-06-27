@@ -17,7 +17,7 @@ export const getAppointmentStatusColors = (status: Appointment["status"]) => {
 export const getAppointmentColors = (type: Appointment["type"]) => {
   switch (type) {
     case "therapy":
-      return "bg-brand-purple-background hover:bg-brand-purple/20 border-brand-purple/20 group-hover:bg-brand-purple/20";
+      return "bg-brand-blue-background hover:bg-brand-blue/20 border-brand-blue/20 group-hover:bg-brand-blue/20";
     case "consultation":
       return "bg-brand-blue-background hover:bg-brand-blue/20 border-brand-blue/20 group-hover:bg-brand-blue/20";
     case "followup":
@@ -30,7 +30,7 @@ export const getAppointmentColors = (type: Appointment["type"]) => {
 export const getAvatarColors = (type: Appointment["type"]) => {
   switch (type) {
     case "therapy":
-      return "bg-brand-purple-dark text-white";
+      return "bg-brand-blue-dark text-white";
     case "consultation":
       return "bg-brand-blue text-white";
     case "followup":
@@ -43,7 +43,7 @@ export const getAvatarColors = (type: Appointment["type"]) => {
 export const getAppointmentTextColor = (type: Appointment["type"]) => {
   switch (type) {
     case "therapy":
-      return "text-brand-purple-dark";
+      return "text-brand-blue-dark";
     case "consultation":
       return "text-brand-blue";
     case "followup":
@@ -188,7 +188,7 @@ Take care, and don't hesitate to reach out if you need anything in the meantime.
 export function getAppointmentTypeStyles(type: Appointment["type"]) {
   switch (type) {
     case "consultation":
-      return "bg-brand-purple-background hover:bg-brand-purple-dark/20 border-brand-purple-dark/20 group-hover:bg-brand-purple-dark/20";
+      return "bg-brand-blue-background hover:bg-brand-blue-dark/20 border-brand-blue-dark/20 group-hover:bg-brand-blue-dark/20";
     case "followup":
       return "bg-brand-blue-background hover:bg-brand-blue/20 border-brand-blue/20 group-hover:bg-brand-blue/20";
     case "therapy":
@@ -203,7 +203,7 @@ export function getAppointmentTypeStyles(type: Appointment["type"]) {
 export function getAppointmentTypeColor(type: Appointment["type"]) {
   switch (type) {
     case "consultation":
-      return "bg-brand-purple-dark text-white";
+      return "bg-brand-blue-dark text-white";
     case "followup":
       return "bg-brand-blue text-white";
     case "therapy":
@@ -218,7 +218,7 @@ export function getAppointmentTypeColor(type: Appointment["type"]) {
 export function getAppointmentTypeTextColor(type: Appointment["type"]) {
   switch (type) {
     case "consultation":
-      return "text-brand-purple-dark";
+      return "text-brand-blue-dark";
     case "followup":
       return "text-brand-blue";
     case "therapy":
