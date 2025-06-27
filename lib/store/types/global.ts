@@ -1,6 +1,19 @@
+import {
+  patientDatabase as _patientDatabase,
+  testMedSpa as _testMedSpa,
+  testNurse as _testNurse,
+} from "@/mock/chat.data";
+
 // Define the state structure for this slice
 export interface GlobalState {
   isSidePanelExpanded: boolean;
   streamingUISessionId: string;
-  // You can add other global states here in the future
+
+  // mock-chat data in Redux:
+  patientDatabase: typeof _patientDatabase;
+  testMedSpa: typeof _testMedSpa;
+  testNurse: typeof _testNurse;
+
+  // currently selected patient ID
+  selectedPatientId: string | null;
 }
