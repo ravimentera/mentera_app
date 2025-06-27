@@ -21,8 +21,10 @@ export {
 // Export custom icons
 export { DashboardIcon } from "./DashboardIcon";
 export { GoogleIcon } from "./GoogleIcon";
+export { MailIcon } from "./MailIcon";
 export { MenteraLogoFull } from "./MenteraLogoFull";
 export { MenteraLogoIcon } from "./MenteraLogoIcon";
+export { MessageSquareIcon } from "./MessageSquareIcon";
 export { RobotIcon } from "./RobotIcon";
 export { ScheduleIcon } from "./ScheduleIcon";
 export { StarIcon } from "./StarIcon";
