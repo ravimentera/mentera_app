@@ -1,9 +1,9 @@
-// components/organisms/chat/ChatClient.tsx
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
+import Image from "next/image";
 import {
   Edit,
   PanelLeft,
@@ -13,6 +13,7 @@ import {
   ArrowDownIcon,
   CheckIcon,
   CopyIcon,
+  FileIcon,
 } from "lucide-react";
 
 import {
@@ -37,9 +38,10 @@ import {
   setSelectedPatientId,
 } from "@/lib/store/slices/globalStateSlice";
 import { Message as ReduxMessage, addMessage } from "@/lib/store/slices/messagesSlice";
-import { clear as clearFiles, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
+import { UploadedFile, clear as clearFiles, removeFile, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
+import { useFileUpload } from "@/lib//hooks/useFileUpload";
 
 const toAUIMessage = (msg: ReduxMessage) => ({
   id: msg.id,
@@ -48,22 +50,12 @@ const toAUIMessage = (msg: ReduxMessage) => ({
   createdAt: new Date(msg.createdAt),
 });
 
-// A new ChatTopbar component created from the props of the old one
 const ChatTopbar = ({
   onOpenDrawer,
   currentPatientId,
   setCurrentPatientId,
-  isPatientContextEnabled,
-  setIsPatientContextEnabled,
-  forceFresh,
-  setForceFresh,
-  cacheDebug,
-  setCacheDebug,
-  patientDB,
 }) => {
-  const { data: apiPatients, isLoading: apiLoading } = useGetPatientsByProviderQuery("NR-2001");
-
-  // Use API data or fallback to empty array
+  const { data: apiPatients } = useGetPatientsByProviderQuery("NR-2001");
   const patientsData = apiPatients || [];
   
   return (
@@ -91,15 +83,14 @@ const ChatTopbar = ({
   );
 };
 
-// The main chat UI. It receives the isRunning status from the parent.
 const ChatThread = ({ isRunning }) => {
   return (
     <ThreadPrimitive.Root className="bg-background box-border flex h-full flex-col overflow-hidden">
       <ThreadPrimitive.Viewport className="flex h-full flex-col items-center overflow-y-scroll scroll-smooth bg-inherit px-4 pt-8">
         <ThreadPrimitive.Messages
           components={{
-            UserMessage: UserMessage,
-            AssistantMessage: AssistantMessage,
+            UserMessage,
+            AssistantMessage,
           }}
         />
         <div className="min-h-8 flex-grow" />
@@ -124,27 +115,91 @@ const ThreadScrollToBottom: React.FC = () => (
   </ThreadPrimitive.ScrollToBottom>
 );
 
-// The composer now also receives the isRunning prop to disable the send button.
-const Composer: React.FC<{ isRunning: boolean }> = ({ isRunning }) => (
-  <ComposerPrimitive.Root className="focus-within:border-purple-500/50 flex w-full flex-col rounded-lg border bg-white shadow-sm transition-colors">
-    <div className="flex w-full items-end px-2.5">
-      <Button variant="ghost" size="icon" className="my-2.5">
-        <PaperclipIcon className="h-5 w-5" />
-      </Button>
-      <ComposerPrimitive.Input
-        rows={1}
-        placeholder="Ask anything..."
-        className="placeholder:text-muted-foreground max-h-40 flex-grow resize-none border-none bg-transparent px-2 py-4 text-sm outline-none focus:ring-0"
-        disabled={isRunning}
-      />
-      <ComposerPrimitive.Send asChild>
-        <Button variant="ghost" size="icon" className="my-2.5 text-purple-600" disabled={isRunning}>
-          <SendHorizontalIcon className="h-5 w-5" />
+const FilePreview = () => {
+    const dispatch = useDispatch();
+    const files = useSelector(selectAllFiles);
+
+    if (files.length === 0) return null;
+
+    return (
+        <div className="border-t p-2">
+            <div className="flex w-full gap-2 overflow-x-auto px-2 py-1">
+                {files.map((f: UploadedFile) => (
+                    <div key={f.id} className="relative h-16 w-16 flex-shrink-0 rounded-md bg-muted flex items-center justify-center overflow-visible border">
+                        <button
+                            onClick={() => dispatch(removeFile(f.id))}
+                            className="absolute -top-1.5 -right-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-gray-600 text-[10px] font-bold leading-none text-white shadow hover:bg-red-500 transition-colors"
+                            aria-label={`Remove ${f.name}`}
+                            type="button"
+                        >
+                            ×
+                        </button>
+                        {f.type.startsWith("image/") ? (
+                            <Image src={f.previewUrl} alt={f.name} layout="fill" className="object-cover rounded-md" />
+                        ) : (
+                            <div className="flex flex-col items-center gap-1 text-center p-1">
+                                <FileIcon className="h-6 w-6 text-gray-500" />
+                                <span className="text-xs text-gray-500 truncate w-14">{f.name}</span>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+const Composer: React.FC<{ isRunning: boolean }> = ({ isRunning }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadFile } = useFileUpload();
+  const files = useSelector(selectAllFiles);
+
+  const triggerBrowse = () => fileInputRef.current?.click();
+
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    if (!e.target.files) return;
+
+    const incoming = Array.from(e.target.files);
+    if (incoming.length + files.length > 5) {
+      alert("You can attach a maximum of 5 files per message.");
+      e.target.value = "";
+      return;
+    }
+
+    for (const file of incoming) {
+      try {
+        await uploadFile(file);
+      } catch (err) {
+        console.error("File upload failed:", err);
+      }
+    }
+    e.target.value = "";
+  };
+
+  return (
+    <ComposerPrimitive.Root className="focus-within:border-purple-500/50 flex w-full flex-col rounded-lg border bg-white shadow-sm transition-colors">
+      <FilePreview />
+      <div className="flex w-full items-end px-2.5">
+        <Button variant="ghost" size="icon" className="my-2.5" onClick={triggerBrowse} type="button">
+          <PaperclipIcon className="h-5 w-5" />
         </Button>
-      </ComposerPrimitive.Send>
-    </div>
-  </ComposerPrimitive.Root>
-);
+        <input ref={fileInputRef} type="file" hidden onChange={handleChange} multiple />
+        <ComposerPrimitive.Input
+          rows={1}
+          placeholder="Ask anything..."
+          className="placeholder:text-muted-foreground max-h-40 flex-grow resize-none border-none bg-transparent px-2 py-4 text-sm outline-none focus:ring-0"
+          disabled={isRunning}
+        />
+        <ComposerPrimitive.Send asChild>
+          <Button variant="ghost" size="icon" className="my-2.5 text-purple-600" disabled={isRunning}>
+            <SendHorizontalIcon className="h-5 w-5" />
+          </Button>
+        </ComposerPrimitive.Send>
+      </div>
+    </ComposerPrimitive.Root>
+  );
+};
+
 
 const UserMessage: React.FC = () => (
   <MessagePrimitive.Root className="grid auto-rows-auto grid-cols-[1fr_auto] gap-y-2 w-full max-w-2xl py-4">
@@ -155,14 +210,17 @@ const UserMessage: React.FC = () => (
 );
 
 const AssistantMessage: React.FC = () => (
-  <MessagePrimitive.Root className="grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] relative w-full max-w-2xl py-4 gap-x-3">
-    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-xs row-span-2 shrink-0">
-      T
-    </div>
+  <MessagePrimitive.Root className="grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] relative w-full max-w-2xl py-4 gap-x-3 items-start">
+    <Image
+      src="/assets/icons/chat.png"
+      width={32}
+      height={32}
+      alt="Tera"
+      className="rounded-full row-span-2"
+    />
     <div className="text-foreground max-w-full break-words leading-7 col-start-2 row-start-1 my-1.5">
       <MessagePrimitive.Content components={{ Text: MarkdownText }} />
     </div>
-
     <AssistantActionBar />
   </MessagePrimitive.Root>
 );
@@ -173,7 +231,7 @@ const AssistantActionBar: React.FC = () => {
       hideWhenRunning
       autohide="not-last"
       autohideFloat="single-branch"
-      className="text-muted-foreground flex gap-1 col-start-3 row-start-2 -ml-1 data-[floating]:bg-background data-[floating]:absolute data-[floating]:rounded-md data-[floating]:border data-[floating]:p-1 data-[floating]:shadow-sm"
+      className="text-muted-foreground flex gap-1 col-start-2 row-start-2 -ml-1 data-[floating]:bg-background data-[floating]:absolute data-[floating]:rounded-md data-[floating]:border data-[floating]:p-1 data-[floating]:shadow-sm"
     >
       <ActionBarPrimitive.Copy asChild>
         <TooltipIconButton tooltip="Copy">
@@ -185,93 +243,115 @@ const AssistantActionBar: React.FC = () => {
           </MessagePrimitive.If>
         </TooltipIconButton>
       </ActionBarPrimitive.Copy>
-      <ActionBarPrimitive.Reload asChild>
-        {/* <TooltipIconButton tooltip="Refresh"> // @TODO: Tera Agent doesn support retry again
-          <RefreshCwIcon />
-        </TooltipIconButton> */}
-      </ActionBarPrimitive.Reload>
     </ActionBarPrimitive.Root>
   );
 };
 
-const NewChatForm = ({ onStartChat }) => {
-  const [input, setInput] = useState("");
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (input.trim()) {
-      onStartChat(input.trim());
-      setInput("");
-    }
-  };
-  return (
-    <div className="w-full mt-8">
-      <form onSubmit={handleSubmit} className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-          <svg
-            className="w-5 h-5"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.624l-.218-2.182a3.375 3.375 0 00-2.456-2.456L12.75 15.75l2.182-.218a3.375 3.375 0 002.456-2.456l.218-2.182.218 2.182a3.375 3.375 0 002.456 2.456l2.182.218-2.182.218a3.375 3.375 0 00-2.456 2.456l-.218 2.182z"
-            />
-          </svg>
+const WelcomeChatForm = ({ onStartChat }) => {
+    const [input, setInput] = useState("");
+    const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const { uploadFile } = useFileUpload();
+    const files = useSelector(selectAllFiles);
+
+    useEffect(() => {
+        if (textAreaRef.current) {
+            textAreaRef.current.style.height = "auto";
+            textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
+        }
+    }, [input]);
+
+    const triggerBrowse = () => fileInputRef.current?.click();
+
+    const handleChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+      if (!e.target.files) return;
+      const incoming = Array.from(e.target.files);
+      if (incoming.length + files.length > 5) {
+        alert("You can attach a maximum of 5 files per message.");
+        e.target.value = "";
+        return;
+      }
+      for (const file of incoming) {
+        try { await uploadFile(file); } catch (err) { console.error("File upload failed:", err); }
+      }
+      e.target.value = "";
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (input.trim() || files.length > 0) {
+            onStartChat(input.trim());
+            setInput("");
+        }
+    };
+
+    return (
+        <div className="w-full mt-8 flex flex-col items-center">
+            <div className="w-full max-w-2xl">
+                <div className="focus-within:border-purple-500/50 flex w-full flex-col rounded-lg border bg-white shadow-sm transition-colors">
+                    <FilePreview />
+                    <form onSubmit={handleSubmit} className="flex w-full items-end px-2.5">
+                        <Button variant="ghost" size="icon" className="my-2.5" type="button" onClick={triggerBrowse}>
+                            <PaperclipIcon className="h-5 w-5" />
+                        </Button>
+                        <input ref={fileInputRef} type="file" hidden onChange={handleChange} multiple />
+                        <textarea
+                            ref={textAreaRef}
+                            rows={1}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmit(e as any);
+                                }
+                            }}
+                            placeholder="Ask anything..."
+                            className="placeholder:text-muted-foreground max-h-40 flex-grow resize-none border-none bg-transparent px-2 py-4 text-sm outline-none focus:ring-0"
+                        />
+                        <Button
+                            type="submit"
+                            variant="ghost"
+                            size="icon"
+                            className="my-2.5 text-purple-600"
+                            disabled={!input.trim() && files.length === 0}
+                            aria-label="Send message"
+                        >
+                            <SendHorizontalIcon className="h-5 w-5" />
+                        </Button>
+                    </form>
+                </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 mt-4">
+                <Button variant="ghost" className="bg-gray-100/80 hover:bg-gray-200 text-gray-700 text-sm font-medium h-9 px-3" onClick={() => onStartChat("Today's Appointments")}>
+                    Today's Appointments
+                </Button>
+                <Button variant="ghost" className="bg-gray-100/80 hover:bg-gray-200 text-gray-700 text-sm font-medium h-9 px-3" onClick={() => onStartChat("Pre/Post Instructions")}>
+                    Pre/Post Instructions
+                </Button>
+            </div>
         </div>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask anything"
-          className="w-full border-2 border-gray-300 bg-white rounded-xl py-4 pl-12 pr-14 text-base focus:ring-purple-500 focus:border-purple-600 outline-none transition-colors"
-        />
-        <button
-          type="submit"
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-600 hover:text-purple-800"
-          aria-label="Send message"
-        >
-          <SendHorizontalIcon className="h-5 w-5" />
-        </button>
-      </form>
-      <div className="flex items-center justify-center gap-2 mt-4">
-        <Button
-          variant="ghost"
-          className="bg-gray-100/80 hover:bg-gray-200 text-gray-700 text-sm font-medium h-9 px-3"
-        >
-          Today's Appointments
-        </Button>
-        <Button
-          variant="ghost"
-          className="bg-gray-100/80 hover:bg-gray-200 text-gray-700 text-sm font-medium h-9 px-3"
-        >
-          Pre/Post Instructions
-        </Button>
-      </div>
-    </div>
-  );
+    );
 };
 
 const WelcomeView = ({ onStartChat }) => (
-  <div className="w-full h-full flex flex-col items-center justify-center px-4 bg-gray-50/40">
-    <div className="max-w-xl w-full text-center">
-      <h1 className="text-5xl font-bold text-purple-600 mb-6">Hello, Rachel</h1>
-      <div className="bg-white p-6 rounded-xl border border-gray-200 text-left space-y-2 shadow-sm mb-6">
-        <p className="font-semibold text-gray-800">TODAY</p>
-        <p className="text-gray-600">8 appointments — first at 9:00 AM, last at 4:30 PM</p>
-        <p className="font-semibold text-gray-800 mt-4">REMINDERS</p>
-        <ul className="list-disc list-inside text-gray-600 space-y-1">
-          <li>3 charts pending</li>
-          <li>Pre-care needed (filler)</li>
-          <li>Laser follow-up – Jenna R.</li>
-        </ul>
-      </div>
-      <NewChatForm onStartChat={onStartChat} />
+    <div className="w-full h-full flex flex-col items-center justify-center px-4 bg-gray-50/40">
+        <div className="max-w-2xl w-full text-center">
+            <h1 className="text-5xl font-bold text-purple-600 mb-6">Hello, Rachel</h1>
+            <div className="bg-white p-6 rounded-xl border border-gray-200 text-left space-y-2 shadow-sm mb-6">
+                <p className="font-semibold text-gray-800">TODAY</p>
+                <p className="text-gray-600">8 appointments — first at 9:00 AM, last at 4:30 PM</p>
+                <p className="font-semibold text-gray-800 mt-4">REMINDERS</p>
+                <ul className="list-disc list-inside text-gray-600 space-y-1">
+                    <li>3 charts pending</li>
+                    <li>Pre-care needed (filler)</li>
+                    <li>Laser follow-up – Jenna R.</li>
+                </ul>
+            </div>
+            <WelcomeChatForm onStartChat={onStartChat} />
+        </div>
     </div>
-  </div>
 );
 
 const ActiveChatPane = ({
@@ -280,6 +360,8 @@ const ActiveChatPane = ({
   isPatientContextEnabled,
   forceFresh,
   cacheDebug,
+  initialMessage,
+  onInitialMessageSent,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -300,44 +382,40 @@ const ActiveChatPane = ({
     filesRef.current = allFiles;
   }, [allFiles]);
 
-  const initialMessageSentRef = useRef(false);
-
   useEffect(() => {
-    if (connected && !initialMessageSentRef.current) {
-      const threadMessages = messages.filter((m) => m.threadId === activeThreadId);
-      if (threadMessages.length === 1 && threadMessages[0].sender === "user") {
-        sendMessage(threadMessages[0].text);
-        initialMessageSentRef.current = true;
-      }
+    // Check for initialMessage OR files to send
+    if (connected && (initialMessage || filesRef.current.length > 0)) {
+        // Only add a text message to redux if there is text
+        if(initialMessage) {
+            dispatch(addMessage({
+                id: uuidv4(),
+                threadId: activeThreadId,
+                sender: "user",
+                text: initialMessage,
+                createdAt: Date.now(),
+            }));
+        }
+      sendMessage(initialMessage || "");
+      onInitialMessageSent();
     }
-  }, [connected, messages, activeThreadId, sendMessage]);
+  }, [connected, initialMessage, activeThreadId, sendMessage, dispatch, onInitialMessageSent]);
 
   const onNew = useCallback(
     async (msg: AppendMessage): Promise<void> => {
       const text = msg.content[0]?.type === "text" ? msg.content[0].text : "";
-      // The first message is handled by the useEffect above, this handles subsequent messages.
-      if (initialMessageSentRef.current) {
-        dispatch(
-          addMessage({
-            id: uuidv4(),
-            threadId: activeThreadId,
-            sender: "user",
-            text,
-            createdAt: Date.now(),
-          }),
-        );
-        sendMessage(text, filesRef.current);
-        dispatch(clearFiles());
-      } else {
-        // This handles the very first message if the connection is already live
-        const threadMessages = messages.filter((m) => m.threadId === activeThreadId);
-        if (threadMessages.length === 1 && threadMessages[0].sender === "user") {
-          sendMessage(threadMessages[0].text);
-          initialMessageSentRef.current = true;
-        }
-      }
+      dispatch(
+        addMessage({
+          id: uuidv4(),
+          threadId: activeThreadId,
+          sender: "user",
+          text,
+          createdAt: Date.now(),
+        }),
+      );
+      sendMessage(text, filesRef.current);
+      // Let useWebSocketChat handle clearing files
     },
-    [activeThreadId, dispatch, sendMessage, filesRef, messages],
+    [activeThreadId, dispatch, sendMessage, filesRef],
   );
 
   const messageRuntime = useExternalStoreRuntime<ReduxMessage>({
@@ -373,31 +451,36 @@ export default function ChatClient() {
   const currentPatientId = selectedId ?? defaultPatientId;
 
   const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(true);
-
-  // States from old ChatTopbar
   const [isPatientContextEnabled, setIsPatientContextEnabled] = useState(true);
   const [forceFresh, setForceFresh] = useState(false);
   const [cacheDebug, setCacheDebug] = useState(false);
 
-  const handleStartChat = (name: string) => {
-    const newThreadId = uuidv4();
-    const newMsgId = uuidv4();
+  const [initialMessage, setInitialMessage] = useState<string | null>(null);
 
-    dispatch(addThread({ id: newThreadId, name: name, activate: false }));
-    dispatch(
-      addMessage({
-        id: newMsgId,
-        threadId: newThreadId,
-        sender: "user",
-        text: name,
-        createdAt: Date.now(),
-      }),
-    );
+  const handleStartChat = (text: string) => {
+    const newThreadId = uuidv4();
+    // Use message text for thread name, or a generic name if only files are present
+    const threadName = text || "Chat with attachments";
+    dispatch(addThread({ id: newThreadId, name: threadName, activate: false }));
+    setInitialMessage(text);
     dispatch(setActiveThreadId(newThreadId));
   };
+  
+  const handleInitialMessageSent = useCallback(() => {
+    setInitialMessage(null);
+    // The files are cleared by the websocket hook after they are sent.
+  }, []);
 
-  const handleNewChatClick = () => dispatch(setActiveThread(null));
-  const handleSelectChat = (threadId: string) => dispatch(setActiveThread(threadId));
+  const handleNewChatClick = () => {
+      setInitialMessage(null);
+      dispatch(clearFiles()); // Clear any lingering files
+      dispatch(setActiveThread(null));
+  }
+  const handleSelectChat = (threadId: string) => {
+      setInitialMessage(null);
+      dispatch(clearFiles()); // Clear any lingering files
+      dispatch(setActiveThread(threadId));
+  }
 
   return (
     <div className="min-h-screen bg-gray-50/40 flex w-full h-full relative">
@@ -467,13 +550,6 @@ export default function ChatClient() {
           onOpenDrawer={() => setIsChatSidebarOpen(true)}
           currentPatientId={currentPatientId}
           setCurrentPatientId={(id) => dispatch(setSelectedPatientId(id))}
-          isPatientContextEnabled={isPatientContextEnabled}
-          setIsPatientContextEnabled={setIsPatientContextEnabled}
-          forceFresh={forceFresh}
-          setForceFresh={setForceFresh}
-          cacheDebug={cacheDebug}
-          setCacheDebug={setCacheDebug}
-          patientDB={patientDB}
         />
         <div className="flex-1 min-h-0">
           {activeThreadId ? (
@@ -484,14 +560,14 @@ export default function ChatClient() {
               isPatientContextEnabled={isPatientContextEnabled}
               forceFresh={forceFresh}
               cacheDebug={cacheDebug}
+              initialMessage={initialMessage}
+              onInitialMessageSent={handleInitialMessageSent}
             />
           ) : (
             <WelcomeView onStartChat={handleStartChat} />
           )}
         </div>
       </main>
-
-      
     </div>
   );
 }
