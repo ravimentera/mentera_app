@@ -40,7 +40,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
       <span>{label}</span>
-      <span className="font-medium text-gray-800">{value}</span>
+      <span className="font-medium text-gray-800 tw-text-sm">{value}</span>
     </div>
   );
 }

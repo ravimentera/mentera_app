@@ -23,24 +23,24 @@ export function UserHistoryCard({ history }: UserHistoryCardProps) {
         <h2 className="text-lg font-semibold">User History</h2>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 text-sm">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-gray-500">Last Visited On</p>
+          <p className="text-gray-500">Last Visited On</p>
           <p className="font-medium">{formatDate(history.lastVisited)}</p>
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-gray-500">Last Connected on Email</p>
+          <p className="text-gray-500">Last Connected on Email</p>
           <p className="font-medium">{formatDate(history.lastEmailConnected)}</p>
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-gray-500">Last Connected on SMS</p>
+          <p className="text-gray-500">Last Connected on SMS</p>
           <p className="font-medium">{formatDate(history.lastSMSConnected)}</p>
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-gray-500">Created On</p>
+          <p className="text-gray-500">Created On</p>
           <p className="font-medium">{formatDate(history.createdOn)}</p>
         </div>
       </div>

@@ -9,23 +9,32 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // For dashboard routes, check if user came from login (in a real app, we would check auth tokens)
+  // For dashboard routes, check auth token
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/appointments") ||
     pathname.startsWith("/profile") ||
     pathname.startsWith("/settings")
   ) {
-    // In a real app, check for authentication token
-    // For this demo, we'll mock "auth" by checking a session cookie
-    const hasAuth = request.cookies.has("auth_session");
+    // Check for auth token in cookie or Authorization header
+    const authToken =
+      request.cookies.get("auth_token")?.value || request.headers.get("authorization");
 
-    if (!hasAuth) {
+    if (!authToken) {
       // Create a URL object to safely append a 'redirect' parameter
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("returnUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
+  }
+
+  // Add CORS headers for API routes
+  if (pathname.startsWith("/api/")) {
+    const response = NextResponse.next();
+    response.headers.set("Access-Control-Allow-Origin", "*");
+    response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    return response;
   }
 
   // Continue with the request
@@ -40,5 +49,7 @@ export const config = {
     "/appointments/:path*",
     "/profile/:path*",
     "/settings/:path*",
+    // Match API routes
+    "/api/:path*",
   ],
 };

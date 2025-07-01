@@ -11,10 +11,10 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ patient }: ProfileHeaderProps) {
   return (
-    <div className="flex items-center justify-between bg-white p-5">
+    <div className="flex items-center justify-between bg-white p-5 pl-0">
       <div className="flex items-center gap-3">
         <Link href="/patients">
-          <Button variant="ghost" className="!p-0 text-gray-900">
+          <Button variant="ghost" className="!p-0 !px-2 text-gray-900">
             <ArrowLeft className="size-6" />
           </Button>
         </Link>
