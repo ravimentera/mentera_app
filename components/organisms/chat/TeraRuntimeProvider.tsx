@@ -12,7 +12,6 @@ import { addThread, deleteThread, setActiveThreadId } from "@/lib/store/slices/t
 import {
   AssistantRuntimeProvider as AUIProvider,
   AppendMessage,
-  AssistantRuntime,
   ThreadListRuntime,
   ThreadMessageLike,
   ThreadRuntime,
@@ -78,7 +77,6 @@ function makeItemRuntime(idFn: () => string | undefined) {
     async archive() {},
     async unarchive() {},
     async delete() {},
-
     /* NEW ---------- imperative helpers expected by <ThreadListItemTrigger /> */
     async switchTo() {
       // biome-ignore lint/style/noNonNullAssertion: reason for ignoring
@@ -141,8 +139,9 @@ function createReduxThreadListRuntime(
       return this.main;
     },
     getItemById: (id) => getOrCreateItem(id) as any,
-    getItemByIndex(i: number) {
-      return getOrCreateItem(this.getState().threads[i]) as any;
+    getItemByIndex: (i: number) => {
+      const threads = slice().threads;
+      return getOrCreateItem(i < 0 || i >= threads.length ? undefined : threads[i]?.id) as any;
     },
     getArchivedItemByIndex(i: number) {
       return getOrCreateItem(this.getState().archivedThreads[i]) as any;
@@ -155,7 +154,7 @@ function createReduxThreadListRuntime(
     },
     async switchToNewThread() {
       const id = uuidv4();
-      dispatch(addThread({ id, activate: true }));
+      dispatch(addThread({ id, name: "New Chat", activate: true }));
       getOrCreateItem(id).__emit?.("switched-to");
     },
   };
@@ -192,7 +191,7 @@ export function TeraRuntimeProvider({
   }, [allFiles]);
 
   /*  websocket */
-  const { loading, sendMessage } = useWebSocketChat({
+  const { loading, sendMessage, isAuthenticated } = useWebSocketChat({
     currentPatientId,
     isPatientContextEnabled,
     forceFresh,
@@ -200,10 +199,37 @@ export function TeraRuntimeProvider({
     activeThreadId,
   });
 
-  /*  on new user message */
+  const sentMessageIdsRef = useRef(new Set<string>());
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
+  useEffect(() => {
+    sentMessageIdsRef.current.clear();
+  }, [activeThreadId]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const unsentMessages = messages.filter(
+      (m) => m.sender === "user" && !sentMessageIdsRef.current.has(m.id),
+    );
+
+    if (unsentMessages.length > 0) {
+      console.log(
+        `TeraRuntimeProvider: Found ${unsentMessages.length} unsent messages. Sending now.`,
+      );
+      for (const msg of unsentMessages) {
+        sendMessage(msg.text, filesRef.current);
+        sentMessageIdsRef.current.add(msg.id);
+      }
+      if (filesRef.current.length > 0) dispatch(clear());
+    }
+  }, [messages, isAuthenticated, sendMessage, dispatch, allFiles]);
+
   const onNew = useCallback(
     async (msg: AppendMessage): Promise<void> => {
       const text = msg.content[0]?.type === "text" ? msg.content[0].text : "";
+
       const reduxMsg: ReduxMessage = {
         id: uuidv4(),
         threadId: activeThreadId,
@@ -211,18 +237,12 @@ export function TeraRuntimeProvider({
         text,
         createdAt: Date.now(),
       };
-      console.log({ reduxMsg });
 
       dispatch(addMessage(reduxMsg));
-      //  always send the most recent files
-      sendMessage(text, filesRef.current);
-
-      dispatch(clear());
     },
-    [activeThreadId, dispatch, sendMessage], // files handled via ref
+    [activeThreadId, dispatch],
   );
 
-  /*  per-thread runtime */
   const messageRuntime = useExternalStoreRuntime<ReduxMessage>({
     messages,
     isRunning: loading,
@@ -230,46 +250,26 @@ export function TeraRuntimeProvider({
     convertMessage: toAUIMessage,
   });
 
-  /* thread-list runtime */
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   const threadListRuntime = useMemo(
-    () => createReduxThreadListRuntime(messageRuntime.thread, dispatch, store.getState),
-    [messageRuntime.thread],
+    () => createReduxThreadListRuntime(messageRuntime.thread, dispatch, () => store.getState()),
+    [messageRuntime.thread, dispatch],
   );
 
-  /*  wire the Redux actions into the external-store core **once** */
-  const coreThreads = (messageRuntime as any)._core.threads; // ⚠️ cast
+  const coreThreads = (messageRuntime as any)._core.threads;
 
-  coreThreads.adapter.onSwitchToNewThread = () => threadListRuntime.switchToNewThread();
+  const patchAdapter = useCallback(() => {
+    coreThreads.adapter.onSwitchToNewThread = () => threadListRuntime.switchToNewThread();
+    coreThreads.adapter.onSwitchToThread = (id: string) => threadListRuntime.switchToThread(id);
+    coreThreads.adapter.threadId = activeThreadId;
+    coreThreads.adapter.threads = threadListRuntime
+      .getState()
+      .threads.map((id) => threadListRuntime.getItemById(id));
+  }, [coreThreads, threadListRuntime, activeThreadId]);
 
-  coreThreads.adapter.onSwitchToThread = (id: string) => threadListRuntime.switchToThread(id);
+  useEffect(() => {
+    patchAdapter();
+  }, [patchAdapter]);
 
-  /* optional: keep the adapter’s current threadId & list in sync */
-  coreThreads.adapter.threadId = activeThreadId;
-  coreThreads.adapter.threads = threadListRuntime
-    .getState()
-    .threads.map((id) => threadListRuntime.getItemById(id));
-
-  //  6½  keep threads-core wired no matter how often the adapter object changes
-  const threadsCore: any = (messageRuntime as any)._core.threads;
-
-  // helper ↻
-  const patchAdapter = () => {
-    threadsCore.adapter.onSwitchToNewThread = () => threadListRuntime.switchToNewThread();
-    threadsCore.adapter.onSwitchToThread = (id: string) => threadListRuntime.switchToThread(id);
-  };
-
-  // run once now …
-  patchAdapter();
-
-  // …and every time the library swaps its adapter object
-  const originalSet = threadsCore.__internal_setAdapter.bind(threadsCore);
-  threadsCore.__internal_setAdapter = (nextAdapter: any) => {
-    originalSet(nextAdapter); // keep normal behaviour
-    patchAdapter(); // re-attach our callbacks
-  };
-
-  /* 7️⃣ expose archive + custom threads object (you already had this) */
   (messageRuntime as any).threads = threadListRuntime;
   (messageRuntime as any).archive = async (id: string) => {
     dispatch(deleteMessagesForThread(id));

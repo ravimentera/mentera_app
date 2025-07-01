@@ -1,4 +1,7 @@
 // components/organisms/chat/useWebSocketChat.ts
+
+"use client";
+
 import WebSocket from "isomorphic-ws";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,7 +11,6 @@ import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
 import type { AppDispatch } from "@/lib/store";
 import { store } from "@/lib/store";
 
-import { fetchDynamicLayout } from "@/lib/store/slices/dynamicLayoutSlice";
 import {
   UploadedFile,
   clear as clearFiles,
@@ -20,7 +22,7 @@ import {
   selectTestNurse,
 } from "@/lib/store/slices/globalStateSlice";
 import { Message as ReduxMessage, addMessage } from "@/lib/store/slices/messagesSlice";
-import { getActiveThreadId, updateThreadLastMessageAt } from "@/lib/store/slices/threadsSlice";
+import { updateThreadLastMessageAt } from "@/lib/store/slices/threadsSlice";
 
 import { sanitizeMarkdown } from "@/lib/utils";
 import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
@@ -32,7 +34,7 @@ interface UseChatWebSocketProps {
   isPatientContextEnabled: boolean;
   forceFresh: boolean;
   cacheDebug: boolean;
-  activeThreadId: string; // Add activeThreadId
+  activeThreadId: string;
 }
 
 const tag = (t: string) => `%c[WS:${t}]`;
@@ -57,6 +59,7 @@ export function useWebSocketChat({
 
   /* ---------------- local state ------------------------------- */
   const [connected, setConnected] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [streamBuffer, setStreamBuffer] = useState("");
 
@@ -68,46 +71,49 @@ export function useWebSocketChat({
   const retryDelay = 2_000;
 
   /* ---------------- helper: File -> base64 -------------------- */
-  const encodeFile = (file: File) =>
-    new Promise<string>((ok, err) => {
-      const r = new FileReader();
-      r.onload = () => ok(String(r.result)); // data:…;base64,AAAA
-      r.onerror = () => err(r.error);
-      r.readAsDataURL(file);
-    });
+  const encodeFile = useCallback(
+    (file: File) =>
+      new Promise<string>((ok, err) => {
+        const r = new FileReader();
+        r.onload = () => ok(String(r.result as string));
+        r.onerror = (e) => err(r.error);
+        r.readAsDataURL(file);
+      }),
+    [],
+  );
 
   /* ---------------- helper: stash AI message ------------------ */
-  const stashAssistantMessage = (content: string, meta?: any) => {
-    const cleaned = sanitizeMarkdown(content);
-    const ai: ReduxMessage = {
-      id: uuid(),
-      threadId: threadIdRef.current,
-      sender: "assistant",
-      text: cleaned,
-      createdAt: Date.now(),
-    };
-    dispatch(addMessage(ai));
-    dispatch(
-      updateThreadLastMessageAt({
+  const stashAssistantMessage = useCallback(
+    (content: string, meta?: any) => {
+      const cleaned = sanitizeMarkdown(content);
+      const ai: ReduxMessage = {
+        id: uuid(),
         threadId: threadIdRef.current,
-        timestamp: ai.createdAt,
-      }),
-    );
-    // if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
-    logMetadata(meta);
-  };
+        sender: "assistant",
+        text: cleaned,
+        createdAt: Date.now(),
+      };
+      dispatch(addMessage(ai));
+      dispatch(
+        updateThreadLastMessageAt({
+          threadId: threadIdRef.current,
+          timestamp: ai.createdAt,
+        }),
+      );
+      logMetadata(meta);
+    },
+    [dispatch],
+  );
 
   /* ---------------- sendMessage ------------------------------- */
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   const sendMessage = useCallback(
-    async (text: string, _ignored?: UploadedFile[]) => {
+    async (text: string, files?: UploadedFile[]) => {
       if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
         console.warn(tag("WARN"), blue, "socket not open – abort send");
         return;
       }
 
-      const files = selectAllFiles(store.getState());
-      const hasDoc = files.length > 0;
+      const hasDoc = files && files.length > 0;
       const convo = `${store.getState().threads.activeThreadId}_thread_${activeThreadId}`;
 
       const payload: any = {
@@ -126,12 +132,10 @@ export function useWebSocketChat({
         payload.patientInfo = patient;
       }
 
-      setLoading(true); // show spinner
+      setLoading(true);
 
-      /* ------- plain chat ---------- */
       if (!hasDoc) {
         payload.message = text;
-        console.log(tag("SEND"), blue, payload);
         socketRef.current.send(JSON.stringify(payload));
         return;
       }
@@ -145,7 +149,7 @@ export function useWebSocketChat({
         message: text || `Please analyze this document: ${file.name}`,
         document: {
           fileName: file.name,
-          base64Data: base64, // <-- NO “data:” prefix
+          base64Data: base64,
           mimeType: file.file.type || "application/octet-stream",
           fileSize: file.file.size,
         },
@@ -159,7 +163,6 @@ export function useWebSocketChat({
         },
       };
 
-      console.log(tag("SEND-DOC"), blue, payload);
       socketRef.current.send(JSON.stringify(payload));
       dispatch(clearFiles());
     },
@@ -173,6 +176,7 @@ export function useWebSocketChat({
       testMedSpa,
       testNurse.id,
       dispatch,
+      encodeFile,
     ],
   );
 
@@ -188,11 +192,12 @@ export function useWebSocketChat({
   useEffect(() => {
     if (isMockActive) {
       setConnected(initialMockConnectedState);
+      setIsAuthenticated(initialMockConnectedState);
       return;
     }
     if (!activeThreadId) {
-      console.log(tag("PAUSE"), blue, "No activeThreadId");
       setConnected(false);
+      setIsAuthenticated(false);
       socketRef.current?.close();
       socketRef.current = null;
       return;
@@ -207,20 +212,18 @@ export function useWebSocketChat({
 
         /* ---- open socket ------------------------------------ */
         const url = new URL(getWebSocketUrl());
-        console.log({ url });
-
         url.searchParams.set("token", token);
         url.searchParams.set("medspaId", testMedSpa.medspaId);
 
-        console.log(tag("OPEN"), blue, url.toString());
         const ws = new WebSocket(url.toString());
         socketRef.current = ws;
 
         /* ---- open ------------------------------------------- */
         ws.onopen = () => {
           setConnected(true);
+          setIsAuthenticated(false); // Reset on new connection
           retryCount.current = 0;
-          retryTimer.current && clearTimeout(retryTimer.current);
+          if (retryTimer.current) clearTimeout(retryTimer.current);
 
           ws.send(
             JSON.stringify({
@@ -229,17 +232,16 @@ export function useWebSocketChat({
               medSpaId: testMedSpa.medspaId,
             }),
           );
-          console.log(tag("OPEN"), blue, "auth sent");
         };
 
         /* ---- message ---------------------------------------- */
         ws.onmessage = (e: any) => {
           const msg: WebSocketResponseMessage = JSON.parse(e.data);
-          console.log(tag("RX"), blue, msg.type, msg);
 
           switch (msg.type) {
             case "auth_success":
               console.log(tag("AUTH_OK"), blue);
+              setIsAuthenticated(true);
               break;
 
             /* ---------- chat streaming ---------------------- */
@@ -295,23 +297,25 @@ export function useWebSocketChat({
               console.error(tag("ERROR"), blue, msg.error);
               setLoading(false);
               break;
-
             default:
               console.warn(tag("UNHANDLED"), blue, msg);
           }
         };
 
-        /* ---- close / error --------------------------------- */
         ws.onclose = (ev: any) => {
           console.log(tag("CLOSE"), blue, ev.code, ev.reason);
           setConnected(false);
+          setIsAuthenticated(false);
           setLoading(false);
           if (retryCount.current < maxRetries) {
             retryCount.current++;
             retryTimer.current = setTimeout(connect, retryDelay);
           }
         };
-        ws.onerror = (err: any) => console.error(tag("WS_ERR"), blue, err.message);
+        ws.onerror = (err: any) => {
+          console.error(tag("WS_ERR"), blue, err.message);
+          setIsAuthenticated(false);
+        };
       } catch (err) {
         console.error(tag("BOOT_ERR"), blue, err);
       }
@@ -320,29 +324,21 @@ export function useWebSocketChat({
     connect();
 
     return () => {
-      retryTimer.current && clearTimeout(retryTimer.current);
+      if (retryTimer.current) clearTimeout(retryTimer.current);
       socketRef.current?.close();
       socketRef.current = null;
     };
-  }, [
-    isMockActive,
-    activeThreadId,
-    cacheDebug,
-    forceFresh,
-    currentPatientId,
-    isPatientContextEnabled,
-    testMedSpa.medspaId,
-  ]);
+  }, [isMockActive, activeThreadId, testMedSpa.medspaId, stashAssistantMessage]);
 
   const send = isMockActive
-    ? (txt: string, _files?: unknown) => {
-        /* always use current active thread id */
+    ? (txt: string, files?: UploadedFile[]) => {
         if (mockSendMessage) mockSendMessage(txt, threadIdRef.current);
       }
     : sendMessage;
 
   return {
     connected,
+    isAuthenticated,
     loading,
     streamBuffer,
     sendMessage: send,
