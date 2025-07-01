@@ -7,86 +7,19 @@ import { Edit, PanelLeft, Search } from "lucide-react";
 
 import { Button } from "@/components/atoms";
 import { TeraRuntimeProvider } from "@/components/organisms/chat/TeraRuntimeProvider";
-import { Thread } from "@/components/organisms/Thread"; // <-- Main reusable component
+import { Thread } from "@/components/organisms/Thread";
 import { AppDispatch, RootState } from "@/lib/store";
-import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { clear as clearFiles } from "@/lib/store/slices/fileUploadsSlice";
-import {
-  selectPatientDatabase,
-  selectSelectedPatientId,
-  setSelectedPatientId,
-} from "@/lib/store/slices/globalStateSlice";
 import { addThread, setActiveThreadId } from "@/lib/store/slices/threadsSlice";
 import { cn } from "@/lib/utils";
 
 // TypeScript Interfaces for Props
-interface ChatTopbarProps {
-  onOpenDrawer: () => void;
-  currentPatientId: string;
-  setCurrentPatientId: (id: string) => void;
-}
-
 interface ChatClientProps {
   // This component doesn't receive props, but it's good practice to define it.
 }
-
-// Main Components
-const ChatTopbar: FC<ChatTopbarProps> = ({
-  onOpenDrawer,
-  currentPatientId,
-  setCurrentPatientId,
-}) => {
-  const { data: apiPatients } = useGetPatientsByProviderQuery("NR-2001");
-  const patientsData = apiPatients || [];
-
-  return (
-    <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white h-16 shrink-0 z-10">
-      <div className="flex items-center gap-4">
-        <h2 className="text-lg font-semibold text-gray-800">Talk to Tera</h2>
-      </div>
-      <div className="flex items-center gap-4 text-sm">
-        <label className="flex items-center gap-2">
-          <span className="font-medium">Patient:</span>
-          <select
-            className="ml-2 border rounded px-2 py-1 bg-white text-black relative z-50"
-            value={currentPatientId}
-            onChange={(e) => setCurrentPatientId(e.target.value)}
-          >
-            {patientsData.map((patient) => (
-              <option key={patient.id} value={patient.patientId}>
-                {patient.firstName} {patient.lastName}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-    </div>
-  );
-};
-
-const ActiveChatPane: FC = () => {
-  return (
-    <div className="h-full">
-      <Thread />
-    </div>
-  );
-};
-
 const ChatClient: FC<ChatClientProps> = () => {
   const dispatch = useDispatch<AppDispatch>();
-
-  const patientDB = useSelector(selectPatientDatabase);
-  const selectedId = useSelector(selectSelectedPatientId);
   const { threads, activeThreadId } = useSelector((s: RootState) => s.threads);
-  const defaultPatientId = Object.keys(patientDB)[0] as string;
-
-  useEffect(() => {
-    if (!selectedId && defaultPatientId) {
-      dispatch(setSelectedPatientId(defaultPatientId));
-    }
-  }, [selectedId, defaultPatientId, dispatch]);
-
-  const currentPatientId = selectedId ?? defaultPatientId;
 
   const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(true);
   const [isPatientContextEnabled, setIsPatientContextEnabled] = useState(true);
@@ -178,21 +111,18 @@ const ChatClient: FC<ChatClientProps> = () => {
       </aside>
 
       <main className="flex-1 flex flex-col min-h-0 bg-white">
-        <ChatTopbar
-          onOpenDrawer={() => setIsChatSidebarOpen(true)}
-          currentPatientId={currentPatientId}
-          setCurrentPatientId={(id) => dispatch(setSelectedPatientId(id))}
-        />
+        {/* Topbar has been removed */}
         <div className="flex-1 min-h-0">
           {activeThreadId ? (
             <TeraRuntimeProvider
               activeThreadId={activeThreadId}
-              currentPatientId={currentPatientId}
               isPatientContextEnabled={isPatientContextEnabled}
               forceFresh={forceFresh}
               cacheDebug={cacheDebug}
             >
-              <ActiveChatPane />
+              <div className="h-full">
+                <Thread />
+              </div>
             </TeraRuntimeProvider>
           ) : (
             <div className="flex h-full items-center justify-center">

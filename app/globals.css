@@ -17,3 +17,24 @@
     display: none; /* Safari and Chrome */
   }
 }
+
+@layer components {
+  .scrollbar {
+    /* Firefox */
+    scrollbar-width: thin;
+    /* thumb color + transparent track */
+    scrollbar-color: #d1d5db transparent; /* light mode */
+    scrollbar-color: #6b7280 transparent; /* dark mode override if desired */
+
+    /* WebKit */
+    &::-webkit-scrollbar {
+      width: 0.25rem; /* same as w-1 */
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent; /* no track background */
+    }
+    &::-webkit-scrollbar-thumb {
+      @apply rounded-full bg-gray-300 dark:bg-neutral-500;
+    }
+  }
+}

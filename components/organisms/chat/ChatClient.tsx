@@ -114,7 +114,6 @@ export default function ChatClient() {
       {activeThreadId ? (
         <TeraRuntimeProvider
           activeThreadId={activeThreadId}
-          currentPatientId={currentPatientId}
           isPatientContextEnabled={isPatientContextEnabled}
           forceFresh={forceFresh}
           cacheDebug={cacheDebug}

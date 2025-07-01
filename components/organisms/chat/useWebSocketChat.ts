@@ -18,6 +18,7 @@ import {
 } from "@/lib/store/slices/fileUploadsSlice";
 import {
   selectPatientDatabase,
+  selectSelectedPatientId,
   selectTestMedSpa,
   selectTestNurse,
 } from "@/lib/store/slices/globalStateSlice";
@@ -30,7 +31,6 @@ import { WebSocketResponseMessage } from "./types";
 import { extractChunk, logMetadata } from "./utils";
 
 interface UseChatWebSocketProps {
-  currentPatientId: keyof ReturnType<typeof selectPatientDatabase>;
   isPatientContextEnabled: boolean;
   forceFresh: boolean;
   cacheDebug: boolean;
@@ -41,7 +41,6 @@ const tag = (t: string) => `%c[WS:${t}]`;
 const blue = "color:#1e90ff;font-weight:bold";
 
 export function useWebSocketChat({
-  currentPatientId,
   isPatientContextEnabled,
   forceFresh,
   cacheDebug,
@@ -49,6 +48,7 @@ export function useWebSocketChat({
 }: UseChatWebSocketProps) {
   const dispatch = useDispatch<AppDispatch>();
   const patientDatabase = useSelector(selectPatientDatabase);
+  const currentPatientId = useSelector(selectSelectedPatientId) as string;
   const testMedSpa = useSelector(selectTestMedSpa);
   const testNurse = useSelector(selectTestNurse);
 

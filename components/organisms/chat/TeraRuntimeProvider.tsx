@@ -162,7 +162,6 @@ function createReduxThreadListRuntime(
 
 export interface TeraRuntimeProviderProps extends PropsWithChildren {
   activeThreadId: string;
-  currentPatientId: string;
   isPatientContextEnabled: boolean;
   forceFresh: boolean;
   cacheDebug: boolean;
@@ -171,7 +170,6 @@ export interface TeraRuntimeProviderProps extends PropsWithChildren {
 export function TeraRuntimeProvider({
   children,
   activeThreadId,
-  currentPatientId,
   isPatientContextEnabled,
   forceFresh,
   cacheDebug,
@@ -192,7 +190,6 @@ export function TeraRuntimeProvider({
 
   /*  websocket */
   const { loading, sendMessage, isAuthenticated } = useWebSocketChat({
-    currentPatientId,
     isPatientContextEnabled,
     forceFresh,
     cacheDebug,

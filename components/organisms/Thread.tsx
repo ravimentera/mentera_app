@@ -6,6 +6,8 @@ import {
   ComposerPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
+  useMessage,
+  useThreadRuntime,
 } from "@assistant-ui/react";
 import {
   ArrowDownIcon,
@@ -17,6 +19,7 @@ import {
   FileTextIcon,
   MessageSquareIcon,
   PaperclipIcon,
+  SearchIcon,
   SendHorizontalIcon,
   ShoppingCartIcon,
   SparklesIcon,
@@ -25,14 +28,46 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import type { FC, ReactNode } from "react";
-import { useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/atoms";
+import { Input } from "@/components/atoms/Input";
 import { MarkdownText } from "@/components/molecules/MarkdownText";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
+import { AppDispatch } from "@/lib/store";
+import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { UploadedFile, removeFile, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
+import { setSelectedPatientId } from "@/lib/store/slices/globalStateSlice";
+import { addMessage } from "@/lib/store/slices/messagesSlice";
+import { getActiveThreadId } from "@/lib/store/slices/threadsSlice";
+
+// Helper function to cleanly parse potential JSON from the assistant's message
+const tryParseAction = (content: string) => {
+  // First, try to find a fenced JSON block
+  const fencedMatch = content.match(/```(?:json)?\s*({[\s\S]*?})\s*```/);
+  if (fencedMatch?.[1]) {
+    try {
+      return JSON.parse(fencedMatch[1]);
+    } catch (e) {
+      // Ignore parsing errors for fenced blocks and fall through
+    }
+  }
+
+  // If no valid fenced block, try to find an inline JSON object
+  const inlineMatch = content.match(/({[\s\S]*})/);
+  if (inlineMatch?.[1]) {
+    try {
+      return JSON.parse(inlineMatch[1]);
+    } catch (e) {
+      // Ignore parsing errors for inline objects
+    }
+  }
+
+  return null;
+};
 
 export const Thread: FC = () => {
   return (
@@ -110,7 +145,7 @@ const SuggestionButton: FC<SuggestionButtonProps> = ({ prompt, icon }) => (
     prompt={prompt}
     method="replace"
     autoSend
-    className="flex items-center justify-start gap-2 text-sm font-medium p-2 rounded-3xl border bg-white hover:bg-slate-50 transition-colors flex-1 basis-[calc(33.333%-0.5rem)] min-w-[200px]"
+    className="flex items-center justify-start gap-2 text-sm font-medium p-2 rounded-lg border bg-white hover:bg-slate-50 transition-colors flex-1 basis-[calc(33.333%-0.5rem)] min-w-[200px]"
   >
     {icon}
     <span>{prompt}</span>
@@ -234,7 +269,7 @@ const Composer: FC = () => {
             </Button>
           </ComposerPrimitive.Send>
         </div>
-        <div className=" flex items-center px-2.5 py-1">
+        <div className="border-t border-slate-200 flex items-center px-2.5 py-1">
           <TooltipIconButton
             tooltip="Attach file"
             variant="ghost"
@@ -243,8 +278,7 @@ const Composer: FC = () => {
           >
             <PaperclipIcon className="h-5 w-5 text-black" />
           </TooltipIconButton>
-
-          <div className="border-t border-slate-200 border h-4"></div>
+          <div className="border-l border-slate-200 h-4 mx-2" />
           <Button variant="ghost" className="text-slate-500 p-1.5 h-auto text-sm font-medium">
             Explore Prompts
           </Button>
@@ -265,7 +299,97 @@ const UserMessage: FC = () => {
   );
 };
 
+const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
+  originalPrompt,
+  message,
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const dispatch = useDispatch<AppDispatch>();
+  const thread = useSelector(getActiveThreadId) as string;
+  const { data: patients, isLoading } = useGetPatientsByProviderQuery("NR-2001");
+
+  const filteredPatients = useMemo(() => {
+    if (!patients) return [];
+    return patients.filter(
+      (p) =>
+        p.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.phone.includes(searchTerm),
+    );
+  }, [patients, searchTerm]);
+
+  const handleSelectPatient = (patient: any) => {
+    dispatch(setSelectedPatientId(patient.patientId));
+    const newPrompt = `${originalPrompt} for patient ${patient.firstName} ${patient.lastName}`;
+    dispatch(
+      addMessage({
+        id: uuidv4(),
+        threadId: thread,
+        sender: "user",
+        text: newPrompt,
+        createdAt: Date.now(),
+      }),
+    );
+  };
+
+  return (
+    <div className="bg-white p-4  border-slate-200 w-full max-w-lg">
+      <p className="font-medium text-slate-800 mb-3">{message}</p>
+      <div className="relative mb-3">
+        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        <Input
+          type="text"
+          placeholder="Search patient by name or phone..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 w-full bg-slate-50 border-slate-300"
+        />
+      </div>
+      <div className="max-h-60 overflow-y-auto border rounded-md bg-white scrollbar">
+        {isLoading && <p className="p-4 text-center text-slate-500">Loading patients...</p>}
+        {!isLoading && filteredPatients.length === 0 && (
+          <p className="p-4 text-center text-slate-500">No patients found.</p>
+        )}
+        {filteredPatients.map((patient) => (
+          <button
+            type="button"
+            key={patient.id}
+            onClick={() => handleSelectPatient(patient)}
+            className="w-full text-left p-3 border-b last:border-b-0 hover:bg-purple-50 transition-colors"
+          >
+            <p className="font-semibold text-slate-800">
+              {patient.firstName} {patient.lastName}
+            </p>
+            <p className="text-sm text-slate-500">{patient.email}</p>
+            <p className="text-sm text-slate-500">{patient.phone}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const AssistantMessage: FC = () => {
+  const message = useMessage();
+  const { getState } = useThreadRuntime();
+  const messages = getState().messages;
+
+  const fullText = message.content.map((c) => (c.type === "text" ? c.text : "")).join("");
+  const parsedAction = tryParseAction(fullText);
+
+  if (parsedAction?.action === "REQUEST_PATIENT_SELECTION") {
+    const currentIndex = messages.findIndex((m) => m.id === message.id);
+    const userMessage = messages[currentIndex - 1];
+    const originalPrompt =
+      userMessage?.content[0]?.type === "text" ? userMessage.content[0].text : "";
+
+    return (
+      <MessagePrimitive.Root className="w-full max-w-2xl py-4 flex justify-center">
+        <PatientSelector originalPrompt={originalPrompt} message={parsedAction.message} />
+      </MessagePrimitive.Root>
+    );
+  }
+
   return (
     <MessagePrimitive.Root className="grid grid-cols-[auto_1fr] grid-rows-[auto_1fr] relative w-full max-w-2xl py-4 gap-x-3 items-start">
       <Image
