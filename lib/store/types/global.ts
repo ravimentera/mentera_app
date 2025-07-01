@@ -7,6 +7,7 @@ import {
 // Define the state structure for this slice
 export interface GlobalState {
   isSidePanelExpanded: boolean;
+  isChatSidebarOpen: boolean;
   streamingUISessionId: string;
 
   // mock-chat data in Redux:

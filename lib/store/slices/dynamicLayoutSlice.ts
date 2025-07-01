@@ -1,7 +1,11 @@
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 import type { ApiLayoutResponse, DynamicLayoutState, LayoutEntry, ThunkApiConfig } from "../types";
-import { getStreamingUISessionId, setSidePanelExpanded } from "./globalStateSlice";
+import {
+  getStreamingUISessionId,
+  setIsChatSidebarOpen,
+  setSidePanelExpanded,
+} from "./globalStateSlice";
 
 const initialState: DynamicLayoutState = {
   layouts: [],
@@ -17,8 +21,13 @@ export const fetchDynamicLayout = createAsyncThunk<
 >("dynamicLayout/fetchLayout", async (markdownKey, thunkAPI) => {
   try {
     const { dispatch, getState, rejectWithValue } = thunkAPI;
+    const activePatientID = (getState() as RootState).globalState.selectedPatientId;
+
+    if (!activePatientID) throw new Error("No active patient ID found");
+
     const sessionId = getStreamingUISessionId(getState());
     dispatch(setSidePanelExpanded(true));
+    dispatch(setIsChatSidebarOpen(false));
     const response = await fetch("/api/layout", {
       method: "POST",
       headers: {

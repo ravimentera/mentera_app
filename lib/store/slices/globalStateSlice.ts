@@ -11,6 +11,7 @@ import {
 // Define the initial state
 const initialState: GlobalState = {
   isSidePanelExpanded: false,
+  isChatSidebarOpen: true, // <-- NEW STATE
   streamingUISessionId: crypto.randomUUID(),
 
   patientDatabase: _patientDatabase,
@@ -25,41 +26,37 @@ export const globalStateSlice = createSlice({
   name: "globalState",
   initialState,
   reducers: {
-    /**
-     * Sets the expanded state of the side panel.
-     * @param action.payload - Boolean indicating whether the panel should be expanded.
-     */
     setSidePanelExpanded: (state, action: PayloadAction<boolean>) => {
       state.isSidePanelExpanded = action.payload;
     },
-    /**
-     * Toggles the expanded state of the side panel.
-     */
     toggleSidePanel: (state) => {
       state.isSidePanelExpanded = !state.isSidePanelExpanded;
     },
-    /** select a patient by ID */
+    setIsChatSidebarOpen: (state, action: PayloadAction<boolean>) => {
+      state.isChatSidebarOpen = action.payload;
+    },
     setSelectedPatientId: (state, action: PayloadAction<string>) => {
       state.selectedPatientId = action.payload;
     },
-    /** clear the current patient selection */
     clearSelectedPatientId: (state) => {
       state.selectedPatientId = null;
     },
   },
 });
 
-// Export actions - these will be dispatched from your components or other thunks
+// Export actions
 export const {
   setSidePanelExpanded,
   toggleSidePanel,
+  setIsChatSidebarOpen, // <-- NEW ACTION
   setSelectedPatientId,
   clearSelectedPatientId,
 } = globalStateSlice.actions;
 
-// Export selectors to access the state
+// Export selectors
 export const selectIsSidePanelExpanded = (state: RootState) =>
   state.globalState.isSidePanelExpanded;
+export const selectIsChatSidebarOpen = (state: RootState) => state.globalState.isChatSidebarOpen; // <-- NEW SELECTOR
 export const getStreamingUISessionId = (state: RootState) => state.globalState.streamingUISessionId;
 export const selectPatientDatabase = (state: RootState) => state.globalState.patientDatabase;
 export const selectTestMedSpa = (state: RootState) => state.globalState.testMedSpa;
@@ -72,5 +69,5 @@ export const selectCurrentPatient = (state: RootState) => {
   return id ? state.globalState.patientDatabase[id] : undefined;
 };
 
-// Export the reducer - this will be added to your Redux store
+// Export the reducer
 export default globalStateSlice.reducer;

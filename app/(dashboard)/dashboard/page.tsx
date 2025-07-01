@@ -3,7 +3,7 @@
 import React, { FC, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
-import { Edit, PanelLeft, Search } from "lucide-react";
+import { Edit, PanelLeft, PanelRightClose, PanelRightOpen, Search } from "lucide-react";
 
 import { Button } from "@/components/atoms";
 import { TeraRuntimeProvider } from "@/components/organisms/chat/TeraRuntimeProvider";
@@ -12,27 +12,40 @@ import { AppDispatch, RootState } from "@/lib/store";
 import { clear as clearFiles } from "@/lib/store/slices/fileUploadsSlice";
 import { addThread, setActiveThreadId } from "@/lib/store/slices/threadsSlice";
 import { cn } from "@/lib/utils";
+import { DynamicLayoutContainer } from "@/components/organisms/DynamicLayoutContainer";
+import {
+  selectIsSidePanelExpanded,
+  selectIsChatSidebarOpen,
+  setIsChatSidebarOpen,
+  selectSelectedPatientId,
+  setSelectedPatientId,
+  selectPatientDatabase,
+  toggleSidePanel,
+} from "@/lib/store/slices/globalStateSlice";
 
-// TypeScript Interfaces for Props
-interface ChatClientProps {
-  // This component doesn't receive props, but it's good practice to define it.
-}
-const ChatClient: FC<ChatClientProps> = () => {
+// The ChatClient component is now focused only on the chat UI.
+const ChatClient: FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { threads, activeThreadId } = useSelector((s: RootState) => s.threads);
 
-  const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(true);
+  // State for the sidebar is now managed by Redux.
+  const isChatSidebarOpen = useSelector(selectIsChatSidebarOpen);
+
+  // These states are for the TeraRuntimeProvider
   const [isPatientContextEnabled, setIsPatientContextEnabled] = useState(true);
   const [forceFresh, setForceFresh] = useState(false);
   const [cacheDebug, setCacheDebug] = useState(false);
 
-  // This effect ensures a thread is always active, allowing the WebSocket to connect on load.
+  const selectedId = useSelector(selectSelectedPatientId);
+  const patientDB = useSelector(selectPatientDatabase);
+  const defaultPatientId = Object.keys(patientDB)[0] as string;
+  const currentPatientId = selectedId ?? defaultPatientId;
+
   useEffect(() => {
     if (!activeThreadId && threads.length === 0) {
       const newThreadId = uuidv4();
       dispatch(addThread({ id: newThreadId, name: "New Chat", activate: true }));
     } else if (!activeThreadId && threads.length > 0) {
-      // If no thread is active but threads exist, activate the most recent one.
       dispatch(setActiveThreadId(threads[threads.length - 1]!.id));
     }
   }, [activeThreadId, threads, dispatch]);
@@ -48,7 +61,7 @@ const ChatClient: FC<ChatClientProps> = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/40 flex w-full h-full relative">
+    <div className="flex w-full h-full relative">
       <aside
         className={cn(
           "bg-slate-50 border-r border-gray-200 transition-all duration-300 overflow-hidden flex flex-col h-full",
@@ -57,7 +70,7 @@ const ChatClient: FC<ChatClientProps> = () => {
       >
         <div className="p-2 flex justify-end">
           <Button
-            onClick={() => setIsChatSidebarOpen(!isChatSidebarOpen)}
+            onClick={() => dispatch(setIsChatSidebarOpen(!isChatSidebarOpen))}
             variant="ghost"
             size="icon"
             className="w-9 h-9 hover:bg-slate-200"
@@ -111,7 +124,6 @@ const ChatClient: FC<ChatClientProps> = () => {
       </aside>
 
       <main className="flex-1 flex flex-col min-h-0 bg-white">
-        {/* Topbar has been removed */}
         <div className="flex-1 min-h-0">
           {activeThreadId ? (
             <TeraRuntimeProvider
@@ -133,6 +145,51 @@ const ChatClient: FC<ChatClientProps> = () => {
       </main>
     </div>
   );
-}
+};
 
-export default ChatClient;
+// The Page component orchestrates the overall layout.
+const Page = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const isSidePanelExpanded = useSelector(selectIsSidePanelExpanded);
+
+  const handleToggleSidePanel = () => {
+    dispatch(toggleSidePanel());
+  };
+
+  return (
+    <div className="flex flex-1 h-full bg-gray-50/40 relative scrollbar">
+      <div
+        className={cn(
+          "h-full bg-background overflow-hidden transition-all duration-300 ease-in-out",
+          isSidePanelExpanded ? "w-1/2" : "w-full",
+        )}
+      >
+        <ChatClient />
+      </div>
+
+      {isSidePanelExpanded && (
+        <div className="w-1/2 flex-shrink-0 bg-background overflow-hidden">
+          <DynamicLayoutContainer />
+        </div>
+      )}
+
+      <div className="absolute top-3 right-3 z-20">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleToggleSidePanel}
+          aria-label={isSidePanelExpanded ? "Collapse side panel" : "Expand side panel"}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {isSidePanelExpanded ? (
+            <PanelRightClose className="h-5 w-5" />
+          ) : (
+            <PanelRightOpen className="h-5 w-5" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default Page;

@@ -11,6 +11,7 @@ import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
 import type { AppDispatch } from "@/lib/store";
 import { store } from "@/lib/store";
 
+import { fetchDynamicLayout } from "@/lib/store/slices/dynamicLayoutSlice";
 import {
   UploadedFile,
   clear as clearFiles,
@@ -93,6 +94,7 @@ export function useWebSocketChat({
         text: cleaned,
         createdAt: Date.now(),
       };
+      if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
       dispatch(addMessage(ai));
       dispatch(
         updateThreadLastMessageAt({
