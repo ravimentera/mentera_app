@@ -10,7 +10,7 @@ interface ProfileCardProps {
 
 export function ProfileCard({ patient }: ProfileCardProps) {
   return (
-    <div className="bg-ui-background-subtle overflow-hidden rounded-2xl">
+    <div className="bg-ui-background-subtle overflow-hidden rounded-2xl w-64">
       {/* Profile Info */}
       <div className="p-6 space-y-6">
         <div className="flex flex-col items-center text-center">

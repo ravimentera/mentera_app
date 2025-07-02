@@ -1,113 +1,80 @@
 "use client";
 
-import { patients } from "@/mock/patients.data";
+import {
+  type HealthInsightsResponse,
+  type MedicalHistoryResponse,
+  type VisitsResponse,
+  useCreateHealthInsightsMutation,
+  useGetHealthInsightsQuery,
+  useGetPatientDetailsQuery,
+  useGetPatientMedicalHistoryQuery,
+  useGetPatientVisitsQuery,
+} from "@/lib/store/api";
+import {
+  transformAppointmentsData,
+  transformCampaignsData,
+  transformCommunicationPreferences,
+  transformDocumentsData,
+  transformMedicalAlertsData,
+  transformPatientData,
+  transformTreatmentHistoryData,
+  transformTreatmentsData,
+  transformUserHistoryData,
+} from "@/utils/patient.utils";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppointmentCard } from "./components/AppointmentCard";
-import { CampaignsCard } from "./components/CampaignsCard";
 import { CommunicationCard } from "./components/CommunicationCard";
-import { DocumentsCard } from "./components/DocumentsCard";
-import { MedicalAlertsCard } from "./components/MedicalAlertsCard";
-import { PackageCard } from "./components/PackageCard";
 import { ProfileCard } from "./components/ProfileCard";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileTabs } from "./components/ProfileTabs";
+import TeraInsightsCard from "./components/TeraInsightsCard";
+import { TreatmentCard } from "./components/TreatmentCard";
+import TreatmentHistoryCard from "./components/TreatmentHistoryCard";
 import { UserHistoryCard } from "./components/UserHistoryCard";
 import { CommunicationPreferences } from "./types";
+
+// Configuration: Number of days after which insights are considered outdated
+const INSIGHTS_REFRESH_THRESHOLD_DAYS = 7;
 
 export default function PatientProfilePage() {
   const params = useParams();
   const patientId = params?.patientId as string;
-
-  // Find patient from mock data
-  const patientData = patients.find((p) => p.patientId === patientId);
-
-  // Transform patient data to match the expected format
-  const patient = patientData
-    ? {
-        id: patientData.patientId,
-        firstName: patientData.provider.split(" ")[0],
-        lastName: patientData.provider.split(" ")[1] || "",
-        email: `${patientData.provider.toLowerCase().replace(" ", ".")}@example.com`,
-        phone: "(555) 123-4567", // Mock phone number since it's not in the data
-        status: "active" as const,
-        tags: [patientData.providerSpecialty],
-        address: {
-          street: "1901 Thornridge Cir.",
-          city: "Shiloh",
-          state: "HI",
-          zip: "81063",
-        },
-        dateOfBirth: "1990-01-01", // Mock DOB since it's not in the data
-        gender: "Not specified", // Mock gender since it's not in the data
-      }
-    : null;
-
-  // Mock data for other sections that aren't in the patients.data.ts
-  const appointments = patientData
-    ? [
-        {
-          id: "1",
-          title: patientData.nextTreatment,
-          date: patientData.followUpDate,
-          time: "2:00 PM",
-          doctor: patientData.provider,
-          status: "upcoming" as const,
-        },
-      ]
-    : [];
-
-  const packages = [
-    {
-      id: "1",
-      name: patientData?.treatmentNotes.procedure || "Treatment Package",
-      progress: 50,
-      totalSessions: 6,
-      completedSessions: 3,
-    },
-  ];
-
-  const documents = [
-    {
-      id: "1",
-      title: "Treatment Consent Form",
-      signedDate: patientData?.visitDate || new Date().toISOString().split("T")[0],
-      type: "consent" as const,
-    },
-  ];
-
-  const medicalAlerts =
-    patientData?.alerts.map((alert, index) => ({
-      id: String(index + 1),
-      type: alert,
-      description: alert,
-      reaction: patientData.preProcedureCheck.allergyCheck,
-    })) || [];
-
-  const userHistory = {
-    lastVisited: patientData?.visitDate || "",
-    lastEmailConnected: patientData?.visitDate || "",
-    lastSMSConnected: patientData?.visitDate || "",
-    createdOn: patientData?.visitDate || "",
-  };
-
-  const campaigns = [
-    {
-      id: "1",
-      type: "email" as const,
-      name: "Follow-up",
-      date: patientData?.followUpDate || "",
-    },
-  ];
-
-  const communicationPreferences = {
-    emailNotifications: true,
-    smsReminders: true,
-  };
-
   const [activeTab, setActiveTab] = useState("overview");
-  const [preferences, setPreferences] =
-    useState<CommunicationPreferences>(communicationPreferences);
+  const [preferences, setPreferences] = useState<CommunicationPreferences>({
+    emailNotifications: false,
+    smsReminders: false,
+  });
+
+  // API calls using Redux
+  const {
+    data: patientDetails,
+    isLoading: isLoadingDetails,
+    error: detailsError,
+  } = useGetPatientDetailsQuery(patientId);
+
+  const {
+    data: medicalHistory,
+    isLoading: isLoadingHistory,
+    error: historyError,
+  } = useGetPatientMedicalHistoryQuery(patientId);
+
+  const {
+    data: visitsData,
+    isLoading: isLoadingVisits,
+    error: visitsError,
+  } = useGetPatientVisitsQuery(patientId);
+
+  // Health insights API calls
+  const {
+    data: healthInsights,
+    isLoading: isLoadingInsights,
+    error: insightsError,
+    refetch: refetchInsights,
+  } = useGetHealthInsightsQuery(patientId);
+
+  const [createHealthInsights, { isLoading: isCreatingInsights }] =
+    useCreateHealthInsightsMutation();
 
   const handleTogglePreference = (key: keyof CommunicationPreferences, value: boolean) => {
     setPreferences((prev) => ({
@@ -120,7 +87,73 @@ export default function PatientProfilePage() {
     setActiveTab(section);
   };
 
-  if (!patient || !patientData) {
+  // Effect to handle insights creation if needed
+  useEffect(() => {
+    const shouldRefreshInsights = (insights: HealthInsightsResponse | undefined): boolean => {
+      if (!insights?.data?.dataQuality?.lastUpdated) return true;
+
+      const lastUpdated = new Date(insights.data.dataQuality.lastUpdated);
+      const now = new Date();
+      const daysDifference = Math.floor(
+        (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      return daysDifference >= INSIGHTS_REFRESH_THRESHOLD_DAYS;
+    };
+
+    const handleInsightsCreation = async () => {
+      // Only proceed if we have patient data and insights query has completed
+      if (!patientDetails?.data || isLoadingInsights) return;
+
+      // If insights don't exist or are outdated, create new ones
+      if (!healthInsights || insightsError || shouldRefreshInsights(healthInsights)) {
+        try {
+          await createHealthInsights(patientId).unwrap();
+          // Refetch the insights after creation
+          refetchInsights();
+        } catch (error) {
+          console.error("Failed to create health insights:", error);
+        }
+      }
+    };
+
+    handleInsightsCreation();
+  }, [
+    patientDetails,
+    healthInsights,
+    insightsError,
+    isLoadingInsights,
+    patientId,
+    createHealthInsights,
+    refetchInsights,
+  ]);
+
+  useEffect(() => {
+    if (patientDetails?.data?.communicationPreference) {
+      setPreferences(transformCommunicationPreferences(patientDetails));
+    }
+  }, [patientDetails]);
+
+  // Loading state
+  if (isLoadingDetails || isLoadingHistory || isLoadingVisits) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500">Loading patient data...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (detailsError || historyError || visitsError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-500">Error loading patient data</p>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!patientDetails?.data) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p className="text-gray-500">Patient not found</p>
@@ -128,45 +161,106 @@ export default function PatientProfilePage() {
     );
   }
 
+  const patient = transformPatientData(patientDetails);
+  const defaultVisitsData: VisitsResponse = {
+    success: true,
+    data: {
+      appointments: {
+        totalCount: 0,
+        upcomingAppointments: [],
+      },
+      packages: {
+        totalCount: 0,
+        inactiveCount: 0,
+        activeCount: 0,
+        activePackages: [],
+        inactivePackages: [],
+      },
+      enrichedVisits: [],
+    },
+    timestamp: "",
+  };
+
+  const defaultMedicalHistory: MedicalHistoryResponse = {
+    success: true,
+    data: {
+      patientId: "",
+      conditions: [],
+      visitHistory: defaultVisitsData.data,
+    },
+    timestamp: "",
+  };
+
+  const appointments = transformAppointmentsData(visitsData ?? defaultVisitsData);
+  const treatments = transformTreatmentsData(visitsData ?? defaultVisitsData);
+  const treatmentHistory = transformTreatmentHistoryData(visitsData ?? defaultVisitsData);
+  const medicalAlerts = transformMedicalAlertsData(
+    medicalHistory ?? defaultMedicalHistory,
+    patientDetails,
+  );
+  const documents = transformDocumentsData(visitsData ?? defaultVisitsData);
+  const userHistory = transformUserHistoryData(visitsData ?? defaultVisitsData, patientDetails);
+  const campaigns = transformCampaignsData(visitsData ?? defaultVisitsData);
+
   return (
     <div className="flex flex-col min-h-screen px-6 pb-6">
       <ProfileHeader patient={patient} />
 
-      <div className="flex-1 flex gap-6">
+      <div className="flex-1 flex gap-6 pb-6">
         <ProfileCard patient={patient} />
-        <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab}>
-          {activeTab === "overview" && (
-            <div className="grid grid-cols-2 gap-6">
-              <div className="grid grid-cols-1 gap-6">
-                <MedicalAlertsCard
-                  alerts={medicalAlerts}
-                  onEdit={() => handleViewAll("medical-history")}
-                />
-                <AppointmentCard
-                  appointments={appointments}
-                  onViewAll={() => handleViewAll("appointments")}
-                />
-                <CampaignsCard
-                  campaigns={campaigns}
-                  onViewAll={() => handleViewAll("notifications")}
-                />
-                <CommunicationCard preferences={preferences} onToggle={handleTogglePreference} />
-              </div>
-              <div className="grid grid-cols-1 gap-6 h-fit">
-                <PackageCard packages={packages} onViewAll={() => handleViewAll("packages")} />
-                <DocumentsCard documents={documents} onViewAll={() => handleViewAll("documents")} />
-                <UserHistoryCard history={userHistory} />
-              </div>
-            </div>
-          )}
+        <div className="flex flex-1">
+          <ProfileTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            appointments={appointments}
+            medicalAlerts={medicalAlerts}
+            treatmentHistory={treatmentHistory}
+            treatments={treatments}
+            isLoadingAppointments={isLoadingVisits}
+            isLoadingMedical={isLoadingHistory || isLoadingVisits}
+          >
+            {activeTab === "overview" && (
+              <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 h-fit">
+                  <TeraInsightsCard
+                    insights={healthInsights?.data?.insights}
+                    isLoading={isLoadingInsights || isCreatingInsights}
+                  />
+                  <CommunicationCard preferences={preferences} onToggle={handleTogglePreference} />
+                  {/* <MedicalAlertsCard
+                    alerts={medicalAlerts}
+                    onEdit={() => handleViewAll("medical-history")}
+                  /> */}
+                  {/* <CampaignsCard
+                    campaigns={campaigns}
+                    onViewAll={() => handleViewAll("notifications")}
+                  /> */}
+                </div>
+                <div className="grid grid-cols-1 gap-6 h-fit">
+                  <TreatmentHistoryCard
+                    treatments={treatmentHistory}
+                    isLoading={isLoadingVisits}
+                    onViewAll={() => handleViewAll("medical-history")}
+                  />
+                  <TreatmentCard
+                    treatments={treatments}
+                    onViewAll={() => handleViewAll("medical-history")}
+                  />
+                  <AppointmentCard
+                    appointments={appointments}
+                    onViewAll={() => handleViewAll("appointments")}
+                  />
 
-          {/* Other tabs content */}
-          {activeTab !== "overview" && (
-            <div className="h-[calc(100vh-16rem)] flex items-center justify-center text-gray-500">
-              <p>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} content coming soon...</p>
-            </div>
-          )}
-        </ProfileTabs>
+                  {/* <DocumentsCard
+                    documents={documents}
+                    onViewAll={() => handleViewAll("documents")}
+                  /> */}
+                  <UserHistoryCard history={userHistory} />
+                </div>
+              </div>
+            )}
+          </ProfileTabs>
+        </div>
       </div>
     </div>
   );

@@ -137,7 +137,7 @@ export default function PatientsPage() {
 
       {/* Dynamic Table with Skeleton Loading */}
       <div className="flex-1 pb-6">
-        <div className="bg-white rounded-lg border border-ui-border h-full border-l-0">
+        <div className="bg-white rounded-lg border border-ui-border h-fit min-h-80 border-l-0">
           <Table
             isLoading={apiLoading}
             skeletonRows={8}
@@ -157,52 +157,70 @@ export default function PatientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody className="overflow-y-auto">
-              {filteredPatients.map((patient: Patient) => (
-                <TableRow key={patient.patientId} onClick={() => handleRowClick(patient.patientId)}>
-                  <TableCell className="text-sm text-text pl-4">{patient.patientId}</TableCell>
-                  <TableCell className="text-sm font-medium text-text-gray-900">
-                    {`${patient.firstName} ${patient.lastName}`}
-                  </TableCell>
-                  <TableCell className="text-sm text-text">{formatPhone(patient.phone)}</TableCell>
-                  <TableCell className="text-sm text-text">{patient.email}</TableCell>
-                  <TableCell className="text-sm text-text">
-                    {formatDate(patient.nextAppointment)}
-                  </TableCell>
-                  <TableCell className="text-sm text-text">
-                    {formatDate(patient.lastVisitDate)}
-                  </TableCell>
-                  <TableCell>
-                    {patient.tags.length > 0 ? (
-                      patient.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          className="bg-brand-blue-light text-brand-blue hover:bg-brand-blue-light mr-1"
-                        >
-                          {tag}
+              {filteredPatients.length > 0 ? (
+                filteredPatients.map((patient: Patient) => (
+                  <TableRow
+                    key={patient.patientId}
+                    onClick={() => handleRowClick(patient.patientId)}
+                  >
+                    <TableCell className="text-sm text-text pl-4">{patient.patientId}</TableCell>
+                    <TableCell className="text-sm font-medium text-text-gray-900">
+                      {`${patient.firstName} ${patient.lastName}`}
+                    </TableCell>
+                    <TableCell className="text-sm text-text">
+                      {formatPhone(patient.phone)}
+                    </TableCell>
+                    <TableCell className="text-sm text-text">{patient.email}</TableCell>
+                    <TableCell className="text-sm text-text">
+                      {formatDate(patient.nextAppointment)}
+                    </TableCell>
+                    <TableCell className="text-sm text-text">
+                      {formatDate(patient.lastVisitDate)}
+                    </TableCell>
+                    <TableCell>
+                      {patient.tags.length > 0 ? (
+                        patient.tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            className="bg-brand-blue-light text-brand-blue hover:bg-brand-blue-light mr-1"
+                          >
+                            {tag}
+                          </Badge>
+                        ))
+                      ) : (
+                        <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100">
+                          No Tags
                         </Badge>
-                      ))
-                    ) : (
-                      <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100">No Tags</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        patient.status === "active"
-                          ? "bg-brand-green-light text-brand-green hover:bg-brand-green-light"
-                          : "bg-secondary text-text hover:bg-secondary"
-                      }
-                    >
-                      {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontalIcon className="h-[17px] w-[17px] text-ui-icon-gray" />
-                    </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          patient.status === "active"
+                            ? "bg-brand-green-light text-brand-green hover:bg-brand-green-light"
+                            : "bg-secondary text-text hover:bg-secondary"
+                        }
+                      >
+                        {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontalIcon className="h-[17px] w-[17px] text-ui-icon-gray" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={patientTableSkeletonColumns?.length}
+                    className="text-center text-sm text-text-muted"
+                  >
+                    No patients records found
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
