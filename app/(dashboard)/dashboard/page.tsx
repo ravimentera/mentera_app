@@ -1,11 +1,12 @@
 "use client";
 
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 import { Edit, PanelLeft, PanelRightClose, PanelRightOpen, Search } from "lucide-react";
 
 import { Button } from "@/components/atoms";
+import { Input } from "@/components/atoms/Input";
 import { TeraRuntimeProvider } from "@/components/organisms/chat/TeraRuntimeProvider";
 import { Thread } from "@/components/organisms/Thread";
 import { AppDispatch, RootState } from "@/lib/store";
@@ -30,6 +31,10 @@ const ChatClient: FC = () => {
 
   // State for the sidebar is now managed by Redux.
   const isChatSidebarOpen = useSelector(selectIsChatSidebarOpen);
+
+  // State for the search functionality
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
   // These states are for the TeraRuntimeProvider
   const [isPatientContextEnabled, setIsPatientContextEnabled] = useState(true);
@@ -60,6 +65,14 @@ const ChatClient: FC = () => {
     dispatch(setActiveThreadId(threadId));
   };
 
+  // Filter threads based on the search term
+  const filteredThreads = useMemo(() => {
+    if (!searchTerm) return threads;
+    return threads.filter((thread) =>
+      thread.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [threads, searchTerm]);
+
   return (
     <div className="flex w-full h-full relative">
       <aside
@@ -80,7 +93,7 @@ const ChatClient: FC = () => {
         </div>
         <div className={cn("flex-1 overflow-y-auto", !isChatSidebarOpen && "hidden")}>
           <div className="px-3 pb-4 space-y-4">
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Button
                 onClick={handleNewChatClick}
                 variant="ghost"
@@ -89,13 +102,16 @@ const ChatClient: FC = () => {
                 <Edit className="h-4 w-4" />
                 <span className="text-sm font-medium">New Chat</span>
               </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-2.5 h-10 px-2 text-gray-700 hover:bg-slate-100"
-              >
-                <Search className="h-4 w-4" />
-                <span className="text-sm font-medium">Search Chat</span>
-              </Button>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search chats..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 h-10 bg-white"
+                />
+              </div>
             </div>
             <div className="space-y-1">
               <div className="px-2 py-1">
@@ -104,7 +120,7 @@ const ChatClient: FC = () => {
                 </span>
               </div>
               <div className="space-y-1">
-                {threads.map((thread) => (
+                {filteredThreads.map((thread) => (
                   <Button
                     key={thread.id}
                     variant="ghost"
@@ -157,7 +173,7 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-1 h-full bg-gray-50/40 relative scrollbar">
+    <div className="flex flex-1 h-full bg-gray-50/40 relative">
       <div
         className={cn(
           "h-full bg-background overflow-hidden transition-all duration-300 ease-in-out",

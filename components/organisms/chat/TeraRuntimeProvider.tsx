@@ -33,7 +33,6 @@ const toAUIMessage = (msg: ReduxMessage): ThreadMessageLike => ({
 });
 
 function makeItemRuntime(idFn: () => string | undefined) {
-  /*  lightweight EventEmitter  */
   const listeners: Record<string, Set<() => void>> = {};
   const on = (evt: string, cb: () => void) => {
     if (!listeners[evt]) listeners[evt] = new Set();
@@ -51,8 +50,6 @@ function makeItemRuntime(idFn: () => string | undefined) {
       const { threads, activeThreadId } = store.getState().threads;
       const id = idFn() ?? ""; // fallback for safety
       const thread = threads.find((t) => t.id === id);
-
-      /* always return a full object (library requires all fields) */
       return {
         id,
         threadId: id,
@@ -84,7 +81,7 @@ function makeItemRuntime(idFn: () => string | undefined) {
       this.__emit?.("switched-to");
     },
     async rename(newTitle: string) {
-      /* optional - no-op */
+      // Thread-list runtime backed by Redux
     },
   };
 }
@@ -100,7 +97,7 @@ function createReduxThreadListRuntime(
   /* ⚡ 1. stable cache — one runtime object per threadId */
   const itemCache = new Map<string, ReturnType<typeof makeItemRuntime>>();
   const getOrCreateItem = (id?: string) => {
-    if (!id) return makeItemRuntime(() => undefined); // ghost
+    if (!id) return makeItemRuntime(() => undefined);
     if (!itemCache.has(id))
       itemCache.set(
         id,
@@ -196,33 +193,38 @@ export function TeraRuntimeProvider({
     activeThreadId,
   });
 
-  const sentMessageIdsRef = useRef(new Set<string>());
+  // This ref now tracks sent messages on a per-thread basis.
+  const sentMessagesByThreadRef = useRef(new Map<string, Set<string>>());
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
+  // This effect is the key. It watches for new user messages in Redux
+  // and sends them if they haven't been sent yet and the socket is authenticated.
   useEffect(() => {
-    sentMessageIdsRef.current.clear();
-  }, [activeThreadId]);
+    if (!isAuthenticated || !activeThreadId) return;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
-  useEffect(() => {
-    if (!isAuthenticated) return;
+    // Get or create the set of sent message IDs for the current thread.
+    const sentIdsForThisThread =
+      sentMessagesByThreadRef.current.get(activeThreadId) ?? new Set<string>();
 
     const unsentMessages = messages.filter(
-      (m) => m.sender === "user" && !sentMessageIdsRef.current.has(m.id),
+      (m) => m.sender === "user" && !sentIdsForThisThread.has(m.id),
     );
 
     if (unsentMessages.length > 0) {
-      console.log(
-        `TeraRuntimeProvider: Found ${unsentMessages.length} unsent messages. Sending now.`,
-      );
       for (const msg of unsentMessages) {
+        console.log(
+          `TeraRuntimeProvider: Sending message ID ${msg.id} for thread ${activeThreadId}`,
+        );
         sendMessage(msg.text, filesRef.current);
-        sentMessageIdsRef.current.add(msg.id);
+        sentIdsForThisThread.add(msg.id); // Mark this message as sent for this thread
       }
+      // Update the map with the new set of sent IDs for this thread.
+      sentMessagesByThreadRef.current.set(activeThreadId, sentIdsForThisThread);
+
       if (filesRef.current.length > 0) dispatch(clear());
     }
-  }, [messages, isAuthenticated, sendMessage, dispatch, allFiles]);
+  }, [messages, isAuthenticated, sendMessage, dispatch, activeThreadId]);
 
+  // onNew is now only for messages coming from the Composer UI
   const onNew = useCallback(
     async (msg: AppendMessage): Promise<void> => {
       const text = msg.content[0]?.type === "text" ? msg.content[0].text : "";
@@ -234,8 +236,8 @@ export function TeraRuntimeProvider({
         text,
         createdAt: Date.now(),
       };
-
       dispatch(addMessage(reduxMsg));
+      // The useEffect above will detect this new message and send it.
     },
     [activeThreadId, dispatch],
   );
