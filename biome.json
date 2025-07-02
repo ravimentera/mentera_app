@@ -15,7 +15,8 @@
       "**/vendor-chunks/**",
       "**/static/chunks/**",
       "**/webpack-runtime.js",
-      "**/*.min.js"
+      "**/*.min.js",
+      "app/(dashboard)/dashboard/page.tsx"
     ]
   },
   "linter": {

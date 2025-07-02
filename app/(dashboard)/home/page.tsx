@@ -1,144 +1,210 @@
 "use client";
 
-import { ChatInterface } from "@/components/organisms";
+import { Edit, PanelLeft, PanelRightClose, PanelRightOpen, Search } from "lucide-react";
+import React, { FC, useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { v4 as uuidv4 } from "uuid";
+
+import { Button } from "@/components/atoms";
+import { Input } from "@/components/atoms/Input";
+import { DynamicLayoutContainer } from "@/components/organisms/DynamicLayoutContainer";
+import { Thread } from "@/components/organisms/Thread";
+import { TeraRuntimeProvider } from "@/components/organisms/chat/TeraRuntimeProvider";
+import { AppDispatch, RootState } from "@/lib/store";
+import { clear as clearFiles } from "@/lib/store/slices/fileUploadsSlice";
+import {
+  selectIsChatSidebarOpen,
+  selectIsSidePanelExpanded,
+  selectPatientDatabase,
+  selectSelectedPatientId,
+  setIsChatSidebarOpen,
+  setSelectedPatientId,
+  toggleSidePanel,
+} from "@/lib/store/slices/globalStateSlice";
+import { addThread, setActiveThreadId } from "@/lib/store/slices/threadsSlice";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
-const recentChats = [
-  "Appointment Schedule",
-  "Create campaign",
-  "Patient follow-up",
-  "Inventory management",
-  "Staff scheduling",
-];
+// The ChatClient component is now focused only on the chat UI.
+const ChatClient: FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { threads, activeThreadId } = useSelector((s: RootState) => s.threads);
 
-export default function DashboardPage() {
-  const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(false);
-  const [hasChatStarted, setHasChatStarted] = useState(false);
-  const [showDynamicContent, setShowDynamicContent] = useState(false);
-  const [messageCount, setMessageCount] = useState(0);
+  // State for the sidebar is now managed by Redux.
+  const isChatSidebarOpen = useSelector(selectIsChatSidebarOpen);
 
-  const toggleChatSidebar = () => {
-    setIsChatSidebarOpen(!isChatSidebarOpen);
-  };
+  // State for the search functionality
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSendMessage = () => {
-    if (!hasChatStarted) {
-      setHasChatStarted(true);
+  // These states are for the TeraRuntimeProvider
+  const [isPatientContextEnabled, setIsPatientContextEnabled] = useState(true);
+  const [forceFresh, setForceFresh] = useState(false);
+  const [cacheDebug, setCacheDebug] = useState(false);
+
+  const selectedId = useSelector(selectSelectedPatientId);
+  const patientDB = useSelector(selectPatientDatabase);
+  const defaultPatientId = Object.keys(patientDB)[0] as string;
+  const currentPatientId = selectedId ?? defaultPatientId;
+
+  useEffect(() => {
+    if (!activeThreadId && threads.length === 0) {
+      const newThreadId = uuidv4();
+      dispatch(addThread({ id: newThreadId, name: "New Chat", activate: true }));
+    } else if (!activeThreadId && threads.length > 0) {
+      // biome-ignore lint/style/noNonNullAssertion: reason for ignoring
+      dispatch(setActiveThreadId(threads[threads.length - 1]!.id));
     }
+  }, [activeThreadId, threads, dispatch]);
 
-    // Increment message count and show dynamic content after 2nd message exchange
-    const newCount = messageCount + 1;
-    setMessageCount(newCount);
-
-    if (newCount >= 2) {
-      // Show dynamic content after 2nd AI reply (with delay for AI response)
-      setTimeout(() => {
-        setShowDynamicContent(true);
-      }, 1500);
-    }
+  const handleNewChatClick = () => {
+    dispatch(clearFiles());
+    const newThreadId = uuidv4();
+    dispatch(addThread({ id: newThreadId, name: "New Chat", activate: true }));
+  };
+  const handleSelectChat = (threadId: string) => {
+    dispatch(clearFiles());
+    dispatch(setActiveThreadId(threadId));
   };
 
-  const handleNewChat = () => {
-    setHasChatStarted(false);
-    setShowDynamicContent(false);
-    setMessageCount(0);
-  };
+  // Filter threads based on the search term
+  const filteredThreads = useMemo(() => {
+    if (!searchTerm) return threads;
+    return threads.filter((thread) => thread.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [threads, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Chat Sidebar */}
-      {/* <div
+    <div className="flex w-full h-full relative">
+      <aside
         className={cn(
-          "bg-theme-blue border-r border-gray-200 transition-all duration-300 overflow-hidden",
-          isChatSidebarOpen ? "w-60" : "w-12",
+          "bg-slate-50 border-r border-gray-200 transition-all duration-300 overflow-hidden flex flex-col h-full",
+          isChatSidebarOpen ? "w-64" : "w-14",
         )}
       >
         <div className="p-2 flex justify-end">
           <Button
-            onClick={toggleChatSidebar}
+            onClick={() => dispatch(setIsChatSidebarOpen(!isChatSidebarOpen))}
             variant="ghost"
-            size="sm"
-            className="w-8 h-8 p-0 hover:bg-slate-200"
+            size="icon"
+            className="w-9 h-9 hover:bg-slate-200"
           >
-            <PanelLeft className="h-4 w-4 text-gray-600" />
+            <PanelLeft className="h-5 w-5 text-gray-600" />
           </Button>
-        </div> 
-
-        {isChatSidebarOpen && (
-          <div className="px-2 pb-4 space-y-4">
-            <div className="space-y-1">
+        </div>
+        <div className={cn("flex-1 overflow-y-auto", !isChatSidebarOpen && "hidden")}>
+          <div className="px-3 pb-4 space-y-4">
+            <div className="space-y-2">
               <Button
-                onClick={handleNewChat}
+                onClick={handleNewChatClick}
                 variant="ghost"
-                className="w-full justify-start gap-2 h-10 px-2 bg-slate-100 text-blue-600 hover:bg-slate-200"
+                className="w-full justify-start gap-2.5 h-10 px-2 bg-slate-100 text-purple-600 hover:bg-slate-200"
               >
                 <Edit className="h-4 w-4" />
                 <span className="text-sm font-medium">New Chat</span>
               </Button>
-
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-2 h-10 px-2 text-gray-700 hover:bg-slate-100"
-              >
-                <Search className="h-4 w-4" />
-                <span className="text-sm font-medium">Search Chat</span>
-              </Button>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search chats..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 h-10 bg-white"
+                />
+              </div>
             </div>
-
             <div className="space-y-1">
               <div className="px-2 py-1">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Recents
                 </span>
               </div>
-
               <div className="space-y-1">
-                {recentChats.map((chat, index) => (
+                {filteredThreads.map((thread) => (
                   <Button
-                    key={chat}
+                    key={thread.id}
                     variant="ghost"
+                    onClick={() => handleSelectChat(thread.id)}
                     className={cn(
-                      "w-full justify-start h-8 px-2 text-gray-600 hover:bg-slate-100 text-sm",
-                      index === 0 && "bg-slate-100 text-gray-700",
+                      "w-full justify-start h-9 px-2 text-gray-600 hover:bg-slate-100 text-sm",
+                      activeThreadId === thread.id && "bg-slate-200 text-gray-800 font-semibold",
                     )}
                   >
-                    <span className="truncate">{chat}</span>
+                    <span className="truncate">{thread.name}</span>
                   </Button>
                 ))}
               </div>
             </div>
           </div>
-        )}
-      </div> */}
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex">
-        <div className="flex-1 flex flex-col">
-          <div
-            className={cn(
-              "w-full flex flex-col items-center",
-              hasChatStarted ? "h-full" : "justify-center px-8 h-full",
-            )}
-          >
-            <div
-              className={cn(
-                "w-full flex flex-col items-center",
-                hasChatStarted && !showDynamicContent ? "max-w-2xl" : "",
-                hasChatStarted ? "h-full" : "justify-center",
-              )}
-            >
-              <ChatInterface
-                onSendMessage={handleSendMessage}
-                hasChatStarted={hasChatStarted}
-                username="Rachel"
-                showDynamicContent={showDynamicContent}
-                className="h-full w-full"
-              />
-            </div>
-          </div>
         </div>
-      </div>
+      </aside>
+
+      <main className="flex-1 flex flex-col min-h-0 bg-white">
+        <div className="flex-1 min-h-0">
+          {activeThreadId ? (
+            <TeraRuntimeProvider
+              activeThreadId={activeThreadId}
+              isPatientContextEnabled={isPatientContextEnabled}
+              forceFresh={forceFresh}
+              cacheDebug={cacheDebug}
+            >
+              <div className="h-full">
+                <Thread />
+              </div>
+            </TeraRuntimeProvider>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <p>Loading chat...</p>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
-}
+};
+
+// The Page component orchestrates the overall layout.
+const Page = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const isSidePanelExpanded = useSelector(selectIsSidePanelExpanded);
+
+  const handleToggleSidePanel = () => {
+    dispatch(toggleSidePanel());
+  };
+
+  return (
+    <div className="flex flex-1 h-full bg-gray-50/40 relative">
+      <div
+        className={cn(
+          "h-full bg-background overflow-hidden transition-all duration-300 ease-in-out",
+          isSidePanelExpanded ? "w-1/2" : "w-full",
+        )}
+      >
+        <ChatClient />
+      </div>
+
+      {isSidePanelExpanded && (
+        <div className="w-1/2 flex-shrink-0 bg-background overflow-hidden">
+          <DynamicLayoutContainer />
+        </div>
+      )}
+
+      {/* <div className="absolute top-3 right-3 z-20">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleToggleSidePanel}
+          aria-label={isSidePanelExpanded ? "Collapse side panel" : "Expand side panel"}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {isSidePanelExpanded ? (
+            <PanelRightClose className="h-5 w-5" />
+          ) : (
+            <PanelRightOpen className="h-5 w-5" />
+          )}
+        </Button>
+      </div> */}
+    </div>
+  );
+};
+
+export default Page;

@@ -10,9 +10,11 @@ import {
   approvalsReducer,
   authReducer,
   dynamicLayoutReducer,
+  fileUploadsReducer,
   globalStateReducer,
   messagesReducer,
   patientsReducer,
+  threadsReducer,
   userRoleReducer,
 } from "./slices";
 
@@ -32,6 +34,8 @@ export const store = configureStore({
     approvals: approvalsReducer,
     userRole: userRoleReducer,
     patients: patientsReducer,
+    fileUploads: fileUploadsReducer,
+    threads: threadsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(authApi.middleware, usersApi.middleware, patientsApi.middleware),
