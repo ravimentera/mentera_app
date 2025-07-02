@@ -12,6 +12,7 @@ import { addThread, deleteThread, setActiveThreadId } from "@/lib/store/slices/t
 import {
   AssistantRuntimeProvider as AUIProvider,
   AppendMessage,
+  FeedbackAdapter,
   ThreadListRuntime,
   ThreadMessageLike,
   ThreadRuntime,
@@ -242,11 +243,64 @@ export function TeraRuntimeProvider({
     [activeThreadId, dispatch],
   );
 
+  const onReload: Parameters<typeof useExternalStoreRuntime<ReduxMessage>>[0]["onReload"] =
+    useCallback(
+      async (parentId: any) => {
+        if (!parentId) return;
+
+        /* Snapshot the current thread messages BEFORE we mutate state */
+        const threadMsgs = store
+          .getState()
+          .messages.items.filter((m) => m.threadId === activeThreadId);
+
+        console.log({ threadMsgs, parentId });
+
+        const lastUserMsg = threadMsgs.find((m) => m.id === parentId && m.sender === "user");
+
+        if (!lastUserMsg) return; // nothing to retry with
+
+        console.log({ lastUserMsg });
+
+        /* Insert a brand-new copy of the user prompt so the UI shows it again */
+        const clonedUser: ReduxMessage = {
+          ...lastUserMsg,
+          id: uuidv4(), // give it a new ID
+          createdAt: Date.now(),
+        };
+        dispatch(addMessage(clonedUser));
+
+        /* Fire the prompt off to your backend */
+        sendMessage(lastUserMsg.text, undefined); // no files on retry
+      },
+      [activeThreadId, dispatch, sendMessage],
+    );
+
+  const feedbackAdapter: FeedbackAdapter = {
+    async submit({ message, type }) {
+      // this now prints the real ID
+      console.log(`${type} feedback for message: ${message.id}`);
+
+      // send to backend, analytics, etc.
+      // await fetch("/api/feedback", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     messageId: message.id,
+      //     rating: type,           // "positive" | "negative"
+      //   }),
+      // });
+    },
+  };
+
   const messageRuntime = useExternalStoreRuntime<ReduxMessage>({
     messages,
     isRunning: loading,
     onNew,
     convertMessage: toAUIMessage,
+    onReload,
+    adapters: {
+      feedback: feedbackAdapter,
+    },
   });
 
   const threadListRuntime = useMemo(

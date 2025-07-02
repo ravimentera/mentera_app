@@ -19,10 +19,13 @@ import {
   FileTextIcon,
   MessageSquareIcon,
   PaperclipIcon,
+  RefreshCwIcon,
   SearchIcon,
   SendHorizontalIcon,
   ShoppingCartIcon,
   SparklesIcon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
   UsersIcon,
   XCircleIcon,
 } from "lucide-react";
@@ -373,6 +376,7 @@ const AssistantMessage: FC = () => {
   const message = useMessage();
   const { getState } = useThreadRuntime();
   const messages = getState().messages;
+  console.log({ messages });
 
   const fullText = message.content.map((c) => (c.type === "text" ? c.text : "")).join("");
   const parsedAction = tryParseAction(fullText);
@@ -407,24 +411,44 @@ const AssistantMessage: FC = () => {
   );
 };
 
-const AssistantActionBar: FC = () => {
-  return (
-    <ActionBarPrimitive.Root
-      hideWhenRunning
-      autohide="not-last"
-      autohideFloat="single-branch"
-      className="text-muted-foreground flex gap-1 col-start-2 row-start-2 -ml-1"
-    >
-      <ActionBarPrimitive.Copy asChild>
-        <TooltipIconButton tooltip="Copy">
-          <MessagePrimitive.If copied>
-            <CheckIcon />
-          </MessagePrimitive.If>
-          <MessagePrimitive.If copied={false}>
-            <CopyIcon />
-          </MessagePrimitive.If>
-        </TooltipIconButton>
-      </ActionBarPrimitive.Copy>
-    </ActionBarPrimitive.Root>
-  );
-};
+const AssistantActionBar: FC = () => (
+  <ActionBarPrimitive.Root
+    hideWhenRunning
+    autohide="not-last"
+    autohideFloat="single-branch"
+    className="text-muted-foreground flex gap-1 col-start-2 row-start-2 -ml-1"
+  >
+    {/* Copy */}
+    <ActionBarPrimitive.Copy asChild>
+      <TooltipIconButton tooltip="Copy">
+        <MessagePrimitive.If copied={false}>
+          <CopyIcon />
+        </MessagePrimitive.If>
+        <MessagePrimitive.If copied>
+          <CheckIcon />
+        </MessagePrimitive.If>
+      </TooltipIconButton>
+    </ActionBarPrimitive.Copy>
+
+    {/* Thumbs up */}
+    <ActionBarPrimitive.FeedbackPositive asChild>
+      <TooltipIconButton tooltip="Like">
+        <ThumbsUpIcon />
+      </TooltipIconButton>
+    </ActionBarPrimitive.FeedbackPositive>
+
+    {/* Thumbs down */}
+    <ActionBarPrimitive.FeedbackNegative asChild>
+      <TooltipIconButton tooltip="Dislike">
+        <ThumbsDownIcon />
+      </TooltipIconButton>
+    </ActionBarPrimitive.FeedbackNegative>
+
+    {/* Retry / Reload */}
+    <ActionBarPrimitive.Reload asChild>
+      <TooltipIconButton tooltip="Try again">
+        <RefreshCwIcon />
+      </TooltipIconButton>
+    </ActionBarPrimitive.Reload>
+  </ActionBarPrimitive.Root>
+);
