@@ -94,7 +94,7 @@ export function useWebSocketChat({
         text: cleaned,
         createdAt: Date.now(),
       };
-      if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
+      // if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
       dispatch(addMessage(ai));
       dispatch(
         updateThreadLastMessageAt({
@@ -226,11 +226,12 @@ export function useWebSocketChat({
           setIsAuthenticated(false); // Reset on new connection
           retryCount.current = 0;
           if (retryTimer.current) clearTimeout(retryTimer.current);
+          const rawToken = token.replace("Bearer ", "");
 
           ws.send(
             JSON.stringify({
               type: "auth",
-              token,
+              token: rawToken,
               medSpaId: testMedSpa.medspaId,
             }),
           );
