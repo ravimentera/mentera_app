@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "https://mentera-app.vercel.app/api/ws-proxy",
+      "destination": "ws://34.204.48.222:5010/ws"
+    }
+  ]
+}
