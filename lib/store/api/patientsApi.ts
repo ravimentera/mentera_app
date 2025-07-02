@@ -20,78 +20,251 @@ interface PatientsResponse {
   message?: string;
 }
 
+// New types for patient details API
+export interface PatientDetailsResponse {
+  success: boolean;
+  data: {
+    id: string;
+    patientId: string;
+    chartId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+    gender: string;
+    allergies: string[];
+    alerts: string[];
+    tags: string[];
+    providerIds: string[];
+    status: string;
+    medspaId: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+    createdAt: string;
+    updatedAt: string;
+    communicationPreference: {
+      emailOptIn: boolean;
+      smsOptIn: boolean;
+      pushOptIn: boolean;
+      voiceOptIn: boolean;
+      directMailOptIn: boolean;
+    };
+  };
+  timestamp: string;
+}
+
+// Types for medical history API
+export interface MedicalHistoryResponse {
+  success: boolean;
+  data: {
+    patientId: string;
+    conditions: Array<{
+      id: string;
+      condition: string;
+      diagnosedDate: string;
+      notes: string;
+      medspaId: string;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    visitHistory: VisitsResponse["data"];
+  };
+  timestamp: string;
+}
+
+// Types for visits API
+export interface VisitsResponse {
+  success: boolean;
+  data: {
+    enrichedVisits: Array<{
+      id: string;
+      patientId: string;
+      visitDate: string;
+      treatmentNotesId: string;
+      providerId: string;
+      nextTreatment: string | null;
+      followUpDate: string;
+      medspaId: string;
+      createdAt: string;
+      updatedAt: string;
+      treatment: {
+        id: string;
+        patientId: string;
+        procedure: string;
+        areasTreated: string[];
+        unitsUsed: number;
+        volumeUsed: string;
+        observations: string;
+        providerRecommendations: string;
+        medspaId: string;
+        packageId: string;
+        sessionNumber: number | null;
+        isPackageSession: boolean;
+        sessionPrice: string | null;
+        createdAt: string;
+        updatedAt: string;
+        package: {
+          id: string;
+          patientId: string;
+          serviceId: string;
+          medspaId: string;
+          packageName: string;
+          treatmentType: string;
+          totalSessions: number;
+          sessionsUsed: number;
+          sessionsRemaining: number;
+          purchaseDate: string;
+          expirationDate: string;
+          packageStatus: string;
+          packagePrice: string;
+          notes: string;
+          createdAt: string;
+          updatedAt: string;
+        };
+      };
+      preCheck: Array<{
+        id: string;
+        visitId: string;
+        medications: string[] | null;
+        consentSigned: boolean;
+        allergyCheck: string;
+        medspaId: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+      postCare: Array<{
+        id: string;
+        visitId: string;
+        instructionsProvided: boolean;
+        followUpRecommended: string;
+        productsRecommended: string[];
+        aftercareNotes: string | null;
+        medspaId: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>;
+    packages: {
+      totalCount: number;
+      inactiveCount: number;
+      activeCount: number;
+      activePackages: Array<{
+        id: string;
+        patientId: string;
+        serviceId: string;
+        medspaId: string;
+        packageName: string;
+        treatmentType: string;
+        totalSessions: number;
+        sessionsUsed: number;
+        sessionsRemaining: number;
+        purchaseDate: string;
+        expirationDate: string;
+        packageStatus: string;
+        packagePrice: string;
+        notes: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+      inactivePackages: any[];
+    };
+    appointments: {
+      totalCount: number;
+      upcomingAppointments: Array<{
+        id: string;
+        medspaId: string;
+        patientId: string;
+        serviceId: string | null;
+        startTime: string;
+        endTime: string;
+        status: string;
+        notes: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    };
+  };
+  timestamp: string;
+}
+
+// Types for health insights API
+export interface HealthInsightsResponse {
+  success: boolean;
+  data: {
+    patientId: string;
+    insights: {
+      healthPatterns: string[];
+      preventativeSuggestions: string[];
+      lifestyleRecommendations: string[];
+      treatmentOptimizationIdeas: string[];
+      overallSummary: string;
+    };
+    dataQuality: {
+      aiResponseType: string;
+      confidence: string;
+      lastUpdated: string;
+    };
+    timestamp: string;
+  };
+  timestamp: string;
+}
+
 export const patientsApi = createApi({
   reducerPath: "patientsApi",
   baseQuery: fetchBaseQuery({
     baseUrl: "/api/proxy",
     prepareHeaders: (headers, { getState }) => {
-      // Get token from Redux state
       const state = getState() as RootState;
-      const token = state.auth.token;
+      const token = state.auth.token || localStorage.getItem("auth_token");
 
       if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      } else {
-        // Fallback to localStorage if Redux state doesn't have token
-        const fallbackToken = localStorage.getItem("auth_token");
-        if (fallbackToken) {
-          headers.set("Authorization", `Bearer ${fallbackToken}`);
-        }
+        headers.set("authorization", `Bearer ${token}`);
       }
 
-      // Set required headers for the external API
-      headers.set("x-medspa-id", "MS-1001");
+      // Add required headers for Next.js API routes
       headers.set("Content-Type", "application/json");
+      headers.set("Accept", "application/json");
+      headers.set("x-medspa-id", "MS-1001");
 
       return headers;
     },
+    credentials: "include", // This ensures cookies are sent with requests
   }),
-  tagTypes: ["Patient"],
   endpoints: (builder) => ({
     getPatientsByProvider: builder.query<Patient[], string>({
-      query: (providerId) => `/patients/provider/${providerId}/patients`,
-      transformResponse: (response: PatientsResponse) => {
-        return response.success ? response.data : [];
-      },
-      transformErrorResponse: (response) => {
-        return response;
-      },
-      providesTags: ["Patient"],
+      query: (providerId) => `/patients?providerId=${providerId}`,
+      transformResponse: (response: PatientsResponse) => response.data,
     }),
-    // getPatientById: builder.query<Patient, string>({
-    //   query: (patientId) => `/patients/${patientId}`,
-    //   providesTags: (result, error, patientId) => [{ type: "Patient", id: patientId }],
-    // }),
-    // createPatient: builder.mutation<Patient, Partial<Patient>>({
-    //   query: (newPatient) => ({
-    //     url: "/patients",
-    //     method: "POST",
-    //     body: newPatient,
-    //   }),
-    //   invalidatesTags: ["Patient"],
-    // }),
-    // updatePatient: builder.mutation<Patient, { id: string; data: Partial<Patient> }>({
-    //   query: ({ id, data }) => ({
-    //     url: `/patients/${id}`,
-    //     method: "PUT",
-    //     body: data,
-    //   }),
-    //   invalidatesTags: (result, error, { id }) => [{ type: "Patient", id }],
-    // }),
-    // deletePatient: builder.mutation<void, string>({
-    //   query: (id) => ({
-    //     url: `/patients/${id}`,
-    //     method: "DELETE",
-    //   }),
-    //   invalidatesTags: ["Patient"],
-    // }),
+    getPatientDetails: builder.query<PatientDetailsResponse, string>({
+      query: (patientId) => `/patients/${patientId}`,
+    }),
+    getPatientMedicalHistory: builder.query<MedicalHistoryResponse, string>({
+      query: (patientId) => `/patients/${patientId}/medical-history`,
+    }),
+    getPatientVisits: builder.query<VisitsResponse, string>({
+      query: (patientId) => `/patients/medical/patients/${patientId}/visits`,
+    }),
+    getHealthInsights: builder.query<HealthInsightsResponse, string>({
+      query: (patientId) => `/patients/intelligence/patients/${patientId}/health-insights/latest`,
+    }),
+    createHealthInsights: builder.mutation<HealthInsightsResponse, string>({
+      query: (patientId) => ({
+        url: `/patients/intelligence/patients/${patientId}/health-insights`,
+        method: "POST",
+      }),
+    }),
   }),
 });
 
 export const {
   useGetPatientsByProviderQuery,
-  // useGetPatientByIdQuery,
-  // useCreatePatientMutation,
-  // useUpdatePatientMutation,
-  // useDeletePatientMutation,
+  useGetPatientDetailsQuery,
+  useGetPatientMedicalHistoryQuery,
+  useGetPatientVisitsQuery,
+  useGetHealthInsightsQuery,
+  useCreateHealthInsightsMutation,
 } = patientsApi;

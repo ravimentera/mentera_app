@@ -50,7 +50,7 @@ export interface Appointment {
   status: "upcoming" | "completed" | "cancelled";
 }
 
-export interface Package {
+export interface Treatment {
   id: string;
   name: string;
   progress: number;

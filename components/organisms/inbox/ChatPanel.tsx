@@ -4,7 +4,7 @@ import { MessageBubble } from "@/components/atoms/MessageBubble";
 import { Icon, IconName } from "@/components/atoms/icons";
 import { ChatInput } from "@/components/molecules/ChatInput";
 import { cn } from "@/lib/utils";
-import { formatMessageTime } from "@/mock/inbox.data";
+import { formatMessageDate, shouldShowDateHeader } from "@/utils/date.utils";
 import { MessageSquare } from "lucide-react";
 import { useState } from "react";
 
@@ -100,20 +100,31 @@ export function ChatPanel({ conversation, onSendMessage, className }: ChatPanelP
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 ">
-        {conversation.messages.map((message, index) => (
-          <div key={message.id} className="space-y-1">
-            <MessageBubble text={message.text} isOutbound={message.isOutbound} />
-            <div
-              className={cn(
-                "text-xs text-gray-500 px-1",
-                message.isOutbound ? "text-right" : "text-left",
-              )}
-            >
-              {formatMessageTime(message.timestamp)}
-            </div>
-          </div>
-        ))}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {conversation.messages.reduce((acc: JSX.Element[], message, index, array) => {
+          // Get current and previous message dates
+          const currentDate = new Date(message.timestamp);
+          const prevDate = index > 0 ? new Date(array[index - 1].timestamp) : null;
+
+          // Check if we need to show a date header
+          if (shouldShowDateHeader(currentDate, prevDate)) {
+            acc.push(
+              <div key={`date-${message.id}`} className="flex justify-center my-4">
+                <span className="text-xs text-text-muted font-medium">
+                  {formatMessageDate(currentDate)}
+                </span>
+              </div>,
+            );
+          }
+
+          acc.push(
+            <div key={message.id} className="space-y-1">
+              <MessageBubble text={message.text} isOutbound={message.isOutbound} />
+            </div>,
+          );
+
+          return acc;
+        }, [])}
       </div>
 
       {/* Message Input */}

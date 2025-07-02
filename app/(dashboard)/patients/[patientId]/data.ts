@@ -6,8 +6,8 @@ import {
   CommunicationPreferences,
   Document,
   MedicalAlert,
-  Package,
   Patient,
+  Treatment,
   UserHistory,
 } from "./types";
 
@@ -18,7 +18,7 @@ import {
 export function getPatientProfile(): {
   patient: Patient;
   appointments: Appointment[];
-  packages: Package[];
+  packages: Treatment[];
   documents: Document[];
   medicalAlerts: MedicalAlert[];
   userHistory: UserHistory;
@@ -62,7 +62,7 @@ export function getPatientProfile(): {
     },
   ];
 
-  const packages: Package[] = [
+  const packages: Treatment[] = [
     {
       id: "1",
       name: "Botox Package",
