@@ -109,18 +109,18 @@ export function ProviderDayView({
 
           {/* Current time indicator */}
           <div
-            className="absolute left-0 right-0 border-t-2 border-brand-purple-dark z-10"
+            className="absolute left-0 right-0 border-t-2 border-brand-blue-dark z-10"
             style={{
               top: `${((new Date().getHours() * 60 + new Date().getMinutes()) / (24 * 60)) * 100}%`,
             }}
           >
-            <div className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-brand-purple-dark" />
+            <div className="absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-brand-blue-dark" />
           </div>
 
           {/* Selection overlay */}
           {dragStart && dragEnd && (
             <div
-              className="absolute left-0 right-0 bg-brand-purple-dark/10 border border-brand-purple-dark/20 z-20"
+              className="absolute left-0 right-0 bg-brand-blue-dark/10 border border-brand-blue-dark/20 z-20"
               style={getSelectionStyles()}
             />
           )}

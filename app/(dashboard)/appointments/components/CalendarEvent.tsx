@@ -36,7 +36,7 @@ export function CalendarEvent({ appointment, onClick }: CalendarEventProps) {
       case "lunch":
         return "bg-green-100 text-green-700 border-green-200";
       case "meeting":
-        return "bg-purple-100 text-purple-700 border-purple-200";
+        return "bg-blue-100 text-blue-700 border-blue-200";
       case "busy":
         return "bg-gray-100 text-gray-700 border-gray-200";
       default:

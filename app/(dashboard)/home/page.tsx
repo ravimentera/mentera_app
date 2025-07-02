@@ -1,28 +1,28 @@
 "use client";
 
+import { Edit, PanelLeft, PanelRightClose, PanelRightOpen, Search } from "lucide-react";
 import React, { FC, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
-import { Edit, PanelLeft, PanelRightClose, PanelRightOpen, Search } from "lucide-react";
 
 import { Button } from "@/components/atoms";
 import { Input } from "@/components/atoms/Input";
-import { TeraRuntimeProvider } from "@/components/organisms/chat/TeraRuntimeProvider";
+import { DynamicLayoutContainer } from "@/components/organisms/DynamicLayoutContainer";
 import { Thread } from "@/components/organisms/Thread";
+import { TeraRuntimeProvider } from "@/components/organisms/chat/TeraRuntimeProvider";
 import { AppDispatch, RootState } from "@/lib/store";
 import { clear as clearFiles } from "@/lib/store/slices/fileUploadsSlice";
-import { addThread, setActiveThreadId } from "@/lib/store/slices/threadsSlice";
-import { cn } from "@/lib/utils";
-import { DynamicLayoutContainer } from "@/components/organisms/DynamicLayoutContainer";
 import {
-  selectIsSidePanelExpanded,
   selectIsChatSidebarOpen,
-  setIsChatSidebarOpen,
-  selectSelectedPatientId,
-  setSelectedPatientId,
+  selectIsSidePanelExpanded,
   selectPatientDatabase,
+  selectSelectedPatientId,
+  setIsChatSidebarOpen,
+  setSelectedPatientId,
   toggleSidePanel,
 } from "@/lib/store/slices/globalStateSlice";
+import { addThread, setActiveThreadId } from "@/lib/store/slices/threadsSlice";
+import { cn } from "@/lib/utils";
 
 // The ChatClient component is now focused only on the chat UI.
 const ChatClient: FC = () => {
@@ -51,6 +51,7 @@ const ChatClient: FC = () => {
       const newThreadId = uuidv4();
       dispatch(addThread({ id: newThreadId, name: "New Chat", activate: true }));
     } else if (!activeThreadId && threads.length > 0) {
+      // biome-ignore lint/style/noNonNullAssertion: reason for ignoring
       dispatch(setActiveThreadId(threads[threads.length - 1]!.id));
     }
   }, [activeThreadId, threads, dispatch]);
@@ -68,9 +69,7 @@ const ChatClient: FC = () => {
   // Filter threads based on the search term
   const filteredThreads = useMemo(() => {
     if (!searchTerm) return threads;
-    return threads.filter((thread) =>
-      thread.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+    return threads.filter((thread) => thread.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [threads, searchTerm]);
 
   return (

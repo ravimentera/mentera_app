@@ -14,7 +14,7 @@ export function PackageCard({ packages, onViewAll }: PackageCardProps) {
     <div className="bg-white rounded-lg border p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Package2 className="h-5 w-5 text-brand-purple" />
+          <Package2 className="h-5 w-5 text-brand-blue" />
           <h2 className="text-lg font-semibold">Active Packages (2/7)</h2>
         </div>
         <Button variant="link" onClick={onViewAll} className="text-blue-600 font-medium">

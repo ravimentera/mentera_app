@@ -17,7 +17,7 @@ import { useState } from "react";
 // Define skeleton column configuration for patients table
 const patientTableSkeletonColumns = [
   { width: "w-16" }, // ID
-  { width: "w-32" }, // Name
+  { width: "w-30" }, // Name
   { width: "w-28" }, // Phone Number
   { width: "w-40" }, // Email
   { width: "w-24" }, // Next Session
@@ -93,8 +93,8 @@ export default function PatientsPage() {
             <h1 className="text-2xl font-semibold text-text-gray-900">Patients</h1>
             <p className="text-sm text-text-gray-500">Manage all patients and their data</p>
           </div>
-          <Button className="bg-brand-purple-dark hover:bg-brand-purple-dark/90 h-10 px-4 py-2">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button>
+            <Plus className="h-4 w-4 mr-2 text-white" />
             Add New
           </Button>
         </div>
@@ -103,6 +103,13 @@ export default function PatientsPage() {
         <div className="flex items-center justify-between">
           <div className="relative">
             <div className="flex gap-2">
+              <Button variant="outline" size="icon" className="h-10 w-10 border-ui-border">
+                <Filter className="h-4.5 w-4.5 text-text-gray-500" />
+              </Button>
+              <Button variant="outline" className="h-10 px-4 py-2 border-ui-border">
+                All Status
+                <ChevronDownIcon className="h-4 w-4 ml-2 text-text-gray-500" />
+              </Button>
               <div className="relative flex items-center">
                 <Input
                   placeholder="Search by ID, name, email, or phone"
@@ -116,13 +123,6 @@ export default function PatientsPage() {
                   <Search className="h-4.5 w-4.5 text-ui-icon-gray" />
                 </div>
               </div>
-              <Button variant="outline" size="icon" className="h-10 w-10 border-ui-border">
-                <Filter className="h-4.5 w-4.5 text-text-gray-500" />
-              </Button>
-              <Button variant="outline" className="h-10 px-4 py-2 border-ui-border">
-                All Status
-                <ChevronDownIcon className="h-4 w-4 ml-2 text-text-gray-500" />
-              </Button>
             </div>
           </div>
           <div className="mt-1.5 text-right text-text-muted">

@@ -21,7 +21,7 @@ export const ToggleSwitch = ({
         <span
           className={cn(
             "text-xs transition-colors",
-            !checked ? "text-brand-purple-dark font-medium" : "text-gray-500",
+            !checked ? "text-brand-blue-dark font-medium" : "text-gray-500",
           )}
         >
           {leftLabel}
@@ -32,8 +32,8 @@ export const ToggleSwitch = ({
         type="button"
         onClick={onChange}
         className={cn(
-          "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-purple-light/40 focus:ring-offset-2",
-          checked ? "bg-brand-purple-dark" : "bg-gray-200 hover:bg-gray-300",
+          "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-blue-light/40 focus:ring-offset-2",
+          checked ? "bg-brand-blue-dark" : "bg-gray-200 hover:bg-gray-300",
         )}
         role="switch"
         aria-checked={checked}
@@ -50,7 +50,7 @@ export const ToggleSwitch = ({
         <span
           className={cn(
             "text-xs transition-colors",
-            checked ? "text-brand-purple-dark font-medium" : "text-gray-500",
+            checked ? "text-brand-blue-dark font-medium" : "text-gray-500",
           )}
         >
           {rightLabel}

@@ -20,7 +20,7 @@ export function CommunicationToggle({
         className={cn(
           "p-2 rounded-md transition-colors",
           activeMethod === "chat"
-            ? "bg-brand-purple-light text-brand-purple border border-brand-purple"
+            ? "bg-brand-blue-light text-brand-blue border border-brand-blue"
             : "text-muted-foreground hover:text-foreground",
         )}
       >
@@ -32,7 +32,7 @@ export function CommunicationToggle({
         className={cn(
           "p-2 rounded-md transition-colors",
           activeMethod === "email"
-            ? "bg-brand-purple-light text-brand-purple border border-brand-purple"
+            ? "bg-brand-blue-light text-brand-blue border border-brand-blue"
             : "text-muted-foreground hover:text-foreground",
         )}
       >

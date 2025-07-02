@@ -22,7 +22,7 @@ export const RoleToggle: React.FC<RoleToggleProps> = ({ className = "", showLabe
     <div className={`flex items-center gap-3 ${className}`}>
       {showLabel && (
         <span className="text-sm font-medium text-gray-700">
-          Role: <span className="capitalize font-semibold text-purple-600">{role}</span>
+          Role: <span className="capitalize font-semibold text-blue-600">{role}</span>
         </span>
       )}
       <ToggleSwitch

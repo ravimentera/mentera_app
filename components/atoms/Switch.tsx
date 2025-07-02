@@ -20,7 +20,7 @@ const Switch = React.forwardRef<HTMLDivElement, SwitchProps>(
         ref={ref}
         className={cn(
           "inline-flex h-[1.15rem] w-8 shrink-0 cursor-pointer items-center rounded-full border border-transparent shadow-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          checked ? "bg-primary" : "bg-input dark:bg-input/80",
+          checked ? "bg-brand-blue" : "bg-input dark:bg-input/80",
           className,
         )}
         onClick={handleClick}

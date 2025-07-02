@@ -44,16 +44,16 @@ export function FormStepper({
             <div
               className={cn(
                 "flex items-center",
-                isActive && "py-2.5 px-5 rounded-full bg-brand-purple-light",
+                isActive && "py-2.5 px-5 rounded-full bg-brand-blue-light",
               )}
             >
               <div
                 className={cn(
                   "flex items-center justify-center w-8 h-8 text-sm font-medium rounded-full",
                   isActive
-                    ? "bg-brand-purple text-white"
+                    ? "bg-brand-blue text-white"
                     : isCompleted
-                      ? "bg-secondary text-brand-purple"
+                      ? "bg-secondary text-brand-blue"
                       : "bg-gray-100 text-gray-500",
                   !isNavigable && "opacity-50 cursor-not-allowed",
                 )}

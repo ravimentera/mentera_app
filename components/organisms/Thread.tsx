@@ -120,7 +120,7 @@ const ThreadWelcome: FC = () => {
       <div className="flex h-full w-full flex-col items-center justify-center px-4">
         <div className="w-full max-w-3xl text-center flex flex-col items-center">
           <h1 className="text-5xl font-bold text-purple-600">Hello, Lucy</h1>
-          <h2 className="text-2xl mt-2 text-slate-600">Your Medspa's Smartest Assistant</h2>
+          <h2 className="text-2xl mt-2 text-slate-600">Your Medspa&lsquo;s Smartest Assistant</h2>
           <p className="mt-4 text-slate-500 max-w-lg">
             From appointment management to compliance, Mentera empowers your entire team to work
             smarter.
@@ -231,11 +231,12 @@ const Composer: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFile } = useFileUpload();
 
+  const files = useSelector(selectAllFiles);
+
   const triggerBrowse = () => fileInputRef.current?.click();
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     if (!e.target.files) return;
-    const files = useSelector(selectAllFiles);
     const incoming = Array.from(e.target.files);
     if (incoming.length + files.length > 5) {
       alert("You can attach a maximum of 5 files per message.");

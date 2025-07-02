@@ -5,5 +5,8 @@ export enum IconName {
   SUCCESS = "success",
   GOOGLE = "google",
   ROBOT = "robot",
+  MESSAGE_SQUARE = "message-square",
+  MAIL = "mail",
+  SCHEDULE = "schedule",
   // Add more custom icons as needed
 }

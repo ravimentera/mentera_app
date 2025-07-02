@@ -15,7 +15,7 @@ export function TreatmentPill({ label, selected = false, onClick, className }: T
       className={cn(
         "inline-flex items-center justify-center px-4 py-2 rounded-full text-base font-medium transition-colors",
         selected
-          ? "bg-brand-purple-light border border-brand-purple text-foreground"
+          ? "bg-brand-blue-light border border-brand-blue text-foreground"
           : "bg-ui-background-gray border border-ui-border text-foreground",
         className,
       )}

@@ -64,12 +64,12 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
           alt={`${name}&apos;s avatar`}
           width={sizeInPixels}
           height={sizeInPixels}
-          className={`${sizeClasses[size]} rounded-full object-cover border-2 border-gray-200`}
+          className={`${sizeClasses[size]} rounded-full object-cover`}
         />
       ) : null}
       {/* Fallback initials */}
       <div
-        className={`${sizeClasses[size]} rounded-full bg-purple-500 text-white font-semibold items-center justify-center border-2 border-gray-200 absolute top-0 left-0 ${!imageUrl ? "flex" : "hidden"}`}
+        className={`${sizeClasses[size]} rounded-full bg-blue-500 text-white font-semibold items-center justify-center absolute top-0 left-0 ${!imageUrl ? "flex" : "hidden"}`}
         style={{ fontSize: size === "small" ? "0.75rem" : size === "large" ? "1.25rem" : "1rem" }}
       >
         {getInitials(name)}

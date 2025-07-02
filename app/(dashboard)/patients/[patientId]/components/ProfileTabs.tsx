@@ -25,15 +25,15 @@ export function ProfileTabs({ activeTab, onTabChange, children }: ProfileTabsPro
   return (
     <div className="w-full">
       <Tabs defaultValue={activeTab} className="w-full">
-        <TabsList className="flex p-0 bg-ui-background-subtle">
+        <TabsList className="flex py-1.5 bg-ui-background-subtle">
           {tabItems.map((tab) => (
             <TabsTrigger
               key={tab.id}
               value={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-2.5 text-sm font-medium rounded-b-sm border-b-2 ${
+              className={`px-4 py-2.5 text-sm font-medium rounded-lg border ${
                 activeTab === tab.id
-                  ? "bg-ui-background-purple text-ui-icon-purple border-ui-icon-purple hover:bg-ui-background-purple hover:text-ui-icon-purple"
+                  ? "bg-brand-blue-light text-brand-blue border-brand-blue hover:bg-brand-blue-light hover:text-brand-blue"
                   : "text-text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
               }`}
             >

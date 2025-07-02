@@ -16,20 +16,25 @@ module.exports = {
     },
     extend: {
       colors: {
+        "theme-blue": "#070E3D",
+        icon: "#18181B",
+        subtle: "#fafafa",
         border: "#e2e8f0",
         input: "#e2e8f0",
         ring: "#94a3b8",
         background: "#ffffff",
         foreground: "#0f172a",
         primary: {
-          DEFAULT: "#0f172a",
+          DEFAULT: "#60a7d6",
           foreground: "#f8fafc",
-          hover: "#8a03d3",
-          active: "#8a03d3",
-          subtle: "#fae8ff",
+          subtle: "#eff6ff",
+          hover: "#1e3a8ae6",
+        },
+        sidebar: {
+          active: "#e9e8fc33",
         },
         secondary: {
-          DEFAULT: "#f1f5f9",
+          DEFAULT: "#F4F4F5",
           foreground: "#0f172a",
           hover: "#e4e4e7",
           active: "#f4f4f5",
@@ -100,9 +105,10 @@ module.exports = {
             },
           },
           blue: {
-            DEFAULT: "#2563eb",
+            DEFAULT: "#1E3A8A",
             hover: "#235ad3",
             light: "#eff6ff",
+            dark: "#172554",
             background: "#2563eb1a",
             gradient: {
               dark: "#111a53",
@@ -235,10 +241,10 @@ module.exports = {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "gradient-brand": "linear-gradient(to right, #111A53, #BD05DD)",
+        "gradient-brand": "linear-gradient(to right, #200F8A, #4F9BED)",
       },
       borderImage: {
-        "gradient-purple": "linear-gradient(to right, #BD05DD, #111A53)",
+        "gradient-blue": "linear-gradient(to right, #200F8A, #4F9BED)",
       },
       transitionProperty: {
         theme: "background-color, border-color, color",
@@ -341,10 +347,10 @@ module.exports = {
     },
     ({ addUtilities }) => {
       addUtilities({
-        ".border-gradient-purple": {
+        ".border-gradient-blue": {
           border: "1px solid transparent",
           backgroundImage:
-            "linear-gradient(white, white), linear-gradient(to right, #BD05DD, #111A53)",
+            "linear-gradient(white, white), linear-gradient(to right, #200F8A, #4F9BED)",
           backgroundOrigin: "border-box",
           backgroundClip: "padding-box, border-box",
         },
@@ -397,10 +403,10 @@ module.exports = {
           cursor: "grab",
         },
         ".bg-brand-gradient": {
-          background: "linear-gradient(to right, #BD05DD, #111A53)",
+          background: "linear-gradient(to right, #200F8A, #4F9BED)",
         },
         ".text-brand-gradient": {
-          background: "linear-gradient(to right, #BD05DD, #111A53)",
+          background: "linear-gradient(to right, #200F8A, #4F9BED)",
           "-webkit-background-clip": "text",
           "background-clip": "text",
           "-webkit-text-fill-color": "transparent",

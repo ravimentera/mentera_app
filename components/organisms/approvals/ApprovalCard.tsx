@@ -202,7 +202,7 @@ export function ApprovalCard({ approval, patient, onApproval, className }: Appro
 
           {/* Action Buttons */}
           <div className="flex justify-between items-center">
-            <div className="bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest p-px rounded-lg">
+            <div className="bg-gradient-to-r from-brand-blue-hover to-blue-950 p-px rounded-lg">
               <Button
                 variant="gradient-light"
                 size="default"

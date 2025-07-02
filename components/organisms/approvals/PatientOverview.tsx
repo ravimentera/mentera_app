@@ -135,8 +135,8 @@ export function PatientOverview({ approval, className }: PatientOverviewProps) {
             <div className="bg-white rounded-lg border border-ui-border p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
-                    <CopyPlus className="w-4 h-4 text-purple-600" />
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <CopyPlus className="w-4 h-4 text-blue-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-foreground">Medical Summary</h3>
                 </div>
@@ -162,7 +162,7 @@ export function PatientOverview({ approval, className }: PatientOverviewProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center">
-                    <IdCardIcon className="w-4 h-4 text-brand-purple" />
+                    <IdCardIcon className="w-4 h-4 text-brand-blue" />
                   </div>
                   <h3 className="text-lg font-semibold text-foreground">
                     Active Packages ({approval.activePackages?.length || 0}/
@@ -185,7 +185,7 @@ export function PatientOverview({ approval, className }: PatientOverviewProps) {
                     </div>
                     <div className="w-full bg-secondary rounded-full h-2">
                       <div
-                        className="bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest h-2 rounded-full transition-all"
+                        className="bg-gradient-to-r from-brand-blue-hover to-blue-950 h-2 rounded-full transition-all"
                         style={{ width: `${pkg.progress}%` }}
                       ></div>
                     </div>
@@ -284,7 +284,7 @@ export function PatientOverview({ approval, className }: PatientOverviewProps) {
             className="cursor-pointer hover:opacity-80 transition-opacity"
             aria-label="View patient details"
           >
-            <ExternalLink className="w-5 h-5 text-brand-purple-dark" />
+            <ExternalLink className="w-5 h-5 text-brand-blue-dark" />
           </button>
         </div>
 
@@ -300,7 +300,7 @@ export function PatientOverview({ approval, className }: PatientOverviewProps) {
                   "px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
                   "flex items-center gap-1.5",
                   activeTab === tab.id
-                    ? "bg-brand-purple-light text-brand-purple border border-brand-purple"
+                    ? "bg-brand-blue-light text-brand-blue border border-brand-blue"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >

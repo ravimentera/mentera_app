@@ -48,7 +48,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {isMounted && (
         <div
           className={cn(
-            "h-screen transition-[width] duration-300 ease-in-out",
+            "h-screen transition-[width] duration-300 ease-in-out rounded-2xl",
             isSidebarCollapsed ? "w-15" : "w-60",
           )}
         >

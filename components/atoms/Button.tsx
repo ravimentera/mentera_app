@@ -9,7 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-brand-purple-dark text-white shadow hover:bg-brand-purple-dark/90",
+        default: "bg-brand-blue text-white shadow hover:bg-brand-blue-dark/90",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
@@ -17,21 +17,21 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         gradient:
-          "bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest text-white shadow hover:opacity-90 [&>svg]:stroke-white [&>svg]:text-white",
+          "bg-gradient-to-r from-brand-blue-hover to-brand-blue-darkest text-white shadow hover:opacity-90 [&>svg]:stroke-white [&>svg]:text-white",
         "gradient-bordered":
-          "bg-gradient-to-r from-brand-purple-hover to-brand-purple-darkest text-white shadow hover:opacity-90 [&>svg]:stroke-white [&>svg]:text-white border border-transparent bg-clip-padding",
+          "bg-gradient-to-r from-brand-blue-hover to-brand-blue-darkest text-white shadow hover:opacity-90 [&>svg]:stroke-white [&>svg]:text-white border border-transparent bg-clip-padding",
         success: "bg-green-600 text-white shadow hover:bg-green-700",
         danger: "bg-red-600 text-white shadow hover:bg-red-700",
         "success-light": "bg-green-100 text-green-800 shadow-sm hover:bg-green-200",
         "danger-light": "bg-red-100 text-red-800 shadow-sm hover:bg-red-200",
         "outline-ghost": "text-brand-blue hover:text-brand-blue-hover",
         "gradient-light":
-          "bg-gradient-to-r from-brand-purple-light via-brand-purple-light/90 to-brand-purple-light/80 text-brand-purple-dark shadow-sm hover:opacity-90 [&>svg]:text-brand-purple-dark",
+          "bg-gradient-to-r from-brand-blue-light via-brand-blue-light/90 to-brand-blue-light/80 text-brand-blue-dark shadow-sm hover:opacity-90 [&>svg]:text-brand-blue-dark",
       },
       size: {
         default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
+        sm: "h-8 rounded-lg px-3 text-xs",
+        lg: "h-10 rounded-lg px-8",
         icon: "h-9 w-9",
       },
     },
