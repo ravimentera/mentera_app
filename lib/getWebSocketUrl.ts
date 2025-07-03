@@ -15,8 +15,5 @@ export function getWebSocketUrl(): string {
     return "ws://0.0.0.0:5010/ws";
   }
 
-  // Production or other environments: use the provided host or default
-  const productionHost = process.env.NEXT_PUBLIC_WS_HOST || "34.204.48.222";
-  // Your production WebSocket endpoint might be at a specific path like /ws
-  return `ws://${productionHost}:5010/ws`;
+  return "wss://ws.mentera.ai/ws/";
 }
