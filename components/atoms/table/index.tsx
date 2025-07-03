@@ -45,7 +45,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
       );
 
       return (
-        <div className="relative w-full overflow-auto">
+        <div className="relative w-full overflow-auto rounded-xl">
           <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props}>
             {/* Render the original header */}
             {header}
@@ -60,7 +60,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     }
 
     return (
-      <div className="relative w-full overflow-auto">
+      <div className="relative w-full overflow-auto rounded-xl">
         <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props}>
           {children}
         </table>
