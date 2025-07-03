@@ -3,8 +3,8 @@
 export function getWebSocketUrl(): string {
   // Check if running in a development environment
   // In Next.js, NODE_ENV is 'development' during `next dev`
-  // const isDevelopment = process.env.NODE_ENV === "production";
-  const isDevelopment = process.env.NODE_ENV === "development";
+  const isDevelopment = process.env.NODE_ENV === "production";
+  // const isDevelopment = process.env.NODE_ENV === "development";
 
   if (isDevelopment) {
     // Local development: connect to your mock server
@@ -15,8 +15,5 @@ export function getWebSocketUrl(): string {
     return "ws://0.0.0.0:5010/ws";
   }
 
-  // Production or other environments: use the provided host or default
-  const productionHost = process.env.NEXT_PUBLIC_WS_HOST || "34.204.48.222";
-  // Your production WebSocket endpoint might be at a specific path like /ws
-  return `ws://${productionHost}:5010/ws`;
+  return "wss://ws.mentera.ai/ws/";
 }
