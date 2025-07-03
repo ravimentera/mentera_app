@@ -3,8 +3,8 @@
 export function getWebSocketUrl(): string {
   // Check if running in a development environment
   // In Next.js, NODE_ENV is 'development' during `next dev`
-  const isDevelopment = process.env.NODE_ENV === "production";
-  // const isDevelopment = process.env.NODE_ENV === "development";
+  // const isDevelopment = process.env.NODE_ENV === "production";
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   if (isDevelopment) {
     // Local development: connect to your mock server
