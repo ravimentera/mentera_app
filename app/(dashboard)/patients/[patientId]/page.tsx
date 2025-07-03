@@ -214,7 +214,7 @@ export default function PatientProfilePage() {
             onTabChange={setActiveTab}
             appointments={appointments}
             medicalAlerts={medicalAlerts}
-            treatmentHistory={treatmentHistory}
+            enrichedVisits={visitsData?.data?.enrichedVisits}
             treatments={treatments}
             isLoadingAppointments={isLoadingVisits}
             isLoadingMedical={isLoadingHistory || isLoadingVisits}
@@ -238,7 +238,7 @@ export default function PatientProfilePage() {
                 </div>
                 <div className="grid grid-cols-1 gap-6 h-fit">
                   <TreatmentHistoryCard
-                    treatments={treatmentHistory}
+                    enrichedVisits={visitsData?.data?.enrichedVisits}
                     isLoading={isLoadingVisits}
                     onViewAll={() => handleViewAll("medical-history")}
                   />

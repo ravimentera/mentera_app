@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/atoms/table";
 import { Calendar, Clock, User } from "lucide-react";
 
 interface Appointment {
@@ -86,55 +94,47 @@ const AppointmentsTab = ({ appointments, isLoading }: AppointmentsTabProps) => {
         <span className="text-sm text-gray-500">({appointments.length} total)</span>
       </div>
 
-      <div className="overflow-hidden border border-gray-200 rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Appointment
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date & Time
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Provider
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      <div className="bg-white rounded-lg border border-ui-border h-fit">
+        <Table>
+          <TableHeader className="sticky top-0 bg-white z-10">
+            <TableRow className="border-b border-ui-border hover:bg-white">
+              <TableHead className="text-xs uppercase">Appointment</TableHead>
+              <TableHead className="text-xs uppercase">Date & Time</TableHead>
+              <TableHead className="text-xs uppercase">Provider</TableHead>
+              <TableHead className="text-xs uppercase">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="overflow-y-auto">
             {appointments.map((appointment) => (
-              <tr key={appointment.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{appointment.title}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center text-sm text-gray-900">
+              <TableRow key={appointment.id}>
+                <TableCell className="text-sm font-medium text-text-gray-900">
+                  {appointment.title}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center text-sm text-text">
                     <Calendar className="w-4 h-4 text-gray-400 mr-2" />
                     {formatDate(appointment.date)}
                   </div>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
+                  <div className="flex items-center text-sm text-text-muted mt-1">
                     <Clock className="w-4 h-4 text-gray-400 mr-2" />
                     {appointment.time}
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center text-sm text-gray-900">
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center text-sm text-text">
                     <User className="w-4 h-4 text-gray-400 mr-2" />
                     {appointment.doctor}
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                </TableCell>
+                <TableCell>
                   <span className={getStatusBadge(appointment.status)}>
                     {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                   </span>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

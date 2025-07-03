@@ -1,38 +1,34 @@
 "use client";
 
-import { Button } from "@/components/atoms";
+import { Badge, Button } from "@/components/atoms";
 import { formatDistanceToNow } from "date-fns";
+import { Clock } from "lucide-react";
 
-interface TreatmentHistoryItem {
+interface EnrichedVisit {
   id: string;
-  title: string;
-  date: string;
-  status: "completed" | "scheduled" | "cancelled";
-  type?: string;
+  visitDate: string;
+  treatment: {
+    procedure: string;
+    areasTreated: string[];
+    unitsUsed: number;
+    volumeUsed: string;
+    observations: string;
+    providerRecommendations: string;
+  };
+  providerId: string;
 }
 
 interface TreatmentHistoryCardProps {
-  treatments?: TreatmentHistoryItem[];
+  enrichedVisits?: EnrichedVisit[];
   isLoading?: boolean;
   onViewAll?: () => void;
 }
 
 const TreatmentHistoryCard = ({
-  treatments = [],
+  enrichedVisits = [],
   isLoading,
   onViewAll,
 }: TreatmentHistoryCardProps) => {
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <div className="w-3 h-3 bg-green-500 rounded-full flex-shrink-0" />;
-      case "scheduled":
-        return <div className="w-3 h-3 bg-yellow-500 rounded-full flex-shrink-0" />;
-      default:
-        return <div className="w-3 h-3 bg-gray-300 rounded-full flex-shrink-0" />;
-    }
-  };
-
   const formatRelativeDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -42,8 +38,8 @@ const TreatmentHistoryCard = ({
     }
   };
 
-  // Show only first 3 items
-  const displayTreatments = treatments.slice(0, 3);
+  // Show only first 2 items
+  const displayTreatments = enrichedVisits.slice(0, 2);
 
   if (isLoading) {
     return (
@@ -51,13 +47,20 @@ const TreatmentHistoryCard = ({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Treatment History</h2>
         </div>
-        <div className="space-y-4">
-          {[1, 2, 3].map((index) => (
-            <div key={index} className="flex items-start gap-3 animate-pulse">
-              <div className="w-3 h-3 bg-gray-200 rounded-full flex-shrink-0 mt-1" />
-              <div className="flex-1">
-                <div className="h-4 bg-gray-200 rounded mb-1"></div>
-                <div className="h-3 bg-gray-200 rounded w-20"></div>
+        <div className="space-y-6">
+          {[1, 2].map((index) => (
+            <div key={index} className="animate-pulse">
+              <div className="flex justify-between mb-2">
+                <div className="h-5 bg-gray-200 rounded w-32"></div>
+                <div className="h-5 bg-gray-200 rounded w-24"></div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="flex gap-2 mt-2">
+                  <div className="h-6 bg-gray-200 rounded w-20"></div>
+                  <div className="h-6 bg-gray-200 rounded w-24"></div>
+                </div>
               </div>
             </div>
           ))}
@@ -66,7 +69,7 @@ const TreatmentHistoryCard = ({
     );
   }
 
-  if (!treatments.length) {
+  if (!enrichedVisits.length) {
     return (
       <div className="bg-white rounded-xl border p-4 h-fit">
         <div className="flex items-center justify-between mb-4">
@@ -80,22 +83,50 @@ const TreatmentHistoryCard = ({
   return (
     <div className="bg-white rounded-xl border p-4 h-fit">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Treatment History</h2>
-        {treatments.length > 3 && onViewAll && (
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">Treatment History</h2>
+          <span className="text-sm text-gray-500">({enrichedVisits.length} total)</span>
+        </div>
+        {onViewAll && (
           <Button variant="link" onClick={onViewAll} className="text-blue-600 font-medium">
             View All
           </Button>
         )}
       </div>
 
-      <div className="space-y-4">
-        {displayTreatments.map((treatment) => (
-          <div key={treatment.id} className="flex items-start gap-3">
-            {getStatusIcon(treatment.status)}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 text-sm leading-tight">{treatment.title}</h3>
-              <p className="text-gray-500 text-sm mt-1">{formatRelativeDate(treatment.date)}</p>
+      <div className="space-y-6">
+        {displayTreatments.map((visit) => (
+          <div key={visit.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="font-medium text-gray-900">{visit.treatment.procedure}</h3>
+                <p className="text-gray-500 text-sm flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  {formatRelativeDate(visit.visitDate)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">
+                  {visit.treatment.unitsUsed} Units
+                </p>
+                <p className="text-xs text-gray-500">{visit.treatment.volumeUsed}</p>
+              </div>
             </div>
+
+            <div className="flex flex-wrap gap-2 mt-3">
+              {visit.treatment.areasTreated.map((area) => (
+                <Badge
+                  key={area}
+                  className="bg-brand-blue-light text-brand-blue hover:bg-brand-blue-light"
+                >
+                  {area}
+                </Badge>
+              ))}
+            </div>
+
+            {visit.treatment.observations && (
+              <p className="text-sm text-gray-600 mt-2">{visit.treatment.observations}</p>
+            )}
           </div>
         ))}
       </div>

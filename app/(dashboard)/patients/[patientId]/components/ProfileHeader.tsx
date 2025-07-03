@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/atoms";
-import { ArrowLeft, Calendar, FileText } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Patient } from "../types";
 
@@ -23,14 +23,14 @@ export function ProfileHeader({ patient }: ProfileHeaderProps) {
         </h1>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* <div className="flex items-center gap-2">
         <Button size="icon" variant="secondary" className="h-9 w-9">
           <FileText className="h-4 w-4 text-icon" />
         </Button>
         <Button size="icon" variant="secondary" className="h-9 w-9">
           <Calendar className="h-4 w-4 text-icon" />
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 }

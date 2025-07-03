@@ -22,7 +22,7 @@ interface ProfileTabsProps {
   // Data for tabs
   appointments?: any[];
   medicalAlerts?: any[];
-  treatmentHistory?: any[];
+  enrichedVisits?: any[];
   treatments?: any[];
   isLoadingAppointments?: boolean;
   isLoadingMedical?: boolean;
@@ -34,7 +34,7 @@ export function ProfileTabs({
   children,
   appointments = [],
   medicalAlerts = [],
-  treatmentHistory = [],
+  enrichedVisits = [],
   treatments = [],
   isLoadingAppointments = false,
   isLoadingMedical = false,
@@ -66,7 +66,7 @@ export function ProfileTabs({
       <TabsContent value="medical-history">
         <MedicalHistoryTab
           medicalAlerts={medicalAlerts}
-          treatmentHistory={treatmentHistory}
+          enrichedVisits={enrichedVisits}
           treatments={treatments}
           isLoading={isLoadingMedical}
         />

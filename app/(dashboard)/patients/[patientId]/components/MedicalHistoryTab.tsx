@@ -1,7 +1,8 @@
 "use client";
 
+import { Badge } from "@/components/atoms";
 import { formatDistanceToNow } from "date-fns";
-import { Activity, AlertTriangle, Calendar, CheckCircle, Clock, Package2 } from "lucide-react";
+import { Activity, AlertTriangle, Calendar, Clock, Package2 } from "lucide-react";
 
 interface MedicalAlert {
   id: string;
@@ -10,12 +11,19 @@ interface MedicalAlert {
   reaction: string;
 }
 
-interface TreatmentHistoryItem {
+interface EnrichedVisit {
   id: string;
-  title: string;
-  date: string;
-  status: "completed" | "scheduled" | "cancelled";
-  type?: string;
+  visitDate: string;
+  treatment: {
+    procedure: string;
+    areasTreated: string[];
+    unitsUsed: number;
+    volumeUsed: string;
+    observations: string;
+    providerRecommendations: string;
+  };
+  providerId: string;
+  followUpDate: string | null;
 }
 
 interface Treatment {
@@ -28,42 +36,17 @@ interface Treatment {
 
 interface MedicalHistoryTabProps {
   medicalAlerts: MedicalAlert[];
-  treatmentHistory: TreatmentHistoryItem[];
+  enrichedVisits?: EnrichedVisit[];
   treatments?: Treatment[];
   isLoading?: boolean;
 }
 
 const MedicalHistoryTab = ({
   medicalAlerts,
-  treatmentHistory,
+  enrichedVisits = [],
   treatments = [],
   isLoading,
 }: MedicalHistoryTabProps) => {
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case "scheduled":
-        return <Clock className="w-5 h-5 text-yellow-500" />;
-      default:
-        return <Activity className="w-5 h-5 text-gray-400" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const baseClasses = "px-3 py-1 rounded-full text-xs font-medium";
-    switch (status) {
-      case "completed":
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case "scheduled":
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case "cancelled":
-        return `${baseClasses} bg-red-100 text-red-800`;
-      default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -188,7 +171,7 @@ const MedicalHistoryTab = ({
         </div>
       )}
 
-      {/* Medical Conditions & Alerts Section - More Subtle */}
+      {/* Medical Conditions & Alerts Section */}
       <div className="bg-white rounded-xl border p-6">
         <div className="flex items-center gap-2 mb-6">
           <AlertTriangle className="w-5 h-5 text-gray-600" />
@@ -233,56 +216,88 @@ const MedicalHistoryTab = ({
         <div className="flex items-center gap-2 mb-6">
           <Activity className="w-5 h-5 text-blue-600" />
           <h2 className="text-xl font-semibold">Treatment History</h2>
-          {treatmentHistory.length > 0 && (
-            <span className="text-sm text-gray-500">({treatmentHistory.length} total)</span>
+          {enrichedVisits.length > 0 && (
+            <span className="text-sm text-gray-500">({enrichedVisits.length} total)</span>
           )}
         </div>
 
-        {treatmentHistory.length === 0 ? (
+        {enrichedVisits.length === 0 ? (
           <div className="text-center py-8">
             <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No treatment history found</h3>
             <p className="text-gray-500">This patient doesn&apos;t have any treatment history.</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {treatmentHistory.map((treatment, index) => (
-              <div key={treatment.id} className="relative">
+          <div className="space-y-8">
+            {enrichedVisits.map((visit, index) => (
+              <div key={visit.id} className="relative">
                 {/* Timeline line */}
-                {index < treatmentHistory.length - 1 && (
-                  <div className="absolute left-2.5 top-8 w-px h-6 bg-gray-200"></div>
+                {index < enrichedVisits.length - 1 && (
+                  <div className="absolute left-2.5 top-12 w-px h-[calc(100%-2rem)] bg-gray-200"></div>
                 )}
 
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 mt-1">{getStatusIcon(treatment.status)}</div>
+                  <div className="flex-shrink-0 mt-1">
+                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                      <Activity className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-base font-medium text-gray-900 mb-1">
-                          {treatment.title}
-                        </h3>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {formatDate(treatment.date)}
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="text-base font-medium text-gray-900">
+                            {visit.treatment.procedure}
+                          </h3>
+                          <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {formatDate(visit.visitDate)}
+                            </div>
+                            <span>•</span>
+                            <span>{formatRelativeDate(visit.visitDate)}</span>
                           </div>
-                          <span>•</span>
-                          <span>{formatRelativeDate(treatment.date)}</span>
-                          {treatment.type && (
-                            <>
-                              <span>•</span>
-                              <span className="capitalize">{treatment.type}</span>
-                            </>
-                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">
+                            {visit.treatment.unitsUsed} Units
+                          </p>
+                          <p className="text-xs text-gray-500">{visit.treatment.volumeUsed}</p>
                         </div>
                       </div>
 
-                      <div className="flex-shrink-0 ml-4">
-                        <span className={getStatusBadge(treatment.status)}>
-                          {treatment.status.charAt(0).toUpperCase() + treatment.status.slice(1)}
-                        </span>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {visit.treatment.areasTreated.map((area) => (
+                          <Badge
+                            key={area}
+                            className="bg-brand-blue-light text-brand-blue hover:bg-brand-blue-light"
+                          >
+                            {area}
+                          </Badge>
+                        ))}
                       </div>
+
+                      {visit.treatment.observations && (
+                        <div className="text-sm text-gray-600 border-t border-gray-200 py-3">
+                          <p className="font-medium text-text mb-1">Observations:</p>
+                          <p>{visit.treatment.observations}</p>
+                        </div>
+                      )}
+
+                      {visit.treatment.providerRecommendations && (
+                        <div className="text-sm text-gray-600 border-t border-gray-200 pt-3">
+                          <p className="font-medium text-text mb-1">Provider Recommendations:</p>
+                          <p>{visit.treatment.providerRecommendations}</p>
+                        </div>
+                      )}
+
+                      {visit.followUpDate && (
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mt-3 border-t border-gray-200 pt-3">
+                          <Clock className="w-4 h-4" />
+                          <span>Follow-up scheduled for {formatDate(visit.followUpDate)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
