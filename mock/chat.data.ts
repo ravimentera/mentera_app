@@ -8,7 +8,7 @@ export const testMedSpa = {
 };
 
 export const testNurse = {
-  id: "NR-2001",
+  id: "PR-2001",
   email: "rachel.garcia@medspa.com",
   role: "PROVIDER",
   firstName: "Rachel",

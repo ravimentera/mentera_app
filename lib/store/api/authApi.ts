@@ -44,7 +44,7 @@ export const authApi = createApi({
                 email: credentials.email,
                 role: "admin",
                 medspaId: "MS-1001",
-                providerId: "NR-2001",
+                providerId: "PR-2001",
               },
               token: tokenData.token,
             },

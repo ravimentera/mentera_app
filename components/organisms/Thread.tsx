@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import {
   ActionBarPrimitive,
   ComposerPrimitive,
@@ -310,7 +309,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const dispatch = useDispatch<AppDispatch>();
   const thread = useSelector(getActiveThreadId) as string;
-  const { data: patients, isLoading } = useGetPatientsByProviderQuery("NR-2001");
+  const { data: patients, isLoading } = useGetPatientsByProviderQuery("PR-2001");
 
   const filteredPatients = useMemo(() => {
     if (!patients) return [];
