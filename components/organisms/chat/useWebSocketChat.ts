@@ -94,7 +94,7 @@ export function useWebSocketChat({
         text: cleaned,
         createdAt: Date.now(),
       };
-      // if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
+      if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
       dispatch(addMessage(ai));
       dispatch(
         updateThreadLastMessageAt({

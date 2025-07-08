@@ -1,123 +1,6 @@
 
 # Component Documentation
 
-## Atoms (Basic UI Elements)
-### Button
-**Props:**
-- `variant` (default/destructive/outline/secondary/ghost/link)
-- `size` (default/sm/lg/icon)
-- `asChild`
-- `className`
-
-**Description:** Customizable button with multiple styles and sizes  
-**Example:**  
-```tsx
-<Button variant="destructive" size="lg">Delete</Button>
-```
-
-### Input
-**Props:**
-- `type` (text/password/number etc.)
-- `className`
-
-**Description:** Styled input field with accessibility support  
-**Example:**  
-```tsx
-<Input type="email" placeholder="Enter email" />
-```
-
-### Label
-**Props:**
-- `className`
-
-**Description:** Accessible form label component  
-**Example:**  
-```tsx
-<Label htmlFor="username">Username</Label>
-```
-
-### Skeleton
-**Props:**
-- `className`
-
-**Description:** Loading state indicator with pulse animation  
-**Example:**  
-```tsx
-<Skeleton className="h-4 w-full" />
-```
-
-### Sonner (Toaster)
-**Props:** inherits from sonner library, uses theme from next-themes  
-**Description:** Notification toaster with dark/light mode support  
-**Example:**  
-```tsx
-useEffect(() => toast.success("Operation completed"), [])
-```
-
-## Molecules (Compound Components)
-### DropdownMenu
-**Props:**
-- `trigger`
-- `content`
-- `variant`
-- `className`
-
-**Description:** Accessible dropdown menu system  
-**Example:**  
-```tsx
-<DropdownMenu>
-  <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
-  <DropdownMenuContent>
-    <DropdownMenuItem>Copy</DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
-```
-
-### Form
-**Props:**
-- `onSubmit`
-- `className`
-- `children`
-
-**Description:** Form wrapper with validation support  
-**Example:**  
-```tsx
-<Form onSubmit={handleSubmit}>
-  <Input name="email" />
-  <Button type="submit">Login</Button>
-</Form>
-```
-
-### Tabs
-**Props:**
-- `tabs`
-- `activeTab`
-- `onTabChange`
-- `className`
-
-**Description:** Tab navigation system  
-**Example:**  
-```tsx
-<Tabs value={tab} onValueChange={setTab}>
-  <TabsList>
-    <TabsTrigger value="home">Home</TabsTrigger>
-  </TabsList>
-</Tabs>
-```
-
-### Toggle
-**Props:**
-- `checked`
-- `onChange`
-- `variant`
-- `className`
-
-**Description:** Switch toggle component  
-**Example:**  
-```tsx
-<Toggle checked={darkMode} onCheckedChange={setDarkMode} />
-```
-
 ## Organisms (Complex Components)
 ### Card
 **Props:**
@@ -166,10 +49,7 @@ useEffect(() => toast.success("Operation completed"), [])
 **Example:**  
 ```tsx
 <LineChart data={chartData} config={{ x: 'time', y: 'value' }} />
-
-
-## Organisms (Custom Cards)
-
+```
 ---
 
 ### UserHistoryCard

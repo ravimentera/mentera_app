@@ -39,14 +39,14 @@ export function NextAppointmentCard({
 
         {/* Upcoming Appointment */}
         <div className="bg-blue-50 rounded-lg p-4 space-y-1 text-sm text-gray-700">
-          <div className="font-semibold text-gray-900">{upcomingAppointment.title}</div>
+          <div className="font-semibold text-gray-900">{upcomingAppointment?.title}</div>
           <div className="flex items-center gap-2 text-gray-600">
             <Clock className="w-4 h-4" />
-            <span>{upcomingAppointment.time}</span>
+            <span>{upcomingAppointment?.time}</span>
           </div>
           <div className="flex items-center gap-2 text-gray-600">
             <User2 className="w-4 h-4" />
-            <span>{upcomingAppointment.doctor}</span>
+            <span>{upcomingAppointment?.doctor}</span>
           </div>
         </div>
 
@@ -56,14 +56,14 @@ export function NextAppointmentCard({
             key={uuid()}
             className="border border-blue-400 bg-green-50 rounded-md p-4 space-y-1 text-sm text-gray-700"
           >
-            <div className="font-semibold text-gray-900">{appt.title}</div>
+            <div className="font-semibold text-gray-900">{appt?.title}</div>
             <div className="flex items-center gap-2 text-gray-600">
               <Clock className="w-4 h-4" />
-              <span>{appt.time}</span>
+              <span>{appt?.time}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-600">
               <User2 className="w-4 h-4" />
-              <span>{appt.doctor}</span>
+              <span>{appt?.doctor}</span>
             </div>
           </div>
         ))}

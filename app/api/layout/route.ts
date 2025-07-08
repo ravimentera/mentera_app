@@ -34,6 +34,10 @@ const bedrockAgentClient = new BedrockAgentRuntimeClient({
 interface LayoutRequestBody {
   markdown: string;
   sessionId: string;
+  providerId: string;
+  medspaId: string;
+  activePatientID: string;
+  latestUserMessage: string;
 }
 
 const MAX_RETRIES = 3;
@@ -123,35 +127,6 @@ You must:
 
 Additional Instructions for Components:
 - Always match the **exact shape and required fields** as defined in the component metadata for each component.
-- For **AppointmentCalendar**, each appointment object must:
-  - Include all required fields:
-    - \`id\`: string
-    - \`chartId\`: string
-    - \`patient\`: { firstName, lastName, condition? }
-    - \`provider\`: { providerId, firstName, lastName, specialties }
-    - \`startTime\` and \`endTime\`: ISO 8601 format (e.g., "2025-05-13T12:30:00Z")
-    - \`type\`: "therapy" | "consultation" | "followup" | "general"
-  - Default \`status\` should be set to \`"pending"\` unless explicitly provided.
-  - Avoid creating simplified or custom structures like { date, procedure }.
-- For **ApprovalsContainer**, each \`ApprovalCardData\` object must:
-  - Include all required fields:
-    - \`id\`: string  // Corresponds to Appointment ID
-    - \`appointmentId\`: string
-    - \`patientName\`: string
-    - \`patientId\`: string
-    - \`isVip\`: boolean
-    - \`time\`: string  // Formatted time string e.g., "Today, 10:00 AM"
-    - \`subject\`: string
-    - \`message\`: string  // The current message to be sent/approved
-    - \`originalMessage\`: string  // The original message from notificationStatus
-    - \`notificationType\`: "pre-care" | "post-care"
-  - Optional fields (if applicable):
-    - \`aiGeneratedMessage?\`: string  // AI's suggested alternative
-    - \`chatHistory?\`: ApprovalChatMessage[]
-    - \`messageVariant?\`: number  // 0 for original/current, 1 for AI, 2+ for alternatives
-    - \`showTeraCompose?\`: boolean
-    - \`editedMessage?\`: string  // If user edits the message directly in the approval card
-
 - Do not omit any prop that is required or semantically relevant in \`components.md\`.
 - You may infer values such as \`procedure\`, \`doctor\`, or \`title\` when logically implied in the markdown.
 
@@ -170,7 +145,12 @@ Your output must adhere to the Layout AST structure with:
 
 Markdown Content to Process:
 ---
-${body.markdown}
+* Provider_id: ${body.providerId}
+* MedSpa_id: ${body.medspaId} 
+* patient_id: ${body.activePatientID}
+---
+Provider Query: ${body.latestUserMessage}
+Tera's Response: ${body.markdown}
 ---
 `;
 
@@ -184,7 +164,7 @@ ${body.markdown}
         );
         const inputCmd: InvokeAgentCommandInput = {
           agentId,
-          agentAliasId,
+          agentAliasId: "IX6QKI0770",
           sessionId: body.sessionId,
           inputText,
           enableTrace: true,
