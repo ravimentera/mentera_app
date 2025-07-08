@@ -3,6 +3,7 @@
 import { AUTH_ROUTES, DASHBOARD_PATHS } from "@/app/constants/route-constants";
 import { Tooltip, TooltipProvider } from "@/components/atoms";
 import { MenteraLogoFull, MenteraLogoIcon } from "@/components/atoms/icons";
+import { useLogoutMutation } from "@/lib/store/api";
 import { cn } from "@/lib/utils";
 import {
   CheckSquare,
@@ -78,6 +79,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [logout] = useLogoutMutation();
 
   // Check if we're on mobile device and load stored state
   useEffect(() => {
@@ -171,6 +173,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       icon: <Users className="h-5 w-5" />,
     },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap();
+      router.push(AUTH_ROUTES.LOGIN);
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still redirect on error
+      router.push(AUTH_ROUTES.LOGIN);
+    }
+  };
 
   return (
     <TooltipProvider>
@@ -277,9 +290,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     <button
                       type="button"
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-100"
-                      onClick={() => {
-                        router.push(AUTH_ROUTES.LOGIN);
-                      }}
+                      onClick={handleLogout}
                     >
                       <LogOut size={16} className="text-gray-500" />
                       <span>Log Out</span>
@@ -294,7 +305,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     className="absolute inset-0 w-full h-full cursor-pointer"
                     onClick={() => {
                       if (isMobile) {
-                        router.push(AUTH_ROUTES.LOGIN);
+                        handleLogout();
                       } else {
                         setShowDropdown(!showDropdown);
                       }
@@ -309,9 +320,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     <button
                       type="button"
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-gray-100"
-                      onClick={() => {
-                        router.push(AUTH_ROUTES.LOGIN);
-                      }}
+                      onClick={handleLogout}
                     >
                       <LogOut size={16} className="text-gray-500" />
                       <span>Log Out</span>

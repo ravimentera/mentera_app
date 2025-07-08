@@ -21,7 +21,7 @@ export const providers = [
     ],
     providers: [
       {
-        providerId: "NR-2001",
+        providerId: "PR-2001",
         avatar: {
           large: "https://randomuser.me/api/portraits/women/75.jpg",
           medium: "https://randomuser.me/api/portraits/med/women/75.jpg",

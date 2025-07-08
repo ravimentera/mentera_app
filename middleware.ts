@@ -16,11 +16,12 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/profile") ||
     pathname.startsWith("/settings")
   ) {
-    // Check for auth token in cookie or Authorization header
+    // Check for auth session cookie (primary) or JWT auth_token (secondary) or Authorization header
+    const authSession = request.cookies.get("auth_session")?.value;
     const authToken =
       request.cookies.get("auth_token")?.value || request.headers.get("authorization");
 
-    if (!authToken) {
+    if (!authSession && !authToken) {
       // Create a URL object to safely append a 'redirect' parameter
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("returnUrl", pathname);

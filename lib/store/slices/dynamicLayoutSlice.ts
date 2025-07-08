@@ -27,7 +27,7 @@ export const fetchDynamicLayout = createAsyncThunk<
       .at(-1)?.text;
 
     // @TODO: Remove the HARDCODED IDs
-    const providerId = "NR-2001";
+    const providerId = "PR-2001";
     const medspaId = "MS-1001";
 
     if (!activePatientID) throw new Error("No active patient ID found");

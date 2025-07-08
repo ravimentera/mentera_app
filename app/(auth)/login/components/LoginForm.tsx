@@ -37,13 +37,17 @@ export function LoginForm() {
       // Simulate API call (1 second delay)
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Set a cookie that expires in 1 day (existing dummy flow)
+      // Generate and store token in Redux first
+      const tokenResult = await generateToken();
+
+      // Set both session cookie and JWT token cookie for unified auth
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + 1);
       document.cookie = `auth_session=demo_authenticated; expires=${expiryDate.toUTCString()}; path=/`;
 
-      // Generate and store token in Redux
-      await generateToken();
+      if (tokenResult.data?.token) {
+        document.cookie = `auth_token=${tokenResult.data.token.replace(/^Bearer\s+/, "")}; expires=${expiryDate.toUTCString()}; path=/`;
+      }
 
       toast.success("Login successful! Welcome to Mentera.");
       router.push(returnUrl);

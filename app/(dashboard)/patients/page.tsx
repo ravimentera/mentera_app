@@ -46,7 +46,7 @@ export default function PatientsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // API call to fetch patients from slice
-  const { data: apiPatients, isLoading: apiLoading } = useGetPatientsByProviderQuery("NR-2001");
+  const { data: apiPatients, isLoading: apiLoading } = useGetPatientsByProviderQuery("PR-2001");
 
   // Use API data or fallback to empty array
   const patientsData = apiPatients || [];
