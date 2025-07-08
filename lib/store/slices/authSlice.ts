@@ -21,7 +21,13 @@ export const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       state.error = null;
-      // Clear cookie and localStorage (will be handled by logout API)
+      // Clear localStorage items (as backup, main cleanup is in logout API)
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("loggedInUserRole");
+        localStorage.removeItem("chatThreads");
+        localStorage.removeItem("chatMessages");
+      }
     },
     clearError: (state) => {
       state.error = null;

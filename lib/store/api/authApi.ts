@@ -29,10 +29,11 @@ export const authApi = createApi({
 
           const tokenData = await tokenResponse.json();
 
-          // Set cookie for UI navigation (existing functionality)
+          // Set both session cookie and JWT token cookie for unified auth
           const expiryDate = new Date();
           expiryDate.setDate(expiryDate.getDate() + 1);
           document.cookie = `auth_session=demo_authenticated; expires=${expiryDate.toUTCString()}; path=/`;
+          document.cookie = `auth_token=${tokenData.token.replace(/^Bearer\s+/, "")}; expires=${expiryDate.toUTCString()}; path=/`;
 
           // Return login response with user data and token
           return {
@@ -59,10 +60,16 @@ export const authApi = createApi({
     logout: builder.mutation<void, void>({
       queryFn: async () => {
         try {
-          // Clear cookie
+          // Clear both session and JWT token cookies
           document.cookie = "auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-          // Clear localStorage
+          document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+          // Clear all authentication-related localStorage items
           localStorage.removeItem("auth_token");
+          localStorage.removeItem("loggedInUserRole");
+          localStorage.removeItem("chatThreads");
+          localStorage.removeItem("chatMessages");
+          // Keep UI preferences like sidebarCollapsed
 
           return { data: undefined };
         } catch (error: any) {
