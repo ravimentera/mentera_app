@@ -188,7 +188,7 @@ const Page = () => {
         </div>
       )}
 
-      {/* <div className="absolute top-3 right-3 z-20">
+      <div className="absolute top-3 right-3 z-20">
         <Button
           variant="ghost"
           size="icon"
@@ -202,7 +202,7 @@ const Page = () => {
             <PanelRightOpen className="h-5 w-5" />
           )}
         </Button>
-      </div> */}
+      </div>
     </div>
   );
 };

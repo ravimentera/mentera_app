@@ -104,7 +104,7 @@ export function LayoutRenderer({
         className="grid grid-cols-1 md:grid-cols-2 gap-6" // Default to 1 col on small, 2 cols on md+
       >
         {allRenderableComponents.map((componentNode) => {
-          const ComponentToRender = componentMap[componentNode.name];
+          const ComponentToRender = componentMap[componentNode?.name || componentNode?.type];
 
           if (!ComponentToRender) {
             return (

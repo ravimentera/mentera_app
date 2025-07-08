@@ -22,6 +22,13 @@ export const fetchDynamicLayout = createAsyncThunk<
   try {
     const { dispatch, getState, rejectWithValue } = thunkAPI;
     const activePatientID = (getState() as RootState).globalState.selectedPatientId;
+    const latestUserMessage = (getState() as RootState).messages.items
+      .filter((message) => message.sender === "user")
+      .at(-1)?.text;
+
+    // @TODO: Remove the HARDCODED IDs
+    const providerId = "NR-2001";
+    const medspaId = "MS-1001";
 
     if (!activePatientID) throw new Error("No active patient ID found");
 
@@ -33,7 +40,14 @@ export const fetchDynamicLayout = createAsyncThunk<
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ markdown: markdownKey.trim(), sessionId }),
+      body: JSON.stringify({
+        markdown: markdownKey.trim(),
+        sessionId,
+        providerId,
+        medspaId,
+        activePatientID,
+        latestUserMessage,
+      }),
     });
 
     if (!response.ok) {
