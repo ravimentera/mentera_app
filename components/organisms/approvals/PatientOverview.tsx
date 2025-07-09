@@ -26,7 +26,7 @@ import { useEffect, useState } from "react";
 
 interface PatientOverviewProps {
   approval: ApprovalItem;
-  patient?: PatientWithProfile | null; // Optional patient prop for consistent data
+  patient?: PatientWithProfile | null;
   className?: string;
 }
 
