@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
 // Import APIs
-import { authApi, patientsApi, usersApi } from "./api";
+import { authApi, communicationsApi, patientsApi, usersApi } from "./api";
 
 // Import slices
 import {
@@ -24,6 +24,7 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [usersApi.reducerPath]: usersApi.reducer,
     [patientsApi.reducerPath]: patientsApi.reducer,
+    [communicationsApi.reducerPath]: communicationsApi.reducer,
 
     // Regular slices
     auth: authReducer,
@@ -38,7 +39,12 @@ export const store = configureStore({
     threads: threadsReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(authApi.middleware, usersApi.middleware, patientsApi.middleware),
+    getDefaultMiddleware().concat(
+      authApi.middleware,
+      usersApi.middleware,
+      patientsApi.middleware,
+      communicationsApi.middleware,
+    ),
 });
 
 setupListeners(store.dispatch);

@@ -24,6 +24,7 @@ module.exports = {
         ring: "#94a3b8",
         background: "#ffffff",
         foreground: "#0f172a",
+        interactive: "#2563EB",
         primary: {
           DEFAULT: "#60a7d6",
           foreground: "#f8fafc",

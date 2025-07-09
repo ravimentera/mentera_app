@@ -1,13 +1,15 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { History } from "lucide-react";
 import { UserHistory } from "../types";
 
 interface UserHistoryCardProps {
   history: UserHistory;
+  showBorder?: boolean;
 }
 
-export function UserHistoryCard({ history }: UserHistoryCardProps) {
+export function UserHistoryCard({ history, showBorder = true }: UserHistoryCardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -17,9 +19,9 @@ export function UserHistoryCard({ history }: UserHistoryCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg border p-6 space-y-6">
+    <div className={cn("bg-white rounded-lg space-y-6", showBorder && "border border-border p-6")}>
       <div className="flex items-center gap-2">
-        <History className="h-5 w-5 text-brand-violet" />
+        {showBorder && <History className="h-5 w-5 text-brand-violet" />}
         <h2 className="text-lg font-semibold">User History</h2>
       </div>
 

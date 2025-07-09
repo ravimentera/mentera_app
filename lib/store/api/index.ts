@@ -9,6 +9,9 @@ export * from "./patientsApi";
 // Auth API
 export * from "./authApi";
 
+// Communications API
+export * from "./communicationsApi";
+
 // Future APIs
 // export { appointmentsApi } from './appointmentsApi';
 // export { treatmentsApi } from './treatmentsApi';

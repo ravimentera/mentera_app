@@ -4,6 +4,7 @@ interface Message {
   sender: string;
   timestamp: Date;
   isOutbound: boolean;
+  channel?: string; // Optional channel for filtering (SMS, EMAIL)
 }
 
 interface ConversationData {

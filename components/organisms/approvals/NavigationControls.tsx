@@ -18,7 +18,7 @@ export function NavigationControls({
 }: NavigationControlsProps) {
   return (
     <div className={className}>
-      <div className="flex justify-between items-center gap-4 mb-4">
+      <div className="flex justify-between items-center gap-4">
         <span className="text-muted-foreground">{totalApprovals} records</span>
         <div className="flex gap-2">
           <Button

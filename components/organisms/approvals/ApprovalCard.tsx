@@ -1,52 +1,13 @@
 import { Avatar, AvatarFallback, Badge, Button } from "@/components/atoms";
 import { CommunicationToggle } from "@/components/molecules/CommunicationToggle";
 import { ApprovalItem } from "@/mock/approvals.data";
+import type { PatientWithProfile } from "@/types/user.types";
 import { Check, Mail, Paperclip, Phone, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-// Define the patient type based on the structure from patients.data.ts
-type Patient = {
-  patientId: string;
-  profile: {
-    firstName: string;
-    lastName: string;
-    gender: string;
-    avatar: {
-      large: string;
-      medium: string;
-      thumbnail: string;
-    };
-  };
-  chartId: string;
-  visitDate: string;
-  provider: string;
-  treatmentNotes: {
-    procedure: string;
-    areasTreated: string[];
-    [key: string]: any; // Allow for flexible additional properties
-    observations: string;
-    providerRecommendations: string;
-  };
-  preProcedureCheck: {
-    medications: string[];
-    consentSigned: boolean;
-    allergyCheck: string;
-  };
-  postProcedureCare: {
-    instructionsProvided: boolean;
-    followUpRecommended: string;
-    productsRecommended: string[];
-  };
-  nextTreatment: string;
-  followUpDate: string;
-  alerts: string[];
-  providerSpecialty: string;
-  treatmentOutcome: string;
-};
-
 interface ApprovalCardProps {
   approval: ApprovalItem;
-  patient: Patient;
+  patient: PatientWithProfile;
   onApproval: (action: "approved" | "declined") => void;
   className?: string;
 }

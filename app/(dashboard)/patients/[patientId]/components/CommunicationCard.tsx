@@ -1,27 +1,42 @@
 "use client";
 
 import { Switch } from "@/components/atoms";
+import { cn } from "@/lib/utils";
 import { Mail, MessageSquare } from "lucide-react";
 import { CommunicationPreferences } from "../types";
 
 interface CommunicationCardProps {
   preferences: CommunicationPreferences;
   onToggle: (key: keyof CommunicationPreferences, value: boolean) => void;
+  showBorder?: boolean;
 }
 
-export function CommunicationCard({ preferences, onToggle }: CommunicationCardProps) {
+export function CommunicationCard({
+  preferences,
+  onToggle,
+  showBorder = true,
+}: CommunicationCardProps) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="p-4 space-y-4">
+    <div
+      className={cn(
+        "bg-white rounded-lg overflow-hidden",
+        showBorder && "border border-border p-6",
+      )}
+    >
+      <div className={cn("space-y-4", showBorder && "p-4")}>
         {/* Header */}
         <div className="flex items-center gap-2">
-          <div className=" flex items-center justify-center">
-            <MessageSquare className="h-4 w-4 text-brand-blue" />
-          </div>
-          <h3 className="text-sm font-medium text-gray-900">Communication</h3>
-          <button type="button" className="ml-auto text-sm font-medium text-blue-700">
-            Edit
-          </button>
+          {showBorder && (
+            <div className=" flex items-center justify-center">
+              <MessageSquare className="h-4 w-4 text-brand-blue" />
+            </div>
+          )}
+          <h3 className="text-lg font-semibold">Communication</h3>
+          {showBorder && (
+            <button type="button" className="ml-auto text-sm font-medium text-blue-700">
+              Edit
+            </button>
+          )}
         </div>
 
         {/* Preferences */}

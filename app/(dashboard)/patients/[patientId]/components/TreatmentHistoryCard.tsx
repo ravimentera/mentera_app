@@ -1,6 +1,7 @@
 "use client";
 
-import { Badge, Button } from "@/components/atoms";
+import { Badge, Link } from "@/components/atoms";
+import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { Clock } from "lucide-react";
 
@@ -22,13 +23,16 @@ interface TreatmentHistoryCardProps {
   enrichedVisits?: EnrichedVisit[];
   isLoading?: boolean;
   onViewAll?: () => void;
+  showBorder?: boolean;
 }
 
 const TreatmentHistoryCard = ({
   enrichedVisits = [],
   isLoading,
   onViewAll,
+  showBorder = true,
 }: TreatmentHistoryCardProps) => {
+  console.log("showBorder", showBorder);
   const formatRelativeDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -43,7 +47,7 @@ const TreatmentHistoryCard = ({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border p-4 h-fit">
+      <div className={cn("bg-white rounded-xl h-fit", showBorder && "border border-border p-4")}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Treatment History</h2>
         </div>
@@ -71,7 +75,12 @@ const TreatmentHistoryCard = ({
 
   if (!enrichedVisits.length) {
     return (
-      <div className="bg-white rounded-xl border p-4 h-fit">
+      <div
+        className={cn(
+          "bg-white rounded-xl border h-fit",
+          showBorder && "border-b border-border p-4",
+        )}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Treatment History</h2>
         </div>
@@ -81,17 +90,13 @@ const TreatmentHistoryCard = ({
   }
 
   return (
-    <div className="bg-white rounded-xl border p-4 h-fit">
+    <div className={cn("bg-white rounded-xl h-fit", showBorder && "border border-border p-4 ")}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">Treatment History</h2>
           <span className="text-sm text-gray-500">({enrichedVisits.length} total)</span>
         </div>
-        {onViewAll && (
-          <Button variant="link" onClick={onViewAll} className="text-blue-600 font-medium">
-            View All
-          </Button>
-        )}
+        {onViewAll && <Link onClick={onViewAll}>View All</Link>}
       </div>
 
       <div className="space-y-6">

@@ -1,25 +1,29 @@
 "use client";
 
-import { Button } from "@/components/atoms";
+import { Link } from "@/components/atoms";
+import { cn } from "@/lib/utils";
 import { Calendar, ChevronRight, User } from "lucide-react";
 import { Appointment } from "../types";
 
 interface AppointmentCardProps {
   appointments: Appointment[];
   onViewAll: () => void;
+  showBorder?: boolean;
 }
 
-export function AppointmentCard({ appointments, onViewAll }: AppointmentCardProps) {
+export function AppointmentCard({
+  appointments,
+  onViewAll,
+  showBorder = true,
+}: AppointmentCardProps) {
   return (
-    <div className="bg-white rounded-lg border p-6 space-y-6">
+    <div className={cn("bg-white rounded-lg space-y-6", showBorder && "border p-6 border-border")}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-brand-blue" />
+          {showBorder && <Calendar className="h-5 w-5 text-brand-blue" />}
           <h2 className="text-lg font-semibold">Next Appointment</h2>
         </div>
-        <Button variant="link" onClick={onViewAll} className="text-blue-600 font-medium">
-          View All
-        </Button>
+        <Link onClick={onViewAll}> View All</Link>
       </div>
 
       {appointments.length === 0 ? (

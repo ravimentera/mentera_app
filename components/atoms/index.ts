@@ -6,6 +6,7 @@ export { default as ChatMessageSkeleton } from "./ChatMessageSkeleton";
 export { InboxCounter } from "./InboxCounter";
 export { Input, PasswordInput } from "./Input";
 export { Label } from "./Label";
+export { Link } from "./Link";
 export { MessageBubble } from "./MessageBubble";
 export { PatientDataItem } from "./PatientDataItem";
 export { Skeleton } from "./Skeleton";

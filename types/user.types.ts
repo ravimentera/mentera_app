@@ -7,7 +7,7 @@ export interface Avatar {
 export interface UserProfile {
   firstName: string;
   lastName: string;
-  gender: "male" | "female";
+  gender: string; // Changed from "male" | "female" to string for more flexibility
   avatar: Avatar;
 }
 
@@ -15,7 +15,7 @@ export interface ProviderAvatar {
   avatar: Avatar;
 }
 
-// Extended patient interface with profile
+// Extended patient interface with profile - now more comprehensive to handle approval components
 export interface PatientWithProfile {
   patientId: string;
   profile: UserProfile;
@@ -25,7 +25,7 @@ export interface PatientWithProfile {
   treatmentNotes: {
     procedure: string;
     areasTreated: string[];
-    unitsUsed?: number;
+    unitsUsed?: number | null;
     volumeUsed?: string;
     sessionNumber?: number;
     sessionDuration?: string;
@@ -37,6 +37,7 @@ export interface PatientWithProfile {
     pigmentUsed?: string;
     observations: string;
     providerRecommendations: string;
+    [key: string]: any; // Allow for flexible additional properties
   };
   preProcedureCheck: {
     medications: string[];

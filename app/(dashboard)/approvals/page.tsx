@@ -11,45 +11,156 @@ import {
   NavigationControls,
   PatientOverview,
 } from "@/components/organisms/approvals";
-import { ApprovalItem, approvalItems, getPatientById } from "@/mock/approvals.data";
-import { mockConversationData } from "@/mock/conversations.data";
+import {
+  useGetPatientConversationQuery,
+  useGetPatientDetailsQuery,
+  useGetPatientMedicalHistoryQuery,
+  useGetPatientVisitsQuery,
+  useGetPendingApprovalsQuery,
+} from "@/lib/store/api";
+import { useAppSelector } from "@/lib/store/hooks";
+import { selectUser } from "@/lib/store/slices/authSlice";
+import {
+  createMockPatientFromApproval,
+  filterMessagesByChannel,
+  transformAPIApprovalToMockApproval,
+  transformAPIConversationToMockConversation,
+} from "@/utils/approvals.utils";
 import confetti from "canvas-confetti";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Toaster, toast } from "sonner";
 
 export default function ApprovalsPage() {
   const [currentApprovalIndex, setCurrentApprovalIndex] = useState(0);
-  const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
   const [showConversationDrawer, setShowConversationDrawer] = useState(false);
   const [activeCommMethod, setActiveCommMethod] = useState<"chat" | "email">("chat");
 
-  useEffect(() => {
-    // Get pending approvals
-    const pendingApprovals = approvalItems.filter((item) => item.status === "pending");
-    setApprovals(pendingApprovals);
+  // Get current user from auth state
+  const user = useAppSelector(selectUser);
+  const providerId = user?.providerId || "PR-2001"; // Fallback to default
 
+  // API calls for approvals
+  const {
+    data: approvalsData,
+    isLoading: approvalsLoading,
+    error: approvalsError,
+  } = useGetPendingApprovalsQuery({ providerId, limit: 50, offset: 0 });
+
+  // Get the current approval and extract patient ID from the active approval card
+  const currentAPIApproval = approvalsData?.data?.approvals[currentApprovalIndex];
+  const currentPatientId = currentAPIApproval?.patient?.id;
+
+  // API calls for patient data using the patient ID from the active approval card
+  // These will re-fetch automatically when currentApprovalIndex changes (and thus currentPatientId changes)
+  const {
+    data: patientDetailsData,
+    isLoading: patientDetailsLoading,
+    error: patientDetailsError,
+  } = useGetPatientDetailsQuery(currentPatientId || "", {
+    skip: !currentPatientId,
+  });
+
+  const {
+    data: patientVisitsData,
+    isLoading: patientVisitsLoading,
+    error: patientVisitsError,
+  } = useGetPatientVisitsQuery(currentPatientId || "", {
+    skip: !currentPatientId,
+  });
+
+  const {
+    data: patientMedicalData,
+    isLoading: patientMedicalLoading,
+    error: patientMedicalError,
+  } = useGetPatientMedicalHistoryQuery(currentPatientId || "", {
+    skip: !currentPatientId,
+  });
+
+  // Get conversation data for the current patient using the same patient ID
+  const {
+    data: conversationData,
+    isLoading: conversationLoading,
+    error: conversationError,
+  } = useGetPatientConversationQuery(
+    {
+      patientId: currentPatientId || "",
+      providerId,
+    },
+    {
+      skip: !currentPatientId,
+    },
+  );
+
+  // Transform API data to component format with enhanced patient data
+  const approvals = useMemo(() => {
+    if (!approvalsData?.data?.approvals) return [];
+
+    return approvalsData.data.approvals.map((approval, index) => {
+      // Only use enhanced patient data for the current approval to avoid unnecessary complexity
+      // and ensure we have the most up-to-date data for the active approval
+      if (index === currentApprovalIndex) {
+        return transformAPIApprovalToMockApproval(
+          approval,
+          patientDetailsData,
+          patientVisitsData,
+          patientMedicalData,
+        );
+      }
+
+      // For non-current approvals, use basic transformation without patient data
+      return transformAPIApprovalToMockApproval(approval);
+    });
+  }, [
+    approvalsData,
+    currentApprovalIndex,
+    patientDetailsData,
+    patientVisitsData,
+    patientMedicalData,
+  ]);
+
+  const currentApproval = approvals[currentApprovalIndex];
+
+  // Create mock patient data from current approval with enhanced patient data
+  const currentPatient = currentAPIApproval
+    ? createMockPatientFromApproval(currentAPIApproval, patientDetailsData)
+    : null;
+
+  // Transform conversation data
+  const transformedConversation = conversationData
+    ? transformAPIConversationToMockConversation(conversationData)
+    : { messages: [] };
+
+  // Filter messages based on active communication method
+  const filteredMessages = useMemo(() => {
+    return filterMessagesByChannel(transformedConversation.messages, activeCommMethod);
+  }, [transformedConversation.messages, activeCommMethod]);
+
+  // Get the actual conversation summary from the API, fallback to approval context summary
+  const actualConversationSummary =
+    conversationData?.data?.summary?.summary?.summary ||
+    currentApproval?.conversationSummary ||
+    "N/A";
+
+  useEffect(() => {
     // Trigger confetti if no approvals on initial load
-    if (pendingApprovals.length === 0) {
+    if (!approvalsLoading && approvals.length === 0) {
       setTimeout(() => {
         confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       }, 500);
     }
-  }, []);
-
-  const currentApproval = approvals[currentApprovalIndex];
-  const currentPatient = currentApproval ? getPatientById(currentApproval.patientId) : null;
+  }, [approvalsLoading, approvals.length]);
 
   const handleApproval = (action: "approved" | "declined") => {
     if (!currentApproval) return;
 
-    const updatedApprovals = approvals.filter((_, index) => index !== currentApprovalIndex);
-    setApprovals(updatedApprovals);
+    // Remove the approved/declined item from local state
+    // Note: In a real implementation, you would also call an API to update the status
 
     // Adjust current index if needed
-    if (currentApprovalIndex >= updatedApprovals.length && updatedApprovals.length > 0) {
-      setCurrentApprovalIndex(updatedApprovals.length - 1);
-    } else if (updatedApprovals.length === 0) {
+    if (currentApprovalIndex >= approvals.length - 1 && approvals.length > 1) {
+      setCurrentApprovalIndex(approvals.length - 2);
+    } else if (approvals.length === 1) {
       setCurrentApprovalIndex(0);
       // Trigger confetti when all approvals are processed
       setTimeout(() => {
@@ -76,6 +187,25 @@ export default function ApprovalsPage() {
     setShowConversationDrawer(true);
   };
 
+  // Loading state
+  if (approvalsLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500">Loading approvals...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (approvalsError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-500">Error loading approvals</p>
+      </div>
+    );
+  }
+
+  // Empty state
   if (approvals.length === 0) {
     return (
       <>
@@ -85,45 +215,64 @@ export default function ApprovalsPage() {
     );
   }
 
+  // No current approval state
   if (!currentApproval || !currentPatient) {
-    return null;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500">No approval data available</p>
+      </div>
+    );
   }
+
+  // Show loading indicator for patient data
+  const isLoadingPatientData =
+    patientDetailsLoading || patientVisitsLoading || patientMedicalLoading;
 
   return (
     <>
       <Toaster richColors position="top-right" />
-      <div className="h-full w-full p-6">
-        {/* Header */}
-        <ApprovalsHeader className="flex flex-col items-start mb-6" />
-
-        <div className="flex gap-6 h-[calc(100vh-8rem)]">
+      <div className="h-full w-full">
+        <div className="flex">
           {/* Approval Section */}
-          <div className="flex-1 space-y-6">
-            {/* Conversation Summary */}
-            <ConversationSummary
-              conversationSummary={currentApproval.conversationSummary || ""}
-              onViewConversation={handleViewConversation}
-            />
+          <div className="flex-1 space-y-6 p-6">
+            {/* Header */}
+            <ApprovalsHeader className="flex flex-col items-start mb-6" />
+            <div className="flex justify-center">
+              <div className="space-y-6 max-w-150">
+                {/* Conversation Summary */}
+                <ConversationSummary
+                  conversationSummary={actualConversationSummary}
+                  onViewConversation={handleViewConversation}
+                />
 
-            {/* Approval Card */}
-            <div className="flex flex-col gap-4">
-              <ApprovalCard
-                approval={currentApproval}
-                patient={currentPatient}
-                onApproval={handleApproval}
-              />
+                {/* Approval Card */}
+                <div className="flex flex-col gap-4">
+                  <ApprovalCard
+                    approval={currentApproval}
+                    patient={currentPatient}
+                    onApproval={handleApproval}
+                  />
 
-              <NavigationControls
-                currentIndex={currentApprovalIndex}
-                totalApprovals={approvals.length}
-                onPrevious={() => handleNavigation("prev")}
-                onNext={() => handleNavigation("next")}
-              />
+                  <NavigationControls
+                    currentIndex={currentApprovalIndex}
+                    totalApprovals={approvals.length}
+                    onPrevious={() => handleNavigation("prev")}
+                    onNext={() => handleNavigation("next")}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Patient Overview Section */}
-          <PatientOverview approval={currentApproval} />
+          <div className="relative w-96 max-h-screen overflow-y-auto border-l border-border rounded-xl">
+            {isLoadingPatientData && (
+              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+                <p className="text-gray-500">Loading patient details...</p>
+              </div>
+            )}
+            <PatientOverview approval={currentApproval} patient={currentPatient} />
+          </div>
         </div>
 
         {/* Conversation Drawer */}
@@ -155,7 +304,29 @@ export default function ApprovalsPage() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto">
-              <ChatMessages messages={mockConversationData.messages} />
+              {conversationLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <p className="text-gray-500">Loading conversation...</p>
+                </div>
+              ) : conversationError ? (
+                <div className="flex items-center justify-center h-32">
+                  <p className="text-red-500">Error loading conversation</p>
+                </div>
+              ) : filteredMessages.length === 0 ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center">
+                    <p className="text-gray-500 text-lg mb-2">
+                      No {activeCommMethod === "chat" ? "SMS" : "Email"} conversations found
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      Try switching to {activeCommMethod === "chat" ? "Email" : "SMS"} to see other
+                      conversations
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <ChatMessages messages={filteredMessages} />
+              )}
             </div>
           </DrawerContent>
         </Drawer>
