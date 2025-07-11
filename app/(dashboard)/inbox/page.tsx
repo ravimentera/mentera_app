@@ -1,29 +1,73 @@
 "use client";
 
-import { ChatPanel, ConversationList, PatientDetailsSidebar } from "@/components/organisms/inbox";
-import { mockConversations, mockPatientDetails } from "@/mock/inbox.data";
-import { useMemo, useState } from "react";
-import type { ChatConversation, InboxCounts, PatientDetail } from "./types";
+import { PatientOverview } from "@/components/organisms/approvals";
+import { ChatPanel, ConversationList } from "@/components/organisms/inbox";
+import {
+  useGetPatientCommunicationsQuery,
+  useGetProviderCommunicationsQuery,
+} from "@/lib/store/api/communicationsApi";
+import {
+  calculateInboxCounts,
+  transformCommunicationsToConversations,
+  updateConversationWithCompleteMessages,
+} from "@/utils/inbox.utils";
+import { useEffect, useMemo, useState } from "react";
+import type { ChatConversation, InboxCounts } from "./types";
 
 export default function InboxPage() {
   const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
+  const [conversationWithCompleteMessages, setConversationWithCompleteMessages] =
+    useState<ChatConversation | null>(null);
+
+  // Use hardcoded provider ID for now - in real app this would come from auth context
+  const providerId = "PR-2001";
+
+  // Fetch communications data using RTK Query
+  const {
+    data: communicationsResponse,
+    isLoading,
+    error,
+  } = useGetProviderCommunicationsQuery({ providerId });
+
+  // Fetch complete patient communications when a conversation is selected
+  const {
+    data: patientCommunicationsResponse,
+    isLoading: isLoadingPatientMessages,
+    error: patientMessagesError,
+  } = useGetPatientCommunicationsQuery(
+    { patientId: selectedConversation?.patientId || "" },
+    { skip: !selectedConversation?.patientId },
+  );
+
+  // Transform API data to match existing interface
+  const conversations = useMemo(() => {
+    if (!communicationsResponse?.data?.data) return [];
+    return transformCommunicationsToConversations(communicationsResponse.data.data);
+  }, [communicationsResponse]);
+
+  // Update selected conversation with complete messages when patient data is loaded
+  useEffect(() => {
+    if (selectedConversation && patientCommunicationsResponse?.data) {
+      const updatedConversation = updateConversationWithCompleteMessages(
+        selectedConversation,
+        patientCommunicationsResponse.data,
+      );
+      setConversationWithCompleteMessages(updatedConversation);
+    } else {
+      setConversationWithCompleteMessages(selectedConversation);
+    }
+  }, [selectedConversation, patientCommunicationsResponse]);
 
   // Calculate counts for tabs
   const counts = useMemo((): InboxCounts => {
-    const all = mockConversations.length;
-    const unread = mockConversations.filter((c) => !c.isRead).length;
-    const read = mockConversations.filter((c) => c.isRead).length;
-    return { all, unread, read };
-  }, []);
-
-  // Get patient details for selected conversation
-  const selectedPatient: PatientDetail | null = useMemo(() => {
-    if (!selectedConversation) return null;
-    return mockPatientDetails[selectedConversation.patientId] || null;
-  }, [selectedConversation]);
+    return calculateInboxCounts(conversations);
+  }, [conversations]);
 
   const handleConversationSelect = (conversation: ChatConversation) => {
     setSelectedConversation(conversation);
+    // Clear previous complete messages while new ones load
+    setConversationWithCompleteMessages(conversation);
+
     // Mark as read when selected
     if (!conversation.isRead) {
       conversation.isRead = true;
@@ -32,7 +76,7 @@ export default function InboxPage() {
   };
 
   const handleSendMessage = (messageText: string) => {
-    if (!selectedConversation) return;
+    if (!conversationWithCompleteMessages) return;
 
     const newMessage = {
       id: `msg-${Date.now()}`,
@@ -42,29 +86,78 @@ export default function InboxPage() {
       isOutbound: true,
     };
 
-    selectedConversation.messages.push(newMessage);
-    selectedConversation.lastMessage = messageText;
-    selectedConversation.timestamp = new Date();
+    const updatedConversation = {
+      ...conversationWithCompleteMessages,
+      messages: [...conversationWithCompleteMessages.messages, newMessage],
+      lastMessage: messageText,
+      timestamp: new Date(),
+    };
 
-    // Update state to trigger re-render
-    setSelectedConversation({ ...selectedConversation });
+    setConversationWithCompleteMessages(updatedConversation);
+
+    // Also update the selected conversation for consistency
+    if (selectedConversation) {
+      setSelectedConversation({
+        ...selectedConversation,
+        lastMessage: messageText,
+        timestamp: new Date(),
+      });
+    }
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="h-full flex bg-gray-50 items-center justify-center">
+        <div className="text-gray-500">Loading conversations...</div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="h-full flex bg-gray-50 items-center justify-center">
+        <div className="text-red-500">Error loading conversations. Please try again.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex bg-gray-50">
       <ConversationList
-        conversations={mockConversations}
+        conversations={conversations}
         selectedConversation={selectedConversation}
         onConversationSelect={handleConversationSelect}
         counts={counts}
       />
-      <div className="p-4 pl-0 flex-1 h-screen bg-white">
+      <div className="py-4 px-0 flex-1 h-screen bg-white">
         <div className="rounded-2xl border border-gray-200 h-full">
-          <ChatPanel conversation={selectedConversation} onSendMessage={handleSendMessage} />
+          {isLoadingPatientMessages && selectedConversation ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-gray-500">Loading complete conversation...</div>
+            </div>
+          ) : (
+            <ChatPanel
+              conversation={conversationWithCompleteMessages}
+              onSendMessage={handleSendMessage}
+            />
+          )}
         </div>
       </div>
 
-      <PatientDetailsSidebar patient={selectedPatient} />
+      {selectedConversation ? (
+        <PatientOverview
+          patientId={selectedConversation.patientId}
+          className="w-[320px] bg-white"
+        />
+      ) : (
+        <div className="w-[320px] bg-white p-6">
+          <div className="text-center text-gray-500">
+            <p>Select a conversation to view patient details</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

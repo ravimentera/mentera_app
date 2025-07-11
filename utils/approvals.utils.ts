@@ -8,6 +8,7 @@ import type {
   CommunicationMessage,
   ConversationResponse,
 } from "@/lib/store/types";
+import { getFullName } from "@/lib/utils";
 import type { ApprovalItem as MockApprovalItem } from "@/mock/approvals.data";
 import type { Message } from "@/mock/conversations.data";
 
@@ -167,7 +168,7 @@ export const transformAPIConversationToMockConversation = (
     // Show actual content unless it's the placeholder text for pending approvals
     text:
       msg.content === "AI-generated message pending approval"
-        ? `[${msg.metadata.messageType || "Message"} - Pending Approval]`
+        ? `[${msg.metadata?.messageType || "Message"} - Pending Approval]`
         : msg.content,
     sender: msg.sender.type === "patient" ? "patient" : "staff",
     timestamp: new Date(msg.timestamp),
@@ -208,7 +209,7 @@ export const getPatientNameFromApproval = (
   if (patientData?.data?.firstName || patientData?.data?.lastName) {
     const firstName = patientData.data.firstName || "";
     const lastName = patientData.data.lastName || "";
-    return `${firstName} ${lastName}`.trim() || "N/A";
+    return getFullName(firstName, lastName) || "N/A";
   }
 
   // Second priority: Patient context from approval (fallback)

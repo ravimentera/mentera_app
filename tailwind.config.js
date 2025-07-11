@@ -31,6 +31,16 @@ module.exports = {
           subtle: "#eff6ff",
           hover: "#1e3a8ae6",
         },
+        gradient: {
+          light: {
+            start: "#E3DEFF",
+            end: "#E8F3FF",
+          },
+          dark: {
+            start: "#200F8A",
+            end: "#4F9BED",
+          },
+        },
         sidebar: {
           active: "#e9e8fc33",
         },
