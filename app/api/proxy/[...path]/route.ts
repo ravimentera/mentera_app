@@ -1,59 +1,79 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE_URL = process.env.API_BASE_URL || "http://34.204.48.222:5001/api";
+const API_BASE_URL = "http://34.204.48.222:5001/api";
 
 export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
-  return handleRequest(request, params.path, "GET");
+  return handleRequest(request, params, "GET");
 }
 
 export async function POST(request: NextRequest, { params }: { params: { path: string[] } }) {
-  return handleRequest(request, params.path, "POST");
+  return handleRequest(request, params, "POST");
 }
 
 export async function PUT(request: NextRequest, { params }: { params: { path: string[] } }) {
-  return handleRequest(request, params.path, "PUT");
+  return handleRequest(request, params, "PUT");
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { path: string[] } }) {
-  return handleRequest(request, params.path, "DELETE");
+  return handleRequest(request, params, "DELETE");
 }
 
-async function handleRequest(request: NextRequest, path: string[], method: string) {
+async function handleRequest(request: NextRequest, params: { path: string[] }, method: string) {
   try {
-    // Reconstruct the path
-    const pathSegments = path.join("/");
+    const path = params.path.join("/");
+    const url = new URL(request.url);
+    const searchParams = url.searchParams.toString();
+    const fullUrl = `${API_BASE_URL}/${path}${searchParams ? `?${searchParams}` : ""}`;
 
-    // Get query parameters
-    const { searchParams } = new URL(request.url);
-    const queryString = searchParams.toString();
+    // Get the request body for non-GET requests
+    let body;
+    if (method !== "GET") {
+      body = await request.text();
+    }
 
-    // Construct the target URL
-    const targetUrl = `${API_BASE_URL}/${pathSegments}${queryString ? `?${queryString}` : ""}`;
+    // Prepare headers //TODO: update this dynamically
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "x-gateway-request": "true",
+      "x-user-id": "12345",
+      "x-user-role": "admin",
+      "x-user-permissions": '["admin"]',
+    };
 
-    console.log("Proxying request to:", targetUrl); // Add logging
-
-    // Forward the request
-    const response = await fetch(targetUrl, {
-      method,
-      headers: {
-        ...Object.fromEntries(request.headers),
-        // Remove headers that might cause issues
-        host: new URL(API_BASE_URL).host,
-      },
-      ...(method !== "GET" && method !== "HEAD" && { body: request.body }),
+    // Copy relevant headers from the original request
+    const headersToForward = ["authorization", "cookie", "user-agent"];
+    headersToForward.forEach((headerName) => {
+      const headerValue = request.headers.get(headerName);
+      if (headerValue) {
+        headers[headerName] = headerValue;
+      }
     });
 
-    // Forward the response
-    const data = await response.json();
+    // Make the API request
+    const apiResponse = await fetch(fullUrl, {
+      method,
+      headers,
+      body: body || undefined,
+    });
 
-    return NextResponse.json(data, {
-      status: response.status,
+    const responseText = await apiResponse.text();
+
+    // Try to parse as JSON, fallback to text
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = responseText;
+    }
+
+    return NextResponse.json(responseData, {
+      status: apiResponse.status,
       headers: {
         "Content-Type": "application/json",
       },
     });
   } catch (error) {
     console.error("Proxy error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

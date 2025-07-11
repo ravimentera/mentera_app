@@ -1,5 +1,6 @@
 import { CommunicationPreferences } from "@/app/(dashboard)/patients/[patientId]/types";
 import { MedicalHistoryResponse, PatientDetailsResponse, VisitsResponse } from "@/lib/store/api";
+import { getFullName } from "@/lib/utils";
 import {
   Appointment,
   Campaign,
@@ -122,9 +123,18 @@ export function transformCommunicationPreferences(
   patientDetails: PatientDetailsResponse,
 ): CommunicationPreferences {
   return {
-    emailNotifications: patientDetails?.data?.communicationPreference?.emailOptIn ?? false,
-    smsReminders: patientDetails?.data?.communicationPreference?.smsOptIn ?? false,
+    emailNotifications: patientDetails?.data?.communicationPreference?.emailOptIn ?? true,
+    smsReminders: patientDetails?.data?.communicationPreference?.smsOptIn ?? true,
   };
+}
+
+// Add this type definition for treatment history
+export interface TreatmentHistoryItem {
+  id: string;
+  title: string;
+  date: string;
+  status: "completed" | "scheduled";
+  type: string;
 }
 
 export function transformTreatmentHistoryData(visitsData: VisitsResponse): TreatmentHistoryItem[] {
@@ -177,10 +187,14 @@ export function transformTreatmentHistoryData(visitsData: VisitsResponse): Treat
   return treatments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
-interface TreatmentHistoryItem {
-  id: string;
-  title: string;
-  date: string;
-  status: "completed" | "scheduled" | "cancelled";
-  type?: string;
+/**
+ * Get patient's full name from patient details
+ * @param patientDetails - Patient details response
+ * @returns Full name string
+ */
+export function getPatientFullName(patientDetails: PatientDetailsResponse): string {
+  return (
+    getFullName(patientDetails?.data?.firstName || "", patientDetails?.data?.lastName || "") ||
+    "N/A"
+  );
 }

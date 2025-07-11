@@ -8,11 +8,9 @@ import { Badge } from "@/components/atoms";
 import {
   type VisitsResponse,
   useGetPatientDetailsQuery,
-  useGetPatientMedicalHistoryQuery,
   useGetPatientVisitsQuery,
 } from "@/lib/store/api";
-import { cn } from "@/lib/utils";
-import { ApprovalItem, getApprovalPatientInfo } from "@/mock/approvals.data";
+import { cn, getFullName } from "@/lib/utils";
 import type { PatientWithProfile } from "@/types/user.types";
 import {
   transformAppointmentsData,
@@ -25,12 +23,20 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface PatientOverviewProps {
-  approval: ApprovalItem;
+  patientId: string;
   patient?: PatientWithProfile | null;
   className?: string;
+  showHeader?: boolean;
+  onPatientRedirect?: () => void;
 }
 
-export function PatientOverview({ approval, patient, className }: PatientOverviewProps) {
+export function PatientOverview({
+  patientId,
+  patient,
+  className,
+  showHeader = true,
+  onPatientRedirect,
+}: PatientOverviewProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [preferences, setPreferences] = useState<CommunicationPreferences>({
     emailNotifications: false,
@@ -38,20 +44,11 @@ export function PatientOverview({ approval, patient, className }: PatientOvervie
   });
   const router = useRouter();
 
-  const patientId = approval.patientId;
-
   // API calls using Redux
-  const {
-    data: patientDetails,
-    isLoading: isLoadingDetails,
-    error: detailsError,
-  } = useGetPatientDetailsQuery(patientId, { skip: !patientId });
-
-  const {
-    data: medicalHistory,
-    isLoading: isLoadingHistory,
-    error: historyError,
-  } = useGetPatientMedicalHistoryQuery(patientId, { skip: !patientId });
+  const { data: patientDetails, isLoading: isLoadingDetails } = useGetPatientDetailsQuery(
+    patientId,
+    { skip: !patientId },
+  );
 
   const {
     data: visitsData,
@@ -73,7 +70,7 @@ export function PatientOverview({ approval, patient, className }: PatientOvervie
     }));
   };
 
-  // Use the patient prop if available, otherwise fall back to approval patient info or API data
+  // Use the patient prop if available, otherwise fall back to API data
   const patientInfo = patient
     ? {
         firstName: patient.profile.firstName,
@@ -84,11 +81,21 @@ export function PatientOverview({ approval, patient, className }: PatientOvervie
           firstName: patientDetails.data.firstName || "N/A",
           lastName: patientDetails.data.lastName || "N/A",
         }
-      : getApprovalPatientInfo(approval);
+      : {
+          firstName: "N/A",
+          lastName: "",
+        };
 
   const handlePatientRedirect = () => {
-    router.push(`/patients/${approval.patientId}`);
+    if (onPatientRedirect) {
+      onPatientRedirect();
+    } else {
+      router.push(`/patients/${patientId}`);
+    }
   };
+
+  // Check if data is still loading
+  const isLoadingPatientData = isLoadingDetails || isLoadingVisits;
 
   // Transform API data for components
   const defaultVisitsData: VisitsResponse = {
@@ -167,7 +174,10 @@ export function PatientOverview({ approval, patient, className }: PatientOvervie
                   <div>Email</div>
                 </div>
                 <div className="font-medium text-text text-sm flex flex-col gap-1">
-                  <div>{patientInfo?.firstName + " " + patientInfo?.lastName || "N/A"}</div>{" "}
+                  <div>
+                    {getFullName(patientInfo?.firstName || "", patientInfo?.lastName || "") ||
+                      "N/A"}
+                  </div>
                   <div>{patientDetails?.data?.phone || "N/A"}</div>
                   <div>{patientDetails?.data?.email || "N/A"}</div>
                 </div>
@@ -188,7 +198,7 @@ export function PatientOverview({ approval, patient, className }: PatientOvervie
             <TreatmentHistoryCard
               enrichedVisits={visitsData?.data?.enrichedVisits}
               isLoading={isLoadingVisits}
-              onViewAll={() => router.push(`/patients/${approval.patientId}`)}
+              onViewAll={() => router.push(`/patients/${patientId}`)}
               showBorder={false}
             />
             <div className="bg-white border-b border-border space-y-4"></div>
@@ -196,7 +206,7 @@ export function PatientOverview({ approval, patient, className }: PatientOvervie
             {/* Active Treatments */}
             <TreatmentCard
               treatments={treatments}
-              onViewAll={() => router.push(`/patients/${approval.patientId}`)}
+              onViewAll={() => router.push(`/patients/${patientId}`)}
               showBorder={false}
             />
             <div className="bg-white border-b border-border space-y-4"></div>
@@ -204,7 +214,7 @@ export function PatientOverview({ approval, patient, className }: PatientOvervie
             {/* Next Appointment */}
             <AppointmentCard
               appointments={appointments}
-              onViewAll={() => router.push(`/patients/${approval.patientId}/appointments`)}
+              onViewAll={() => router.push(`/patients/${patientId}/appointments`)}
               showBorder={false}
             />
             <div className="bg-white border-b border-border space-y-4"></div>
@@ -234,22 +244,31 @@ export function PatientOverview({ approval, patient, className }: PatientOvervie
   return (
     <div className={cn("overflow-y-auto", className)}>
       {/* Header */}
-      <div className="p-4 space-y-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground">Patient Overview</h2>
-          <button
-            type="button"
-            onClick={handlePatientRedirect}
-            className="cursor-pointer hover:opacity-80 transition-opacity"
-            aria-label="View patient details"
-          >
-            <ExternalLink className="w-5 h-5 text-interactive" />
-          </button>
+      {showHeader && (
+        <div className="p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-foreground">Patient Overview</h2>
+            <button
+              type="button"
+              onClick={handlePatientRedirect}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              aria-label="View patient details"
+            >
+              <ExternalLink className="w-5 h-5 text-interactive" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Content */}
-      <div className="p-4 pt-1 overflow-y-auto">{renderTabContent()}</div>
+      {/* Loading State */}
+      {isLoadingPatientData ? (
+        <div className="flex items-center justify-center h-96">
+          <div className="text-gray-500">Loading patient data...</div>
+        </div>
+      ) : (
+        /* Content */
+        <div className="p-4 pt-1 overflow-y-auto">{renderTabContent()}</div>
+      )}
     </div>
   );
 }

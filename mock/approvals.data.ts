@@ -51,37 +51,17 @@ export const getPatientById = (patientId: string) => {
   return patients.find((patient) => patient.patientId === patientId);
 };
 
-// Helper function to get complete patient info for approval
-export const getApprovalPatientInfo = (approvalItem: ApprovalItem) => {
-  const patient = getPatientById(approvalItem.patientId);
-  if (!patient) return null;
+// Helper function to generate contact info
+function generateContactInfo(firstName: string, lastName: string) {
+  const emailDomain = "@example.com";
+  const phonePrefix = "(555) ";
+  const phoneNumber = Math.floor(1000000 + Math.random() * 9000000);
 
   return {
-    firstName: patient.profile.firstName,
-    lastName: patient.profile.lastName,
-    phone: approvalItem.patientExtras.phone,
-    email: approvalItem.patientExtras.email,
-    avatar: patient.profile.avatar.large,
-    isVip: approvalItem.patientExtras.isVip,
+    phone: `${phonePrefix}${phoneNumber.toString().slice(0, 3)}-${phoneNumber.toString().slice(3)}`,
+    email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${emailDomain}`,
   };
-};
-
-// Generate realistic phone numbers and emails based on patient data
-const generateContactInfo = (firstName: string, lastName: string) => {
-  const phoneNumbers = [
-    "+16898798897",
-    "+14155552345",
-    "+13235551234",
-    "+19175554567",
-    "+12135558901",
-  ];
-  const domains = ["gmail.com", "yahoo.com", "outlook.com", "icloud.com"];
-
-  return {
-    phone: phoneNumbers[Math.floor(Math.random() * phoneNumbers.length)],
-    email: `${firstName.toLowerCase()}@${domains[Math.floor(Math.random() * domains.length)]}`,
-  };
-};
+}
 
 export const approvalItems: ApprovalItem[] = [
   {

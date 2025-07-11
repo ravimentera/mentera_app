@@ -12,6 +12,8 @@ import {
   PatientOverview,
 } from "@/components/organisms/approvals";
 import {
+  useApproveApprovalMutation,
+  useDeclineApprovalMutation,
   useGetPatientConversationQuery,
   useGetPatientDetailsQuery,
   useGetPatientMedicalHistoryQuery,
@@ -39,6 +41,12 @@ export default function ApprovalsPage() {
   // Get current user from auth state
   const user = useAppSelector(selectUser);
   const providerId = user?.providerId || "PR-2001"; // Fallback to default
+
+  // Add decline approval mutation
+  const [declineApproval] = useDeclineApprovalMutation();
+
+  // Add approve approval mutation
+  const [approveApproval] = useApproveApprovalMutation();
 
   // API calls for approvals
   const {
@@ -151,28 +159,51 @@ export default function ApprovalsPage() {
     }
   }, [approvalsLoading, approvals.length]);
 
-  const handleApproval = (action: "approved" | "declined") => {
+  const handleApproval = async (action: "approved" | "declined") => {
     if (!currentApproval) return;
 
-    // Remove the approved/declined item from local state
-    // Note: In a real implementation, you would also call an API to update the status
+    try {
+      if (action === "declined") {
+        // Call the decline API with the approval ID
+        console.log("Declining approval with ID:", currentApproval.id);
 
-    // Adjust current index if needed
-    if (currentApprovalIndex >= approvals.length - 1 && approvals.length > 1) {
-      setCurrentApprovalIndex(approvals.length - 2);
-    } else if (approvals.length === 1) {
-      setCurrentApprovalIndex(0);
-      // Trigger confetti when all approvals are processed
-      setTimeout(() => {
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-      }, 300);
+        const response = await declineApproval({ approvalId: currentApproval.id }).unwrap();
+
+        console.log("Decline approval response:", response);
+      } else if (action === "approved") {
+        // Call the approve API with the approval ID
+        console.log("Approving approval with ID:", currentApproval.id);
+
+        const response = await approveApproval({ approvalId: currentApproval.id }).unwrap();
+
+        console.log("Approve approval response:", response);
+      }
+
+      // Remove the approved/declined item from local state
+      // Note: In a real implementation, you would also call an API to update the status
+
+      // Adjust current index if needed
+      if (currentApprovalIndex >= approvals.length - 1 && approvals.length > 1) {
+        setCurrentApprovalIndex(approvals.length - 2);
+      } else if (approvals.length === 1) {
+        setCurrentApprovalIndex(0);
+        // Trigger confetti when all approvals are processed
+        setTimeout(() => {
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }, 300);
+      }
+
+      toast.success(
+        action === "approved"
+          ? "Message approved and sent successfully"
+          : "Message declined successfully",
+      );
+    } catch (error) {
+      console.error("Failed to process approval action:", error);
+      toast.error(
+        `Failed to ${action === "approved" ? "approve" : "decline"} message. Please try again.`,
+      );
     }
-
-    toast.success(
-      action === "approved"
-        ? "Message approved and sent successfully"
-        : "Message declined successfully",
-    );
   };
 
   const handleNavigation = (direction: "prev" | "next") => {
@@ -224,21 +255,17 @@ export default function ApprovalsPage() {
     );
   }
 
-  // Show loading indicator for patient data
-  const isLoadingPatientData =
-    patientDetailsLoading || patientVisitsLoading || patientMedicalLoading;
-
   return (
     <>
       <Toaster richColors position="top-right" />
       <div className="h-full w-full">
         <div className="flex">
           {/* Approval Section */}
-          <div className="flex-1 space-y-6 p-6">
+          <div className="flex-1 space-y-6 p-6 h-screen overflow-y-auto">
             {/* Header */}
             <ApprovalsHeader className="flex flex-col items-start mb-6" />
             <div className="flex justify-center">
-              <div className="space-y-6 max-w-150">
+              <div className="space-y-6 px-16">
                 {/* Conversation Summary */}
                 <ConversationSummary
                   conversationSummary={actualConversationSummary}
@@ -250,6 +277,7 @@ export default function ApprovalsPage() {
                   <ApprovalCard
                     approval={currentApproval}
                     patient={currentPatient}
+                    providerId={providerId}
                     onApproval={handleApproval}
                   />
 
@@ -265,13 +293,8 @@ export default function ApprovalsPage() {
           </div>
 
           {/* Patient Overview Section */}
-          <div className="relative w-96 max-h-screen overflow-y-auto border-l border-border rounded-xl">
-            {isLoadingPatientData && (
-              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
-                <p className="text-gray-500">Loading patient details...</p>
-              </div>
-            )}
-            <PatientOverview approval={currentApproval} patient={currentPatient} />
+          <div className="w-96 max-h-screen overflow-y-auto border-l border-border rounded-xl">
+            <PatientOverview patientId={currentApproval.patientId} patient={currentPatient} />
           </div>
         </div>
 
