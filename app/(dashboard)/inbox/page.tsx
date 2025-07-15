@@ -3,13 +3,13 @@
 import { PatientOverview } from "@/components/organisms/approvals";
 import { ChatPanel, ConversationList } from "@/components/organisms/inbox";
 import {
-  useGetPatientCommunicationsQuery,
-  useGetProviderCommunicationsQuery,
+  useGetConversationQuery,
+  useGetProviderInboxQuery,
 } from "@/lib/store/api/communicationsApi";
 import {
-  calculateInboxCounts,
-  transformCommunicationsToConversations,
-  updateConversationWithCompleteMessages,
+  calculateInboxCountsFromData,
+  transformInboxDataToConversations,
+  updateConversationWithDetailedMessages,
 } from "@/utils/inbox.utils";
 import { useEffect, useMemo, useState } from "react";
 import type { ChatConversation, InboxCounts } from "./types";
@@ -22,46 +22,46 @@ export default function InboxPage() {
   // Use hardcoded provider ID for now - in real app this would come from auth context
   const providerId = "PR-2001";
 
-  // Fetch communications data using RTK Query
-  const {
-    data: communicationsResponse,
-    isLoading,
-    error,
-  } = useGetProviderCommunicationsQuery({ providerId });
+  // Fetch inbox data using the new inbox endpoint
+  const { data: inboxResponse, isLoading, error } = useGetProviderInboxQuery({ providerId });
 
-  // Fetch complete patient communications when a conversation is selected
+  // Fetch detailed conversation when a conversation is selected
   const {
-    data: patientCommunicationsResponse,
-    isLoading: isLoadingPatientMessages,
-    error: patientMessagesError,
-  } = useGetPatientCommunicationsQuery(
-    { patientId: selectedConversation?.patientId || "" },
+    data: conversationResponse,
+    isLoading: isLoadingConversation,
+    error: conversationError,
+  } = useGetConversationQuery(
+    {
+      providerId: providerId,
+      patientId: selectedConversation?.patientId || "",
+    },
     { skip: !selectedConversation?.patientId },
   );
 
-  // Transform API data to match existing interface
+  // Transform inbox data to match existing interface
   const conversations = useMemo(() => {
-    if (!communicationsResponse?.data?.data) return [];
-    return transformCommunicationsToConversations(communicationsResponse.data.data);
-  }, [communicationsResponse]);
+    if (!inboxResponse?.data) return [];
+    return transformInboxDataToConversations(inboxResponse.data);
+  }, [inboxResponse]);
 
-  // Update selected conversation with complete messages when patient data is loaded
+  // Update selected conversation with detailed messages when conversation data is loaded
   useEffect(() => {
-    if (selectedConversation && patientCommunicationsResponse?.data) {
-      const updatedConversation = updateConversationWithCompleteMessages(
+    if (selectedConversation && conversationResponse?.data) {
+      const updatedConversation = updateConversationWithDetailedMessages(
         selectedConversation,
-        patientCommunicationsResponse.data,
+        conversationResponse.data,
       );
       setConversationWithCompleteMessages(updatedConversation);
     } else {
       setConversationWithCompleteMessages(selectedConversation);
     }
-  }, [selectedConversation, patientCommunicationsResponse]);
+  }, [selectedConversation, conversationResponse]);
 
-  // Calculate counts for tabs
+  // Calculate counts for tabs using the new function
   const counts = useMemo((): InboxCounts => {
-    return calculateInboxCounts(conversations);
-  }, [conversations]);
+    if (!inboxResponse?.data) return { all: 0, unread: 0, read: 0 };
+    return calculateInboxCountsFromData(inboxResponse.data);
+  }, [inboxResponse]);
 
   const handleConversationSelect = (conversation: ChatConversation) => {
     setSelectedConversation(conversation);
@@ -133,9 +133,9 @@ export default function InboxPage() {
       />
       <div className="py-4 px-0 flex-1 h-screen bg-white">
         <div className="rounded-2xl border border-gray-200 h-full">
-          {isLoadingPatientMessages && selectedConversation ? (
+          {isLoadingConversation && selectedConversation ? (
             <div className="h-full flex items-center justify-center">
-              <div className="text-gray-500">Loading complete conversation...</div>
+              <div className="text-gray-500">Loading conversation...</div>
             </div>
           ) : (
             <ChatPanel
@@ -149,10 +149,10 @@ export default function InboxPage() {
       {selectedConversation ? (
         <PatientOverview
           patientId={selectedConversation.patientId}
-          className="w-[320px] bg-white"
+          className="w-[360px] bg-white"
         />
       ) : (
-        <div className="w-[320px] bg-white p-6">
+        <div className="w-[360px] bg-white p-6">
           <div className="text-center text-gray-500">
             <p>Select a conversation to view patient details</p>
           </div>

@@ -1,47 +1,28 @@
 import type { ChatConversation, InboxCounts, InboxMessage } from "@/app/(dashboard)/inbox/types";
-import type { CommunicationMessage } from "@/lib/store/api/communicationsApi";
+import type {
+  ConversationData,
+  ConversationMessage,
+  InboxConversationData,
+} from "@/lib/store/api/communicationsApi";
 import { getInitials } from "@/lib/utils";
 
 /**
- * Transform API communication messages to inbox conversations
+ * Transform inbox conversation data to chat conversations for the UI
  */
-export function transformCommunicationsToConversations(
-  communications: CommunicationMessage[],
+export function transformInboxDataToConversations(
+  inboxData: InboxConversationData[],
 ): ChatConversation[] {
-  // Group messages by patient
-  const conversationGroups = communications.reduce(
-    (groups, comm) => {
-      if (!groups[comm.patientId]) {
-        groups[comm.patientId] = [];
-      }
-      groups[comm.patientId].push(comm);
-      return groups;
-    },
-    {} as Record<string, CommunicationMessage[]>,
-  );
+  return inboxData.map((data) => {
+    const { patientId, patientName, latestMessage, messageStats, hasUnread } = data;
 
-  // Transform each group into a conversation
-  return Object.entries(conversationGroups).map(([patientId, messages]) => {
-    // Sort messages by date (newest first for lastMessage, but we'll reverse for the messages array)
-    const sortedMessages = [...messages].sort(
-      // Create a copy to avoid mutating the original array
-      (a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime(),
-    );
-
-    const latestMessage = sortedMessages[0];
-    const patientName =
-      latestMessage.metadata?.patientName ||
-      latestMessage.metadata?.participantInfo?.patientName ||
-      "Unknown Patient";
-
-    // Count unread messages (status is not "READ")
-    const unreadCount = messages.filter((msg) => msg.status !== "READ").length;
-
-    // Transform messages to inbox format (showing only first few for conversation list)
-    const transformedMessages: InboxMessage[] = sortedMessages
-      .slice(0, 10) // Limit to last 10 messages for performance in conversation list
-      .map(transformMessageToInboxMessage)
-      .reverse(); // Reverse to show oldest first in conversation
+    // Create a single message object for the conversation list
+    const lastMessageObj: InboxMessage = {
+      id: latestMessage.id,
+      text: latestMessage.content,
+      sender: latestMessage.sender === "provider" ? "provider" : "user",
+      timestamp: new Date(latestMessage.sentAt),
+      isOutbound: latestMessage.direction === "OUTBOUND",
+    };
 
     return {
       id: `conv-${patientId}`,
@@ -50,71 +31,67 @@ export function transformCommunicationsToConversations(
       patientInitials: getInitials(patientName),
       lastMessage: latestMessage.content,
       timestamp: new Date(latestMessage.sentAt),
-      isRead: unreadCount === 0,
-      unreadCount: unreadCount,
+      isRead: !hasUnread,
+      unreadCount: messageStats.unreadCount,
       channel: latestMessage.channel === "SMS" ? ("SMS" as const) : ("Email" as const),
-      messages: transformedMessages,
+      messages: [lastMessageObj], // Only latest message for conversation list
     };
   });
 }
 
 /**
- * Transform patient-specific communications to complete conversation messages
- * This is used when a conversation is selected to show all messages
+ * Transform detailed conversation data to inbox messages for chat display
  */
-export function transformPatientCommunicationsToMessages(
-  communications: CommunicationMessage[],
+export function transformConversationToMessages(
+  conversationData: ConversationData,
 ): InboxMessage[] {
-  return [...communications] // Create a copy to avoid mutating the original array
-    .sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()) // Oldest first
-    .map(transformMessageToInboxMessage);
+  return conversationData.messages
+    .map((message) => transformConversationMessageToInboxMessage(message))
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Sort oldest first
 }
 
 /**
- * Update a conversation with complete message history from patient communications
+ * Transform a single conversation message to inbox message format
  */
-export function updateConversationWithCompleteMessages(
-  conversation: ChatConversation,
-  patientCommunications: CommunicationMessage[],
-): ChatConversation {
-  const completeMessages = transformPatientCommunicationsToMessages(patientCommunications);
-
-  return {
-    ...conversation,
-    messages: completeMessages,
-  };
-}
-
-/**
- * Transform a single communication message to inbox message format
- */
-function transformMessageToInboxMessage(comm: CommunicationMessage): InboxMessage {
-  // Determine if this is from patient or provider based on metadata
-  const isFromPatient =
-    comm.metadata?.isPatientReply === true || comm.metadata?.direction === "INBOUND";
-
+function transformConversationMessageToInboxMessage(message: ConversationMessage): InboxMessage {
   // Handle special cases for pending/queued messages
-  let displayContent = comm.content;
-  if (comm.content === "AI-generated message pending approval" && comm.status === "QUEUED") {
-    displayContent = `[${comm.metadata?.messageType || "Message"} - Pending Approval]`;
+  let displayContent = message.content;
+  if (message.content === "AI-generated message pending approval" && message.queuedMessage) {
+    displayContent = message.queuedMessage.content;
   }
 
   return {
-    id: comm.id,
+    id: message.id,
     text: displayContent,
-    sender: isFromPatient ? "user" : "provider",
-    timestamp: new Date(comm.sentAt),
-    isOutbound: !isFromPatient,
+    sender: message.sender === "provider" ? "provider" : "user",
+    timestamp: new Date(message.sentAt),
+    isOutbound: message.direction === "OUTBOUND",
   };
 }
 
 /**
- * Calculate inbox counts from conversations
+ * Update conversation with detailed messages from conversation API
  */
-export function calculateInboxCounts(conversations: ChatConversation[]): InboxCounts {
-  const all = conversations.length;
-  const unread = conversations.filter((conv) => !conv.isRead).length;
-  const read = conversations.filter((conv) => conv.isRead).length;
+export function updateConversationWithDetailedMessages(
+  conversation: ChatConversation,
+  conversationData: ConversationData,
+): ChatConversation {
+  const detailedMessages = transformConversationToMessages(conversationData);
+
+  return {
+    ...conversation,
+    messages: detailedMessages,
+    patientName: conversationData.patientName || conversation.patientName,
+  };
+}
+
+/**
+ * Calculate inbox counts from inbox data
+ */
+export function calculateInboxCountsFromData(inboxData: InboxConversationData[]): InboxCounts {
+  const all = inboxData.length;
+  const unread = inboxData.filter((data) => data.hasUnread).length;
+  const read = inboxData.filter((data) => !data.hasUnread).length;
 
   return { all, unread, read };
 }

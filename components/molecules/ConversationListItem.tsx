@@ -2,7 +2,7 @@ import type { ChatConversation } from "@/app/(dashboard)/inbox/types";
 import { Avatar, AvatarFallback } from "@/components/atoms";
 import { InboxCounter } from "@/components/atoms/InboxCounter";
 import { cn } from "@/lib/utils";
-import { formatMessageTime } from "@/mock/inbox.data";
+import { formatMessageTime } from "@/utils/date.utils";
 import { Icon, IconName } from "../atoms/icons";
 
 export interface ConversationListItemProps {

@@ -1,3 +1,4 @@
+import type { Message } from "@/app/(dashboard)/inbox/types";
 import type {
   MedicalHistoryResponse,
   PatientDetailsResponse,
@@ -10,7 +11,6 @@ import type {
 } from "@/lib/store/types";
 import { getFullName } from "@/lib/utils";
 import type { ApprovalItem as MockApprovalItem } from "@/mock/approvals.data";
-import type { Message } from "@/mock/conversations.data";
 
 // Transform API approval item to mock approval item format
 export const transformAPIApprovalToMockApproval = (
