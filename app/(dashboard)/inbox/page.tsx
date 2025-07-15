@@ -7,7 +7,6 @@ import {
   useGetProviderInboxQuery,
 } from "@/lib/store/api/communicationsApi";
 import {
-  calculateInboxCountsFromData,
   transformInboxDataToConversations,
   updateConversationWithDetailedMessages,
 } from "@/utils/inbox.utils";
@@ -18,6 +17,8 @@ export default function InboxPage() {
   const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
   const [conversationWithCompleteMessages, setConversationWithCompleteMessages] =
     useState<ChatConversation | null>(null);
+  // Track read status changes locally to update filters immediately
+  const [readStatusUpdates, setReadStatusUpdates] = useState<Record<string, boolean>>({});
 
   // Use hardcoded provider ID for now - in real app this would come from auth context
   const providerId = "PR-2001";
@@ -38,11 +39,24 @@ export default function InboxPage() {
     { skip: !selectedConversation?.patientId },
   );
 
-  // Transform inbox data to match existing interface
+  // Transform inbox data to match existing interface and apply local read status updates
   const conversations = useMemo(() => {
     if (!inboxResponse?.data) return [];
-    return transformInboxDataToConversations(inboxResponse.data);
-  }, [inboxResponse]);
+    const baseConversations = transformInboxDataToConversations(inboxResponse.data);
+
+    // Apply local read status updates
+    return baseConversations.map((conversation) => {
+      const localReadStatus = readStatusUpdates[conversation.id];
+      if (localReadStatus !== undefined) {
+        return {
+          ...conversation,
+          isRead: localReadStatus,
+          unreadCount: localReadStatus ? 0 : conversation.unreadCount,
+        };
+      }
+      return conversation;
+    });
+  }, [inboxResponse, readStatusUpdates]);
 
   // Update selected conversation with detailed messages when conversation data is loaded
   useEffect(() => {
@@ -57,21 +71,25 @@ export default function InboxPage() {
     }
   }, [selectedConversation, conversationResponse]);
 
-  // Calculate counts for tabs using the new function
+  // Calculate counts for tabs using the current conversations (with local updates applied)
   const counts = useMemo((): InboxCounts => {
-    if (!inboxResponse?.data) return { all: 0, unread: 0, read: 0 };
-    return calculateInboxCountsFromData(inboxResponse.data);
-  }, [inboxResponse]);
+    const all = conversations.length;
+    const unread = conversations.filter((conv) => !conv.isRead).length;
+    const read = conversations.filter((conv) => conv.isRead).length;
+    return { all, unread, read };
+  }, [conversations]);
 
   const handleConversationSelect = (conversation: ChatConversation) => {
     setSelectedConversation(conversation);
     // Clear previous complete messages while new ones load
     setConversationWithCompleteMessages(conversation);
 
-    // Mark as read when selected
+    // Mark as read when selected (if it wasn't already read)
     if (!conversation.isRead) {
-      conversation.isRead = true;
-      conversation.unreadCount = 0;
+      setReadStatusUpdates((prev) => ({
+        ...prev,
+        [conversation.id]: true,
+      }));
     }
   };
 
