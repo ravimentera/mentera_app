@@ -31,13 +31,13 @@ export const transformAPIApprovalToMockApproval = (
     message: apiApproval.communication.content,
     status: mapAPIStatusToMockStatus(apiApproval.status),
     timestamp: new Date(apiApproval.createdAt),
-    conversationSummary: apiApproval.context.aiContext.conversationContext.summary || "N/A",
+    conversationSummary: apiApproval.context?.aiContext?.conversationContext?.summary || "N/A",
     aiSuggestion: "Tera Suggest", // Default value
     appointmentDetails: {
       procedure: apiApproval.communication.type || "N/A",
       date: "N/A",
       time: "N/A",
-      provider: apiApproval.context.aiContext.providerContext.name || "N/A",
+      provider: apiApproval.context?.aiContext?.providerContext?.name || "N/A",
     },
     nextAppointments: transformVisitsToNextAppointments(visitsData),
     medicalSummary: transformMedicalDataToSummary(medicalData, patientData),
@@ -251,7 +251,7 @@ export const createMockPatientFromApproval = (
     },
     chartId: `CH-${apiApproval.patient.id.replace("PT-", "5")}`,
     visitDate: "N/A",
-    provider: apiApproval.context.aiContext.providerContext.name || "N/A",
+    provider: apiApproval.context?.aiContext?.providerContext?.name || "N/A",
     treatmentNotes: {
       procedure: apiApproval.communication.type || "N/A",
       areasTreated: ["N/A"],
@@ -272,7 +272,7 @@ export const createMockPatientFromApproval = (
     nextTreatment: "N/A",
     followUpDate: "N/A",
     alerts: [],
-    providerSpecialty: apiApproval.context.aiContext.providerContext.specialty || "N/A",
+    providerSpecialty: apiApproval.context?.aiContext?.providerContext?.specialty || "N/A",
     treatmentOutcome: "N/A",
   };
 };
