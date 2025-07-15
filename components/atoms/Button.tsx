@@ -26,7 +26,7 @@ const buttonVariants = cva(
         "danger-light": "bg-red-100 text-red-800 shadow-sm hover:bg-red-200",
         "outline-ghost": "text-brand-blue hover:text-brand-blue-hover",
         "gradient-light":
-          "bg-gradient-to-r from-brand-blue-light via-brand-blue-light/90 to-brand-blue-light/80 text-brand-blue-dark shadow-sm hover:opacity-90 [&>svg]:text-brand-blue-dark",
+          "bg-gradient-to-r from-brand-blue-light/90 to-brand-blue-light text-brand-blue-dark shadow-sm hover:opacity-90 [&>svg]:text-brand-blue-dark",
       },
       size: {
         default: "h-9 px-4 py-2",

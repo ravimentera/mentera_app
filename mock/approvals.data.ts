@@ -10,6 +10,7 @@ export interface ApprovalItem {
   };
   type: "follow-up" | "reminder" | "consultation" | "pre-care" | "post-care";
   message: string;
+  subject: string;
   status: "pending" | "approved" | "declined";
   timestamp: Date;
   conversationSummary?: string;
@@ -51,37 +52,17 @@ export const getPatientById = (patientId: string) => {
   return patients.find((patient) => patient.patientId === patientId);
 };
 
-// Helper function to get complete patient info for approval
-export const getApprovalPatientInfo = (approvalItem: ApprovalItem) => {
-  const patient = getPatientById(approvalItem.patientId);
-  if (!patient) return null;
+// Helper function to generate contact info
+function generateContactInfo(firstName: string, lastName: string) {
+  const emailDomain = "@example.com";
+  const phonePrefix = "(555) ";
+  const phoneNumber = Math.floor(1000000 + Math.random() * 9000000);
 
   return {
-    firstName: patient.profile.firstName,
-    lastName: patient.profile.lastName,
-    phone: approvalItem.patientExtras.phone,
-    email: approvalItem.patientExtras.email,
-    avatar: patient.profile.avatar.large,
-    isVip: approvalItem.patientExtras.isVip,
+    phone: `${phonePrefix}${phoneNumber.toString().slice(0, 3)}-${phoneNumber.toString().slice(3)}`,
+    email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${emailDomain}`,
   };
-};
-
-// Generate realistic phone numbers and emails based on patient data
-const generateContactInfo = (firstName: string, lastName: string) => {
-  const phoneNumbers = [
-    "+16898798897",
-    "+14155552345",
-    "+13235551234",
-    "+19175554567",
-    "+12135558901",
-  ];
-  const domains = ["gmail.com", "yahoo.com", "outlook.com", "icloud.com"];
-
-  return {
-    phone: phoneNumbers[Math.floor(Math.random() * phoneNumbers.length)],
-    email: `${firstName.toLowerCase()}@${domains[Math.floor(Math.random() * domains.length)]}`,
-  };
-};
+}
 
 export const approvalItems: ApprovalItem[] = [
   {
@@ -94,6 +75,7 @@ export const approvalItems: ApprovalItem[] = [
     type: "follow-up",
     message:
       "Hi Yashodha! Just checking in about your CoolSculpting treatment. How's the recovery? Most see initial results in 2-3 weeks. Are you noticing any changes? If you're ready, we can schedule your follow-up assessment for early next month. Should I reserve a spot for you?",
+    subject: "CoolSculpting Follow-up",
     status: "pending",
     timestamp: new Date("2025-01-29T09:30:00"),
     conversationSummary:
@@ -152,6 +134,7 @@ export const approvalItems: ApprovalItem[] = [
     type: "pre-care",
     message:
       "Hi Nikolaj! Your Botox appointment is coming up tomorrow at 2:30 PM. Please remember to avoid alcohol and blood-thinning medications 24 hours before your treatment. Also, please arrive 15 minutes early for pre-treatment consultation. Looking forward to seeing you!",
+    subject: "Botox Treatment",
     status: "pending",
     timestamp: new Date("2025-01-29T10:15:00"),
     conversationSummary:
@@ -203,6 +186,7 @@ export const approvalItems: ApprovalItem[] = [
     type: "post-care",
     message:
       "Hi Willow! Thank you for choosing us for your IPL treatment yesterday. You may notice some darkening of spots - this is completely normal and shows the treatment is working! Please continue using SPF 50+ and avoid direct sun exposure for the next 2 weeks. Any concerns, please don't hesitate to reach out!",
+    subject: "IPL Photofacial",
     status: "pending",
     timestamp: new Date("2025-01-29T11:00:00"),
     conversationSummary:
@@ -254,6 +238,7 @@ export const approvalItems: ApprovalItem[] = [
     type: "reminder",
     message:
       "Hi Malthe! This is a friendly reminder that your next PRP hair restoration session is scheduled for next Monday at 1:00 PM. Please ensure you're well-hydrated and have eaten before your appointment. We're excited to continue your hair restoration journey!",
+    subject: "PRP Hair Restoration",
     status: "pending",
     timestamp: new Date("2025-01-29T14:30:00"),
     conversationSummary:
@@ -305,6 +290,7 @@ export const approvalItems: ApprovalItem[] = [
     type: "follow-up",
     message:
       "Hi Käthe! Your microblading is healing beautifully! As discussed, your touch-up appointment is scheduled for next week. Please continue following the aftercare instructions - no picking or scratching, and keep the area dry. Can't wait to see the final results!",
+    subject: "Microblading Touch-up",
     status: "pending",
     timestamp: new Date("2025-01-29T16:45:00"),
     conversationSummary:

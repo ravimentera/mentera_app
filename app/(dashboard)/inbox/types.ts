@@ -6,6 +6,15 @@ export interface InboxMessage {
   isOutbound: boolean;
 }
 
+export interface Message {
+  id: string;
+  text: string;
+  sender: string;
+  timestamp: Date;
+  isOutbound: boolean;
+  channel?: string;
+}
+
 export interface ChatConversation {
   id: string;
   patientId: string;

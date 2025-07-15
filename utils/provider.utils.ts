@@ -1,3 +1,4 @@
+import { getFullName, getInitials } from "@/lib/utils";
 import { providers } from "../mock/providers.data";
 import { ProviderWithAvatar } from "../types/user.types";
 
@@ -38,7 +39,7 @@ export function getAllProviders(): ProviderWithAvatar[] {
  * @returns Full name string
  */
 export function getProviderFullName(provider: ProviderWithAvatar): string {
-  return `${provider.firstName} ${provider.lastName}`;
+  return getFullName(provider.firstName, provider.lastName);
 }
 
 /**
@@ -47,5 +48,5 @@ export function getProviderFullName(provider: ProviderWithAvatar): string {
  * @returns Initials string
  */
 export function getProviderInitials(provider: ProviderWithAvatar): string {
-  return `${provider.firstName.charAt(0)}${provider.lastName.charAt(0)}`;
+  return getInitials(getFullName(provider.firstName, provider.lastName));
 }
