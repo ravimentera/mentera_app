@@ -215,10 +215,10 @@ export const getPatientNameFromApproval = (
 
   // Second priority: Patient context from approval (fallback)
   if (
-    apiApproval.context.aiContext.patientContext.name &&
-    apiApproval.context.aiContext.patientContext.name !== "Unknown Patient"
+    apiApproval.context?.aiContext?.patientContext?.name &&
+    apiApproval.context?.aiContext?.patientContext?.name !== "Unknown Patient"
   ) {
-    return apiApproval.context.aiContext.patientContext.name;
+    return apiApproval.context?.aiContext?.patientContext?.name;
   }
 
   // Last priority: Basic patient name from approval

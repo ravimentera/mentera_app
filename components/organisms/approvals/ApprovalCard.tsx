@@ -301,7 +301,6 @@ export function ApprovalCard({
                 variant="success-light"
                 onClick={() => handleApproval("approved")}
                 size="default"
-                className="min-w-46"
                 disabled={isGenerating}
               >
                 <ThumbsUp className="w-4 h-4 mr-2" />
