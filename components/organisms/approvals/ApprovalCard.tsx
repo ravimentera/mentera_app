@@ -137,9 +137,7 @@ export function ApprovalCard({
         {/* Header */}
         <div className="p-4 border-b border-ui-border bg-ui-background-gray">
           <div className="flex justify-between items-start">
-            <h3 className="text-xl font-semibold text-foreground">
-              Follow up on recent {approval.appointmentDetails?.procedure || "treatment"}.
-            </h3>
+            <h3 className="text-xl font-semibold text-foreground">{approval.subject}</h3>
             <div className="flex flex-col items-end gap-1">
               <Badge variant="success">{approval.type}</Badge>
               <span className="text-sm text-muted-foreground">

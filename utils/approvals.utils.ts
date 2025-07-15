@@ -29,6 +29,7 @@ export const transformAPIApprovalToMockApproval = (
     },
     type: mapAPITypeToMockType(apiApproval.communication.type),
     message: apiApproval.communication.content,
+    subject: apiApproval.communication.subject || "Treatment Follow-up",
     status: mapAPIStatusToMockStatus(apiApproval.status),
     timestamp: new Date(apiApproval.createdAt),
     conversationSummary: apiApproval.context?.aiContext?.conversationContext?.summary || "N/A",
