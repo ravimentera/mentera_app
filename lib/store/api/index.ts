@@ -1,5 +1,8 @@
 // Export all API endpoints and hooks
 
+// Auth interceptor
+export * from "./authInterceptor";
+
 // Users API
 export * from "./usersApi";
 

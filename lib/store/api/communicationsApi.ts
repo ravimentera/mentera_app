@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { RootState } from "../index";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import type { ApprovalsResponse, ConversationResponse } from "../types";
+import { proxyAuthBaseQuery } from "./authInterceptor";
 
 // Types for inbox endpoint
 export interface InboxLatestMessage {
@@ -314,25 +314,7 @@ export interface EditApproveApprovalResponse {
 
 export const communicationsApi = createApi({
   reducerPath: "communicationsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "/api/proxy",
-    prepareHeaders: (headers, { getState }) => {
-      const state = getState() as RootState;
-      const token = state.auth.token || localStorage.getItem("auth_token");
-
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-
-      // Add required headers for Next.js API routes
-      headers.set("Content-Type", "application/json");
-      headers.set("Accept", "application/json");
-      headers.set("x-medspa-id", "MS-1001");
-
-      return headers;
-    },
-    credentials: "include", // This ensures cookies are sent with requests
-  }),
+  baseQuery: proxyAuthBaseQuery,
   tagTypes: [
     "Approvals",
     "Conversations",
