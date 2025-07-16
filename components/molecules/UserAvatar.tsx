@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 import { Avatar } from "../../types/user.types";
 
 interface UserAvatarProps {
@@ -15,6 +15,8 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   size = "small",
   className = "",
 }) => {
+  const [imageError, setImageError] = useState(false);
+
   const sizeClasses = {
     small: "w-10 h-10",
     medium: "w-12 h-12",
@@ -55,21 +57,25 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
 
   const imageUrl = getImageUrl();
   const sizeInPixels = getSizeInPixels();
+  const shouldShowImage = imageUrl && !imageError;
 
   return (
     <div className={`relative ${sizeClasses[size]} ${className}`}>
-      {imageUrl ? (
+      {shouldShowImage ? (
         <Image
           src={imageUrl}
-          alt={`${name}&apos;s avatar`}
+          alt={`${name}'s avatar`}
           width={sizeInPixels}
           height={sizeInPixels}
           className={`${sizeClasses[size]} rounded-full object-cover`}
+          onError={() => setImageError(true)}
+          // Add fallback for production environments
+          unoptimized={process.env.NODE_ENV === "production"}
         />
       ) : null}
-      {/* Fallback initials */}
+      {/* Fallback initials - show when no image or image failed to load */}
       <div
-        className={`${sizeClasses[size]} rounded-full bg-blue-500 text-white font-semibold items-center justify-center absolute top-0 left-0 ${!imageUrl ? "flex" : "hidden"}`}
+        className={`${sizeClasses[size]} rounded-full bg-blue-500 text-white font-semibold items-center justify-center absolute top-0 left-0 ${!shouldShowImage ? "flex" : "hidden"}`}
         style={{ fontSize: size === "small" ? "0.75rem" : size === "large" ? "1.25rem" : "1rem" }}
       >
         {getInitials(name)}

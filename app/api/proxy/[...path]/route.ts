@@ -119,7 +119,14 @@ async function handleRequest(request: NextRequest, params: { path: string[] }, m
     };
 
     // Copy relevant headers from the original request
-    const headersToForward = ["authorization", "cookie", "user-agent", "accept", "accept-encoding"];
+    const headersToForward = [
+      "authorization",
+      "cookie",
+      "user-agent",
+      "accept",
+      "accept-encoding",
+      "x-medspa-id",
+    ];
     headersToForward.forEach((headerName) => {
       const headerValue = request.headers.get(headerName);
       if (headerValue) {
@@ -206,7 +213,7 @@ export async function OPTIONS() {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
       "Access-Control-Allow-Headers":
-        "Content-Type, Authorization, x-gateway-request, x-user-id, x-user-role, x-user-permissions",
+        "Content-Type, Authorization, x-gateway-request, x-user-id, x-user-role, x-user-permissions, x-medspa-id",
     },
   });
 }

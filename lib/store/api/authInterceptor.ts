@@ -16,6 +16,7 @@ export const createAuthInterceptor = (
     prepareHeaders: (headers, { getState }) => {
       const state = getState() as RootState;
       const token = state.auth.token || localStorage.getItem("auth_token");
+      const medspaId = state.auth.user?.medspaId || "MS-1001"; // Fallback to default if no user
 
       if (token) {
         headers.set("authorization", `Bearer ${token}`);
@@ -24,7 +25,7 @@ export const createAuthInterceptor = (
       // Add required headers for Next.js API routes
       headers.set("Content-Type", "application/json");
       headers.set("Accept", "application/json");
-      headers.set("x-medspa-id", "MS-1001");
+      headers.set("x-medspa-id", medspaId);
 
       return headers;
     },

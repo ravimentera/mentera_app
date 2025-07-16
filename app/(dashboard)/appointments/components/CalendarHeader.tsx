@@ -224,7 +224,7 @@ export function CalendarHeader({
             </div>
             <input
               type="text"
-              placeholder="Search by name, email, phone number"
+              placeholder="Search by name"
               className="h-10 w-[293px] pl-10 pr-3 py-2 rounded-lg border border-zinc-200 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-dark"
             />
           </div>

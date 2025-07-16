@@ -15,6 +15,9 @@ export * from "./authApi";
 // Communications API
 export * from "./communicationsApi";
 
+// Charts API
+export * from "./chartsApi";
+
 // Future APIs
 // export { appointmentsApi } from './appointmentsApi';
 // export { treatmentsApi } from './treatmentsApi';

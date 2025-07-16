@@ -46,16 +46,26 @@ function DrawerContent({
   className,
   children,
   direction = "right",
+  size = "default",
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & {
   direction?: "bottom" | "right" | "left";
+  size?: "default" | "wide" | "narrow";
 }) {
   const getPositionClasses = () => {
+    const sizeClasses = {
+      narrow: "w-80",
+      default: "w-96",
+      wide: "w-[1100px]",
+    };
+
+    const widthClass = direction !== "bottom" ? sizeClasses[size] : "";
+
     switch (direction) {
       case "right":
-        return "inset-y-0 right-0 h-full border-l animate-slide-in-right";
+        return `inset-y-0 right-0 h-full border-l animate-slide-in-right ${widthClass}`;
       case "left":
-        return "inset-y-0 left-0 h-full border-r animate-slide-in-left";
+        return `inset-y-0 left-0 h-full border-r animate-slide-in-left ${widthClass}`;
       case "bottom":
         return "inset-x-0 bottom-0 border-t animate-in-bottom";
     }

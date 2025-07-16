@@ -30,6 +30,7 @@ export const DASHBOARD_PATHS = {
   APPOINTMENTS: "/appointments",
   APPROVALS: "/approvals",
   INBOX: "/inbox",
+  CHARTING: "/charting",
   TREATMENTS: "/treatments",
   ANALYTICS: "/analytics",
   SETTINGS: "/settings",

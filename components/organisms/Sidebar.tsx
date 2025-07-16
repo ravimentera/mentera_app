@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   CheckSquare,
   ChevronRight,
+  FileText,
   Home,
   LogOut,
   MessageSquare,
@@ -171,6 +172,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       name: "Patients",
       href: DASHBOARD_PATHS.PATIENTS,
       icon: <Users className="h-5 w-5" />,
+    },
+    {
+      name: "Charting",
+      href: DASHBOARD_PATHS.CHARTING,
+      icon: <FileText className="h-5 w-5" />,
     },
   ];
 
