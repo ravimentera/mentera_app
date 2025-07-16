@@ -1,11 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { LoginCredentials, LoginResponse, TokenResponse } from "../types";
 
+// Simple base query for auth operations (no 401 interceptor needed)
+const authBaseQuery = fetchBaseQuery({
+  baseUrl: "/api",
+  prepareHeaders: (headers) => {
+    headers.set("Content-Type", "application/json");
+    headers.set("Accept", "application/json");
+    return headers;
+  },
+  credentials: "include",
+});
+
 export const authApi = createApi({
   reducerPath: "authApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "/api",
-  }),
+  baseQuery: authBaseQuery,
   tagTypes: ["Auth"],
   endpoints: (builder) => ({
     // Generate JWT token using existing /api/token endpoint

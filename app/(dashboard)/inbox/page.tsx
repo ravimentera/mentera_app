@@ -167,10 +167,10 @@ export default function InboxPage() {
       {selectedConversation ? (
         <PatientOverview
           patientId={selectedConversation.patientId}
-          className="w-[360px] bg-white"
+          className="w-[340px] bg-white"
         />
       ) : (
-        <div className="w-[360px] bg-white p-6">
+        <div className="w-[340px] bg-white p-6">
           <div className="text-center text-gray-500">
             <p>Select a conversation to view patient details</p>
           </div>

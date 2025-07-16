@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { RootState } from "../index";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { proxyAuthBaseQuery } from "./authInterceptor";
 
 interface Patient {
   id: string;
@@ -215,25 +215,7 @@ export interface HealthInsightsResponse {
 
 export const patientsApi = createApi({
   reducerPath: "patientsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "/api/proxy",
-    prepareHeaders: (headers, { getState }) => {
-      const state = getState() as RootState;
-      const token = state.auth.token || localStorage.getItem("auth_token");
-
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-
-      // Add required headers for Next.js API routes
-      headers.set("Content-Type", "application/json");
-      headers.set("Accept", "application/json");
-      headers.set("x-medspa-id", "MS-1001");
-
-      return headers;
-    },
-    credentials: "include", // This ensures cookies are sent with requests
-  }),
+  baseQuery: proxyAuthBaseQuery,
   endpoints: (builder) => ({
     getPatientsByProvider: builder.query<Patient[], string>({
       query: (providerId) => `/patients?providerId=${providerId}`,

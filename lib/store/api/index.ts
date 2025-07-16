@@ -1,5 +1,8 @@
 // Export all API endpoints and hooks
 
+// Auth interceptor
+export * from "./authInterceptor";
+
 // Users API
 export * from "./usersApi";
 
@@ -11,6 +14,9 @@ export * from "./authApi";
 
 // Communications API
 export * from "./communicationsApi";
+
+// Charts API
+export * from "./chartsApi";
 
 // Future APIs
 // export { appointmentsApi } from './appointmentsApi';

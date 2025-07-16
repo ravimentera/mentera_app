@@ -12,8 +12,6 @@ import {
   PatientOverview,
 } from "@/components/organisms/approvals";
 import {
-  useApproveApprovalMutation,
-  useDeclineApprovalMutation,
   useGetPatientConversationQuery,
   useGetPatientDetailsQuery,
   useGetPatientMedicalHistoryQuery,
@@ -37,16 +35,11 @@ export default function ApprovalsPage() {
   const [currentApprovalIndex, setCurrentApprovalIndex] = useState(0);
   const [showConversationDrawer, setShowConversationDrawer] = useState(false);
   const [activeCommMethod, setActiveCommMethod] = useState<"chat" | "email">("chat");
+  const [hasApprovalErrors, setHasApprovalErrors] = useState(false);
 
   // Get current user from auth state
   const user = useAppSelector(selectUser);
   const providerId = user?.providerId || "PR-2001"; // Fallback to default
-
-  // Add decline approval mutation
-  const [declineApproval] = useDeclineApprovalMutation();
-
-  // Add approve approval mutation
-  const [approveApproval] = useApproveApprovalMutation();
 
   // API calls for approvals
   const {
@@ -151,59 +144,51 @@ export default function ApprovalsPage() {
     "N/A";
 
   useEffect(() => {
-    // Trigger confetti if no approvals on initial load
-    if (!approvalsLoading && approvals.length === 0) {
+    // Reset error flag when new approvals are loaded
+    if (approvalsData?.data?.approvals && approvalsData.data.approvals.length > 0) {
+      setHasApprovalErrors(false);
+    }
+  }, [approvalsData]);
+
+  useEffect(() => {
+    // Trigger confetti if no approvals on initial load and no errors occurred
+    if (!approvalsLoading && approvals.length === 0 && !hasApprovalErrors && !approvalsError) {
       setTimeout(() => {
         confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       }, 500);
     }
-  }, [approvalsLoading, approvals.length]);
+  }, [approvalsLoading, approvals.length, hasApprovalErrors, approvalsError]);
 
-  const handleApproval = async (action: "approved" | "declined") => {
+  const handleApproval = (action: "approved" | "declined", hasError = false) => {
     if (!currentApproval) return;
 
-    try {
-      if (action === "declined") {
-        // Call the decline API with the approval ID
-        console.log("Declining approval with ID:", currentApproval.id);
+    if (hasError) {
+      // Set error flag to prevent confetti
+      setHasApprovalErrors(true);
+      toast.error(
+        `Failed to ${action === "approved" ? "approve" : "decline"} message. Please try again.`,
+      );
+      return;
+    }
 
-        const response = await declineApproval({ approvalId: currentApproval.id }).unwrap();
-
-        console.log("Decline approval response:", response);
-      } else if (action === "approved") {
-        // Call the approve API with the approval ID
-        console.log("Approving approval with ID:", currentApproval.id);
-
-        const response = await approveApproval({ approvalId: currentApproval.id }).unwrap();
-
-        console.log("Approve approval response:", response);
-      }
-
-      // Remove the approved/declined item from local state
-      // Note: In a real implementation, you would also call an API to update the status
-
-      // Adjust current index if needed
-      if (currentApprovalIndex >= approvals.length - 1 && approvals.length > 1) {
-        setCurrentApprovalIndex(approvals.length - 2);
-      } else if (approvals.length === 1) {
-        setCurrentApprovalIndex(0);
-        // Trigger confetti when all approvals are processed
+    // Success case - adjust current index if needed
+    if (currentApprovalIndex >= approvals.length - 1 && approvals.length > 1) {
+      setCurrentApprovalIndex(approvals.length - 2);
+    } else if (approvals.length === 1) {
+      setCurrentApprovalIndex(0);
+      // Trigger confetti when all approvals are processed successfully without errors
+      if (!hasApprovalErrors) {
         setTimeout(() => {
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }, 300);
       }
-
-      toast.success(
-        action === "approved"
-          ? "Message approved and sent successfully"
-          : "Message declined successfully",
-      );
-    } catch (error) {
-      console.error("Failed to process approval action:", error);
-      toast.error(
-        `Failed to ${action === "approved" ? "approve" : "decline"} message. Please try again.`,
-      );
     }
+
+    toast.success(
+      action === "approved"
+        ? "Message approved and sent successfully"
+        : "Message declined successfully",
+    );
   };
 
   const handleNavigation = (direction: "prev" | "next") => {

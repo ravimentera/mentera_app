@@ -16,7 +16,7 @@ interface ApprovalCardProps {
   approval: ApprovalItem;
   patient: PatientWithProfile;
   providerId: string;
-  onApproval: (action: "approved" | "declined") => void;
+  onApproval: (action: "approved" | "declined", hasError?: boolean) => void;
   className?: string;
 }
 
@@ -118,10 +118,12 @@ export function ApprovalCard({
         }
       }
 
-      // Call the parent component's onApproval handler
-      onApproval(action);
+      // Call the parent component's onApproval handler only on success
+      onApproval(action, false);
     } catch (error) {
       console.error(`Failed to ${action} approval:`, error);
+      // Call onApproval with error flag so parent knows the operation failed
+      onApproval(action, true);
     }
   };
 
