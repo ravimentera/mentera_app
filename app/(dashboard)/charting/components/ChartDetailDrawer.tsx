@@ -2,7 +2,13 @@
 
 import { Button } from "@/components/atoms";
 import { Tabs, TabsList, TabsTrigger } from "@/components/molecules";
-import { Drawer, DrawerClose, DrawerContent, DrawerHeader } from "@/components/organisms";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  VoiceRecording,
+} from "@/components/organisms";
 import { PatientOverview } from "@/components/organisms/approvals/PatientOverview";
 import {
   useApproveChartMutation,
@@ -33,6 +39,9 @@ export function ChartDetailDrawer({
   const [activeTab, setActiveTab] = useState<"prechart" | "postchart">("prechart");
   const [isEditing, setIsEditing] = useState(false);
   const [pendingContent, setPendingContent] = useState<string>("");
+  const [showVoiceRecording, setShowVoiceRecording] = useState(false);
+  const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
+  const [hasCompletedRecording, setHasCompletedRecording] = useState(false);
 
   // Reset editing state when drawer closes
   useEffect(() => {
@@ -40,6 +49,10 @@ export function ChartDetailDrawer({
       console.log("Resetting isEditing due to drawer close");
       setIsEditing(false);
       setPendingContent("");
+      // Reset recording states when drawer closes
+      setShowVoiceRecording(false);
+      setIsRecordingInProgress(false);
+      setHasCompletedRecording(false);
     }
   }, [open]);
 
@@ -97,6 +110,9 @@ export function ChartDetailDrawer({
       }).unwrap();
 
       toast.success("Chart approved successfully");
+
+      // Close the drawer after successful approval
+      onOpenChange(false);
     } catch (error: any) {
       console.error("Failed to approve chart:", error);
       toast.error(error?.data?.message || "Failed to approve chart. Please try again.");
@@ -170,189 +186,244 @@ export function ChartDetailDrawer({
   if (!open) return null;
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent size="wide" direction="right">
-        {/* Header */}
-        <DrawerHeader className="border-b border-gray-200 px-5 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {/* Avatar */}
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 font-medium text-lg">
-                  {patient?.firstName?.[0]}
-                  {patient?.lastName?.[0]}
-                </span>
+    <>
+      <Drawer open={open} onOpenChange={onOpenChange} direction="right">
+        <DrawerContent size="wide" direction="right">
+          {/* Header */}
+          <DrawerHeader className="border-b border-gray-200 px-5 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {/* Avatar */}
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-medium text-lg">
+                    {patient?.firstName?.[0]}
+                    {patient?.lastName?.[0]}
+                  </span>
+                </div>
+
+                {/* Patient Info */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      {patient?.firstName} {patient?.lastName}
+                    </h2>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <span>{patient?.patientId}</span>
+                    <span>|</span>
+                    <Phone className="w-4 h-4" />
+                    <span>{patient?.phone}</span>
+                    <span>|</span>
+                    <Mail className="w-4 h-4" />
+                    <span>{patient?.email}</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Patient Info */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {patient?.firstName} {patient?.lastName}
-                  </h2>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <span>{patient?.patientId}</span>
-                  <span>|</span>
-                  <Phone className="w-4 h-4" />
-                  <span>{patient?.phone}</span>
-                  <span>|</span>
-                  <Mail className="w-4 h-4" />
-                  <span>{patient?.email}</span>
-                </div>
-              </div>
+              <DrawerClose asChild>
+                <button type="button" className="text-text">
+                  <X className="h-6 w-6" />
+                </button>
+              </DrawerClose>
             </div>
+          </DrawerHeader>
 
-            <DrawerClose asChild>
-              <button type="button" className="text-text">
-                <X className="h-6 w-6" />
-              </button>
-            </DrawerClose>
-          </div>
-        </DrawerHeader>
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left Panel - Chart Content */}
+            <div className="flex-1 flex flex-col overflow-hidden border-r border-gray-200">
+              {/* Chart Tabs */}
+              <div className="px-6 py-3 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <Tabs
+                    value={activeTab}
+                    defaultValue="prechart"
+                    onValueChange={(value) => setActiveTab(value as "prechart" | "postchart")}
+                  >
+                    <TabsList className="flex py-1.5 bg-ui-background-subtle">
+                      <TabsTrigger
+                        value="prechart"
+                        className={`px-3 py-1.5 text-sm font-medium rounded-lg border ${
+                          activeTab === "prechart"
+                            ? "bg-brand-blue-light text-brand-blue border-brand-blue"
+                            : "text-text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
+                        }`}
+                      >
+                        Pre chart
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="postchart"
+                        className={`px-3 py-1.5 text-sm font-medium rounded-lg border ${
+                          activeTab === "postchart"
+                            ? "bg-brand-blue-light text-brand-blue border-brand-blue"
+                            : "text-text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
+                        }`}
+                      >
+                        Post-chart
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Panel - Chart Content */}
-          <div className="flex-1 flex flex-col overflow-hidden border-r border-gray-200">
-            {/* Chart Tabs */}
-            <div className="px-6 py-3 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <Tabs
-                  value={activeTab}
-                  defaultValue="prechart"
-                  onValueChange={(value) => setActiveTab(value as "prechart" | "postchart")}
-                >
-                  <TabsList className="flex py-1.5 bg-ui-background-subtle">
-                    <TabsTrigger
-                      value="prechart"
-                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border ${
-                        activeTab === "prechart"
-                          ? "bg-brand-blue-light text-brand-blue border-brand-blue"
-                          : "text-text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
-                      }`}
-                    >
-                      Pre chart
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="postchart"
-                      className={`px-3 py-1.5 text-sm font-medium rounded-lg border ${
-                        activeTab === "postchart"
-                          ? "bg-brand-blue-light text-brand-blue border-brand-blue"
-                          : "text-text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
-                      }`}
-                    >
-                      Post-chart
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-
-                <div className="flex items-center gap-2">
-                  {!isEditing && (
+                  <div className="flex items-center gap-2">
+                    {!isEditing && (
+                      <button
+                        type="button"
+                        onClick={handleContentEdit}
+                        disabled={isSaving || isApproving}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      >
+                        <Edit className="w-5 h-5 text-gray-600" />
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={handleContentEdit}
-                      disabled={isSaving || isApproving}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <Edit className="w-5 h-5 text-gray-600" />
+                      <Copy className="w-5 h-5 text-gray-600" />
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <Copy className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <Button size="sm">
-                    <Mic className="w-4 h-4 mr-2" />
-                    Record
-                  </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        console.log("Record button clicked!");
+                        setShowVoiceRecording(true);
+                        setIsRecordingInProgress(true);
+                        setHasCompletedRecording(false); // Reset completed state
+                      }}
+                    >
+                      <Mic className="w-4 h-4 mr-2" />
+                      Record
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Chart Content */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {isLoadingChart ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-gray-500">Loading chart...</div>
-                </div>
-              ) : chartError ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-red-500">Error loading chart</div>
-                </div>
-              ) : chart?.content ? (
-                <>
-                  {console.log("Rendering ChartContentEditor with isEditing:", isEditing)}
-                  <ChartContentEditor
-                    key={`chart-editor-${chartId}`}
-                    content={chart.content}
-                    isEditing={isEditing}
-                    onSave={handleContentSave}
-                    onCancel={handleContentCancel}
-                    onEdit={handleContentEdit}
-                    onContentChange={setPendingContent}
-                  />
-                </>
-              ) : (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-gray-500">No chart content available</div>
-                </div>
-              )}
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="border-t border-gray-200 p-6 py-4 bg-white shadow-lg">
-              <div className="flex items-center gap-3">
-                {isEditing ? (
+              {/* Chart Content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                {showVoiceRecording ? (
+                  /* Voice Recording Interface replaces the content */
+                  <div className="h-full">
+                    <VoiceRecording
+                      onClose={() => {
+                        console.log("VoiceRecording onClose called");
+                        setShowVoiceRecording(false);
+                        setIsRecordingInProgress(false);
+                        // Don't set hasCompletedRecording to true if user just cancels
+                      }}
+                      onSave={(transcription: string) => {
+                        console.log("Voice transcription:", transcription);
+                        // Insert transcription into chart content
+                        const newContent = chart?.content
+                          ? `${chart.content}\n\n**Voice Recording Transcription:**\n${transcription}`
+                          : `**Voice Recording Transcription:**\n${transcription}`;
+                        handleContentSave(newContent);
+                        setShowVoiceRecording(false);
+                        setIsRecordingInProgress(false);
+                        setHasCompletedRecording(true);
+                      }}
+                      onRecordingStateChange={setIsRecordingInProgress}
+                      onRecordingComplete={() => setHasCompletedRecording(true)}
+                    />
+                  </div>
+                ) : isLoadingChart ? (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="text-gray-500">Loading chart...</div>
+                  </div>
+                ) : chartError ? (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="text-red-500">Error loading chart</div>
+                  </div>
+                ) : chart?.content ? (
                   <>
-                    <Button
-                      variant="outline"
-                      onClick={handleFooterCancel}
-                      disabled={isSaving || isApproving}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleFooterSave}
-                      disabled={isSaving || isApproving}
-                      className="bg-brand-blue hover:bg-brand-blue-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSaving ? "Saving..." : "Save"}
-                    </Button>
+                    {console.log("Rendering ChartContentEditor with isEditing:", isEditing)}
+                    <ChartContentEditor
+                      key={`chart-editor-${chartId}`}
+                      content={chart.content}
+                      isEditing={isEditing}
+                      onSave={handleContentSave}
+                      onCancel={handleContentCancel}
+                      onEdit={handleContentEdit}
+                      onContentChange={setPendingContent}
+                    />
                   </>
                 ) : (
-                  <>
-                    <Button
-                      onClick={handleApprove}
-                      disabled={isApproving}
-                      className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isApproving ? "Approving..." : "Approve"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleRegenerate}
-                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                      <RefreshCcw className="w-4 h-4 mr-2" />
-                      Regenerate
-                    </Button>
-                  </>
+                  <div className="flex items-center justify-center h-64">
+                    <div className="text-gray-500">No chart content available</div>
+                  </div>
                 )}
               </div>
+
+              {/* Bottom Actions */}
+              <div className="border-t border-gray-200 p-6 py-4 bg-white shadow-lg min-h-[68px] flex items-center">
+                <div className="flex items-center gap-3">
+                  {showVoiceRecording ? (
+                    /* Hide all buttons when voice recording interface is active */
+                    isRecordingInProgress ? /* Hide buttons during recording */
+                    null : hasCompletedRecording ? (
+                      /* Show Generate SOAP button only after recording is completed */
+                      <Button
+                        onClick={() => {
+                          // TODO: Implement SOAP generation logic
+                          console.log("Generate SOAP clicked");
+                          toast.success("SOAP notes generated!");
+                          // Reset the completed recording state after generating SOAP
+                          setHasCompletedRecording(false);
+                          setShowVoiceRecording(false);
+                        }}
+                        className="bg-brand-blue hover:bg-brand-blue-dark text-white"
+                      >
+                        Generate SOAP
+                      </Button>
+                    ) : /* No buttons when showing start recording card */
+                    null
+                  ) : isEditing ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={handleFooterCancel}
+                        disabled={isSaving || isApproving}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleFooterSave}
+                        disabled={isSaving || isApproving}
+                        className="bg-brand-blue hover:bg-brand-blue-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSaving ? "Saving..." : "Save"}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={handleApprove}
+                        disabled={isApproving}
+                        className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isApproving ? "Approving..." : "Approve"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleRegenerate}
+                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                      >
+                        <RefreshCcw className="w-4 h-4 mr-2" />
+                        Regenerate
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="w-96">
+              <PatientOverview
+                patientId={patientId || chart?.patientId || ""}
+                showHeader={true}
+                className="h-full"
+              />
             </div>
           </div>
-
-          <div className="w-96">
-            <PatientOverview
-              patientId={patientId || chart?.patientId || ""}
-              showHeader={true}
-              className="h-full"
-            />
-          </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 }

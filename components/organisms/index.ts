@@ -44,6 +44,7 @@ export {
 } from "./Table";
 
 export { Thread } from "./Thread";
+export { VoiceRecording } from "./VoiceRecording";
 
 // Export charts
 export * from "./charts";

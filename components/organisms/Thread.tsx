@@ -45,6 +45,7 @@ import { UploadedFile, removeFile, selectAllFiles } from "@/lib/store/slices/fil
 import { setSelectedPatientId } from "@/lib/store/slices/globalStateSlice";
 import { addMessage } from "@/lib/store/slices/messagesSlice";
 import { getActiveThreadId } from "@/lib/store/slices/threadsSlice";
+import { getFirstProvider } from "@/utils/provider.utils";
 
 // Helper function to cleanly parse potential JSON from the assistant's message
 const tryParseAction = (content: string) => {
@@ -118,7 +119,9 @@ const ThreadWelcome: FC = () => {
     <ThreadPrimitive.Empty>
       <div className="flex h-full w-full flex-col items-center justify-center px-4">
         <div className="w-full max-w-3xl text-center flex flex-col items-center">
-          <h1 className="text-5xl font-bold text-purple-600">Hello, Lucy</h1>
+          <h1 className="text-5xl font-bold bg-gradient-brand bg-clip-text text-transparent">
+            Hello, {getFirstProvider()?.firstName ?? "Lucy"}
+          </h1>
           <h2 className="text-2xl mt-2 text-slate-600">Your Medspa&lsquo;s Smartest Assistant</h2>
           <p className="mt-4 text-slate-500 max-w-lg">
             From appointment management to compliance, Mentera empowers your entire team to work
@@ -156,24 +159,24 @@ const SuggestionButton: FC<SuggestionButtonProps> = ({ prompt, icon }) => (
 
 const ThreadWelcomeSuggestions: FC = () => {
   const suggestions = [
-    { prompt: "Today's Appointments", icon: <CalendarIcon className="w-4 h-4 text-purple-600" /> },
+    { prompt: "Today's Appointments", icon: <CalendarIcon className="w-4 h-4 text-brand-blue" /> },
     {
       prompt: "Send Reminder SMS",
-      icon: <MessageSquareIcon className="w-4 h-4 text-purple-600" />,
+      icon: <MessageSquareIcon className="w-4 h-4 text-brand-blue" />,
     },
     {
       prompt: "Draft Aftercare Message",
-      icon: <FileTextIcon className="w-4 h-4 text-purple-600" />,
+      icon: <FileTextIcon className="w-4 h-4 text-brand-blue" />,
     },
-    { prompt: "Patient History Summary", icon: <UsersIcon className="w-4 h-4 text-purple-600" /> },
+    { prompt: "Patient History Summary", icon: <UsersIcon className="w-4 h-4 text-brand-blue" /> },
     {
       prompt: "Pre/Post Instructions",
-      icon: <ClipboardListIcon className="w-4 h-4 text-purple-600" />,
+      icon: <ClipboardListIcon className="w-4 h-4 text-brand-blue" />,
     },
-    { prompt: "Create Campaign", icon: <SparklesIcon className="w-4 h-4 text-purple-600" /> },
-    { prompt: "Send Consent Form", icon: <FileTextIcon className="w-4 h-4 text-purple-600" /> },
-    { prompt: "Inventory Check", icon: <ShoppingCartIcon className="w-4 h-4 text-purple-600" /> },
-    { prompt: "No-show Reports", icon: <XCircleIcon className="w-4 h-4 text-purple-600" /> },
+    { prompt: "Create Campaign", icon: <SparklesIcon className="w-4 h-4 text-brand-blue" /> },
+    { prompt: "Send Consent Form", icon: <FileTextIcon className="w-4 h-4 text-brand-blue" /> },
+    { prompt: "Inventory Check", icon: <ShoppingCartIcon className="w-4 h-4 text-brand-blue" /> },
+    { prompt: "No-show Reports", icon: <XCircleIcon className="w-4 h-4 text-brand-blue" /> },
   ];
   return (
     <div className="mt-6 flex w-full max-w-3xl flex-wrap justify-center gap-2">
@@ -253,7 +256,7 @@ const Composer: FC = () => {
   };
 
   return (
-    <div className="p-[2px] bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl shadow-lg w-full">
+    <div className="p-[2px] rounded-xl border border-gradient-blue shadow-lg w-full">
       <ComposerPrimitive.Root className="flex w-full flex-col rounded-[14px] bg-white">
         <FilePreview />
         <div className="flex w-full items-center pl-2.5 pr-1">
@@ -266,7 +269,7 @@ const Composer: FC = () => {
           <ComposerPrimitive.Send asChild>
             <Button
               size="icon"
-              className="my-2.5 bg-gradient-to-br from-purple-600 to-indigo-700 text-white rounded-lg w-8 h-8 hover:opacity-90 transition-opacity shrink-0"
+              className="my-2.5 bg-gradient-to-br from-gradient-dark-start to-gradient-dark-end text-white rounded-lg w-8 h-8 hover:opacity-90 transition-opacity shrink-0"
             >
               <SendHorizontalIcon className="h-5 w-5" />
             </Button>
@@ -358,7 +361,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
             type="button"
             key={patient.id}
             onClick={() => handleSelectPatient(patient)}
-            className="w-full text-left p-3 border-b last:border-b-0 hover:bg-purple-50 transition-colors"
+            className="w-full text-left p-3 border-b last:border-b-0 hover:bg-brand-50 transition-colors"
           >
             <p className="font-semibold text-slate-800">
               {patient.firstName} {patient.lastName}
