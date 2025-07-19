@@ -1,7 +1,7 @@
 "use client";
 
 import { Edit, PanelLeft, PanelRightClose, PanelRightOpen, Search } from "lucide-react";
-import React, { FC, useEffect, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 
@@ -18,7 +18,6 @@ import {
   selectPatientDatabase,
   selectSelectedPatientId,
   setIsChatSidebarOpen,
-  setSelectedPatientId,
   toggleSidePanel,
 } from "@/lib/store/slices/globalStateSlice";
 import { addThread, setActiveThreadId } from "@/lib/store/slices/threadsSlice";
@@ -96,7 +95,7 @@ const ChatClient: FC = () => {
               <Button
                 onClick={handleNewChatClick}
                 variant="ghost"
-                className="w-full justify-start gap-2.5 h-10 px-2 bg-slate-100 text-purple-600 hover:bg-slate-200"
+                className="w-full justify-start gap-2.5 h-10 px-2 bg-slate-100 text-brand-blue hover:bg-slate-200"
               >
                 <Edit className="h-4 w-4" />
                 <span className="text-sm font-medium">New Chat</span>

@@ -40,7 +40,12 @@ export interface ChartGenerationRequest {
 export interface ChartGenerationResponse {
   success: boolean;
   data: {
-    chart: Chart;
+    chartId: string;
+    content: string;
+    templateUsed: string;
+    approved: boolean;
+    version: number;
+    generatedAt: string;
   };
 }
 

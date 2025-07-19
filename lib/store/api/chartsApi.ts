@@ -58,7 +58,25 @@ export const chartsApi = createApi({
         method: "POST",
         body,
       }),
-      transformResponse: (response: ChartGenerationResponse) => response.data.chart,
+      transformResponse: (response: ChartGenerationResponse, meta, arg) => {
+        // Transform the response to match the Chart interface
+        return {
+          id: response.data.chartId,
+          content: response.data.content,
+          approved: response.data.approved,
+          version: response.data.version,
+          createdAt: response.data.generatedAt,
+          templateId: response.data.templateUsed,
+          // Include data from the original request
+          visitId: arg.visitId,
+          providerIds: arg.providerIds,
+          patientId: arg.patientId,
+          chartType: arg.chartType,
+          treatmentType: arg.treatmentId,
+          medspaId: "",
+          updatedAt: response.data.generatedAt,
+        } as Chart;
+      },
       invalidatesTags: (result, error, arg) => [{ type: "Charts", id: arg.primaryProviderId }],
     }),
     updateChartContent: builder.mutation<Chart, { chartId: string; content: string }>({

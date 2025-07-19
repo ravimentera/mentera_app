@@ -11,6 +11,7 @@ import type { PatientWithProfile } from "@/types/user.types";
 import { formatApprovalTimestamp } from "@/utils/date.utils";
 import { Check, Mail, Phone, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 interface ApprovalCardProps {
   approval: ApprovalItem;
@@ -66,11 +67,29 @@ export function ApprovalCard({
     try {
       setIsGenerating(true);
 
+      // Map approval type to appropriate event type
+      const getEventType = (approvalType: string) => {
+        switch (approvalType) {
+          case "follow-up":
+            return "FOLLOW_UP";
+          case "reminder":
+            return "APPOINTMENT_REMINDER";
+          case "consultation":
+            return "CONSULTATION_REQUEST";
+          case "pre-care":
+            return "PRE_CARE_INSTRUCTIONS";
+          case "post-care":
+            return "POST_CARE_INSTRUCTIONS";
+          default:
+            return "APPOINTMENT_MISSED"; // fallback
+        }
+      };
+
       // Prepare the API request
       const requestData = {
         patientId: approval.patientId,
         providerId: providerId,
-        eventType: "APPOINTMENT_MISSED", // Default event type - could be dynamic based on approval type
+        eventType: getEventType(approval.type),
         channel: activeCommMethod === "chat" ? ("SMS" as const) : ("EMAIL" as const),
         priority: "HIGH" as const,
       };
@@ -78,17 +97,32 @@ export function ApprovalCard({
       // Call the API
       const response = await generateAutomatedMessage(requestData).unwrap();
 
-      // Update the message with the generated content
-      if (response.success && response.data.content) {
-        const generatedMessage = response.data.content;
-        approval.message = generatedMessage;
-        setEditedMessage(generatedMessage);
-
-        // Reset manual edit flag since this was AI generated
-        setWasManuallyEdited(false);
+      // Validate the response structure
+      if (!response.success) {
+        throw new Error(response.message || "Failed to generate automated message");
       }
-    } catch (error) {
+
+      if (!response.data?.queuedMessage?.content) {
+        throw new Error("No content received in the response");
+      }
+
+      // Update the message with the generated content
+      const generatedMessage = response.data.queuedMessage.content;
+      approval.message = generatedMessage;
+      setEditedMessage(generatedMessage);
+
+      // Reset manual edit flag since this was AI generated
+      setWasManuallyEdited(false);
+
+      // Show success toast
+      toast.success("Message generated successfully with Tera AI!");
+    } catch (error: any) {
       console.error("Failed to generate automated message:", error);
+
+      // Show error toast with specific message
+      const errorMessage =
+        error?.data?.message || error?.message || "Failed to generate message. Please try again.";
+      toast.error(errorMessage);
 
       // Fallback to original message in case of error
       approval.message = originalMessage;

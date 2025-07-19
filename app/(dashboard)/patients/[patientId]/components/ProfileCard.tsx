@@ -21,10 +21,15 @@ export function ProfileCard({ patient }: ProfileCardProps) {
                 {patient.lastName[0]}
               </span>
             </div>
-            {patient.status === "inactive" && (
+            {patient.status === "inactive" ? (
               <div className="flex items-center gap-1.5 mt-2 justify-center">
                 <div className="w-1.5 h-1.5 rounded-full bg-gray-500" />
                 <span className="text-sm text-gray-500 font-medium">Inactive</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 mt-2 justify-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <span className="text-sm text-gray-500 font-medium">Active</span>
               </div>
             )}
           </div>

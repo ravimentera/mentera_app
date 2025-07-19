@@ -239,28 +239,27 @@ export interface GenerateAutomatedMessageRequest {
 
 export interface GenerateAutomatedMessageResponse {
   success: boolean;
+  message: string;
   data: {
+    success: boolean;
     messageId: string;
-    content: string;
-    channel: "SMS" | "EMAIL";
-    patientId: string;
-    providerId: string;
-    eventType: string;
-    priority: "HIGH" | "MEDIUM" | "LOW";
-    generatedAt: string;
-    metadata: {
-      aiGenerated: boolean;
-      aiModel: string;
-      tone: string;
-      format: string;
-      contextDataProvided: boolean;
-      patientInfoProvided: boolean;
-      treatmentInfoProvided: boolean;
+    eventId: string;
+    queuedMessage: {
+      content: string;
+      subject: string;
+      channel: "SMS" | "EMAIL";
+      priority: "HIGH" | "MEDIUM" | "LOW";
+      approvalStatus: "PENDING_APPROVAL" | "APPROVED" | "DECLINED";
+      aiContext: any;
+      generatedAt: string;
+      confidence: number;
     };
-    requiresApproval: boolean;
-    confidence: number;
+    summaries: {
+      patientSummary: any;
+      providerSummary: any;
+      conversationSummary: any;
+    };
   };
-  timestamp: string;
 }
 
 // Types for approval actions
