@@ -19,41 +19,41 @@ export const chartsProvider: ContextProvider<PatientChart[]> = {
     }
 
     try {
-      console.log(
-        `[chartsProvider] Fetching charts for patient ${patientId} from provider ${providerId}`,
-      );
+      // console.log(
+      //   `[chartsProvider] Fetching charts for patient ${patientId} from provider ${providerId}`,
+      // );
 
       // Step 1: Get all provider charts
       const providerChartsResult = await store
         .dispatch(chartsApi.endpoints.getProviderCharts.initiate(providerId))
         .unwrap();
 
-      console.log(
-        `[chartsProvider] Retrieved ${providerChartsResult.length} total charts from provider ${providerId}`,
-      );
-      console.log(
-        `[chartsProvider] All chart patientIds:, ${providerChartsResult.map((chart) => ({ id: chart.id, patientId: chart.patientId }))}`,
-      );
+      // console.log(
+      //   `[chartsProvider] Retrieved ${providerChartsResult.length} total charts from provider ${providerId}`,
+      // );
+      // console.log(
+      //   `[chartsProvider] All chart patientIds:, ${providerChartsResult.map((chart) => ({ id: chart.id, patientId: chart.patientId }))}`,
+      // );
 
       // Step 2: Filter charts for the specific patient (with robust filtering)
       const patientChartSummaries = providerChartsResult.filter((chart) => {
         const matches = chart.patientId === patientId;
         if (matches) {
-          console.log(`[chartsProvider] ✅ Chart ${chart.id} matches patient ${patientId}`);
+          // console.log(`[chartsProvider] ✅ Chart ${chart.id} matches patient ${patientId}`);
         } else {
           console.log(
-            `[chartsProvider] ❌ Chart ${chart.id} has patientId ${chart.patientId}, doesn't match ${patientId}`,
+            // `[chartsProvider] ❌ Chart ${chart.id} has patientId ${chart.patientId}, doesn't match ${patientId}`,
           );
         }
         return matches;
       });
 
-      console.log(
-        `[chartsProvider] Found ${patientChartSummaries.length} charts for patient ${patientId}`,
-      );
-      console.log(
-        `[chartsProvider] Filtered chart IDs: ${patientChartSummaries.map((chart) => chart.id)}`,
-      );
+      // console.log(
+      //   `[chartsProvider] Found ${patientChartSummaries.length} charts for patient ${patientId}`,
+      // );
+      // console.log(
+      //   `[chartsProvider] Filtered chart IDs: ${patientChartSummaries.map((chart) => chart.id)}`,
+      // );
 
       if (patientChartSummaries.length === 0) {
         console.log(`[chartsProvider] No charts found for patient ${patientId}`);
@@ -139,21 +139,22 @@ export const chartsProvider: ContextProvider<PatientChart[]> = {
         })
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-      console.log(
-        `[chartsProvider] Final result: ${sortedAndFilteredCharts.length} charts for patient ${patientId}`,
-      );
-      console.log(
-        "[chartsProvider] Chart details:",
-        sortedAndFilteredCharts.map((chart) => ({
-          id: chart.id,
-          patientId: chart.patientId,
-          chartType: chart.chartType,
-          treatmentType: chart.treatmentType,
-          approved: chart.approved,
-          createdAt: chart.createdAt,
-          contentLength: chart.content?.length || 0,
-        })),
-      );
+      // Debugging Logs
+      // console.log(
+      //   `[chartsProvider] Final result: ${sortedAndFilteredCharts.length} charts for patient ${patientId}`,
+      // );
+      // console.log(
+      //   "[chartsProvider] Chart details:",
+      //   sortedAndFilteredCharts.map((chart) => ({
+      //     id: chart.id,
+      //     patientId: chart.patientId,
+      //     chartType: chart.chartType,
+      //     treatmentType: chart.treatmentType,
+      //     approved: chart.approved,
+      //     createdAt: chart.createdAt,
+      //     contentLength: chart.content?.length || 0,
+      //   })),
+      // );
 
       return sortedAndFilteredCharts;
     } catch (error) {

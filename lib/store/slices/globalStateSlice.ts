@@ -1,6 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 import type { GlobalState } from "../types";
+import type { Patient } from "../types/patient";
 
 import {
   patientDatabase as _patientDatabase,
@@ -19,6 +20,7 @@ const initialState: GlobalState = {
   testNurse: _testNurse,
 
   selectedPatientId: null,
+  selectedPatient: null,
 };
 
 // Create the slice
@@ -40,6 +42,22 @@ export const globalStateSlice = createSlice({
     },
     clearSelectedPatientId: (state) => {
       state.selectedPatientId = null;
+      state.selectedPatient = null; // Also clear the patient object
+    },
+    // NEW ACTIONS FOR PATIENT OBJECT MANAGEMENT
+    setSelectedPatient: (state, action: PayloadAction<Patient>) => {
+      state.selectedPatient = action.payload;
+      state.selectedPatientId = action.payload.patientId; // Keep ID in sync
+    },
+    clearSelectedPatient: (state) => {
+      state.selectedPatient = null;
+      state.selectedPatientId = null;
+    },
+    // Update existing action to also clear patient object
+    updateSelectedPatient: (state, action: PayloadAction<Partial<Patient>>) => {
+      if (state.selectedPatient) {
+        state.selectedPatient = { ...state.selectedPatient, ...action.payload };
+      }
     },
   },
 });
@@ -51,6 +69,9 @@ export const {
   setIsChatSidebarOpen, // <-- NEW ACTION
   setSelectedPatientId,
   clearSelectedPatientId,
+  setSelectedPatient, // NEW
+  clearSelectedPatient, // NEW
+  updateSelectedPatient, // NEW
 } = globalStateSlice.actions;
 
 // Export selectors
@@ -63,6 +84,9 @@ export const selectTestMedSpa = (state: RootState) => state.globalState.testMedS
 export const selectTestNurse = (state: RootState) => state.globalState.testNurse;
 
 export const selectSelectedPatientId = (state: RootState) => state.globalState.selectedPatientId;
+
+// NEW SELECTOR FOR FULL PATIENT OBJECT
+export const selectSelectedPatient = (state: RootState) => state.globalState.selectedPatient;
 
 export const selectCurrentPatient = (state: RootState) => {
   const id = state.globalState.selectedPatientId;

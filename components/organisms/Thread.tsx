@@ -45,9 +45,14 @@ import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/slices/authSlice";
 import { UploadedFile, removeFile, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
-import { setSelectedPatientId } from "@/lib/store/slices/globalStateSlice";
+import {
+  clearSelectedPatient,
+  selectSelectedPatient,
+  setSelectedPatient,
+} from "@/lib/store/slices/globalStateSlice";
 import { addMessage } from "@/lib/store/slices/messagesSlice";
 import { getActiveThreadId } from "@/lib/store/slices/threadsSlice";
+import type { Patient } from "@/lib/store/types/patient";
 import { getFirstProvider } from "@/utils/provider.utils";
 
 // Helper function to cleanly parse potential JSON from the assistant's message
@@ -313,7 +318,6 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   message,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -321,7 +325,8 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   const user = useAppSelector(selectUser);
   const providerId = user?.providerId || "PR-2001";
 
-  console.log({ providerId, selectedPatient, isProcessing });
+  // CHANGED: Use global state instead of local state
+  const selectedPatient = useSelector(selectSelectedPatient);
 
   const { data: patients, isLoading } = useGetPatientsByProviderQuery(providerId);
 
@@ -331,8 +336,6 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     isLoading: isContextLoading,
     isError: isContextError,
   } = usePatientContext(selectedPatient?.patientId || null, { providerId });
-
-  console.log({ context, isContextLoading, isContextError, isProcessing });
 
   const filteredPatients = useMemo(() => {
     if (!patients) return [];
@@ -344,6 +347,16 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     );
   }, [patients, searchTerm]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
+  useEffect(() => {
+    // Conditional logging only when context status changes
+    if (selectedPatient) {
+      console.log(
+        `[PatientSelector] Context status for ${selectedPatient.firstName} ${selectedPatient.lastName}: Loading=${isContextLoading}, Error=${isContextError}, HasContext=${!!context}`,
+      );
+    }
+  }, [selectedPatient, isContextLoading, isContextError, !!context]);
+
   // Effect to handle context ready state
   useEffect(() => {
     if (selectedPatient && context && !isContextLoading && isProcessing) {
@@ -354,11 +367,10 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         isProcessing,
       });
 
-      // Set the selected patient in global state
-      dispatch(setSelectedPatientId(selectedPatient.patientId));
-
       // Create the enhanced prompt with patient context
       const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
+
+      console.log({ context });
 
       // Add message with patient context
       dispatch(
@@ -372,15 +384,10 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         }),
       );
 
-      console.log(
-        "[PatientSelector] Message sent, keeping patient selected for continued interaction",
-      );
+      console.log("[PatientSelector] Message sent, patient selection persisted in global state");
 
-      // Reset processing state but KEEP the patient selected
-      // The user is still working with this patient's context
+      // Reset processing state but KEEP the patient selected in global state
       setIsProcessing(false);
-      // DON'T reset selectedPatient - keep it for continued interaction
-      // setSelectedPatient(null); // <-- REMOVED: This was causing context to become null
     }
   }, [selectedPatient, context, isContextLoading, isProcessing, dispatch, thread, originalPrompt]);
 
@@ -393,7 +400,6 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
       );
 
       // Still proceed with the message but without context
-      dispatch(setSelectedPatientId(selectedPatient.patientId));
       const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
       dispatch(
         addMessage({
@@ -405,10 +411,8 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         }),
       );
 
-      console.log("[PatientSelector] Error handled, keeping patient selected");
+      console.log("[PatientSelector] Error handled, patient selection persisted in global state");
       setIsProcessing(false);
-      // DON'T reset selectedPatient - keep it for continued interaction
-      // setSelectedPatient(null); // <-- REMOVED: This was causing context to become null
     }
   }, [
     selectedPatient,
@@ -420,7 +424,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     originalPrompt,
   ]);
 
-  const handleSelectPatient = (patient: any) => {
+  const handleSelectPatient = (patient: Patient) => {
     // Prevent selecting a different patient while processing
     if (isProcessing || isContextLoading) {
       console.log("[PatientSelector] Cannot select patient while processing");
@@ -431,8 +435,16 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
       patientId: patient.patientId,
       name: `${patient.firstName} ${patient.lastName}`,
     });
-    setSelectedPatient(patient);
+
+    // CHANGED: Use global state instead of local state
+    dispatch(setSelectedPatient(patient));
     setIsProcessing(true);
+  };
+
+  const handleClearPatient = () => {
+    console.log("[PatientSelector] Manually clearing patient selection");
+    // CHANGED: Use global state action to clear
+    dispatch(clearSelectedPatient());
   };
 
   return (
@@ -450,10 +462,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
             </div>
             <button
               type="button"
-              onClick={() => {
-                console.log("[PatientSelector] Manually clearing patient selection");
-                // setSelectedPatient(null);
-              }}
+              onClick={handleClearPatient}
               className="text-green-600 hover:text-green-800 text-sm underline"
             >
               Clear
@@ -508,7 +517,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
             <button
               type="button"
               key={patient.id}
-              onClick={() => !isDisabled && handleSelectPatient(patient)}
+              onClick={() => !isDisabled && handleSelectPatient(patient as Patient)}
               disabled={isDisabled}
               className={`w-full text-left p-3 border-b last:border-b-0 transition-colors ${
                 isSelected

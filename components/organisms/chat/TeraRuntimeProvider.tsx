@@ -212,12 +212,33 @@ export function TeraRuntimeProvider({
 
     if (unsentMessages.length > 0) {
       for (const msg of unsentMessages) {
+        let messageToSend = msg.text;
+
+        // Check if the optional context property exists on the message.
+        if (msg.context) {
+          const contextualPrompt = `
+---
+Use the following JSON data as the single source of truth to accurately answer the user's query about the patient. This context provides comprehensive information, including demographics, medical charts, and visit history.`;
+
+          // Stringify the context object to include it in the message payload.
+          const contextString = JSON.stringify(msg.context, null, 2);
+
+          messageToSend = `${msg.text}\n\n---\n\
+        ${contextualPrompt}\n\n
+        ${contextString}`;
+        }
+
         console.log(
           `TeraRuntimeProvider: Sending message ID ${msg.id} for thread ${activeThreadId}`,
         );
-        sendMessage(msg.text, filesRef.current);
-        sentIdsForThisThread.add(msg.id); // Mark this message as sent for this thread
+
+        console.log({ messageToSend });
+
+        // Send the final message payload, which may include the context.
+        sendMessage(messageToSend, filesRef.current);
+        sentIdsForThisThread.add(msg.id); // Mark this message as sent for this thread.
       }
+
       // Update the map with the new set of sent IDs for this thread.
       sentMessagesByThreadRef.current.set(activeThreadId, sentIdsForThisThread);
 
