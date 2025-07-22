@@ -17,4 +17,6 @@ export interface GlobalState {
 
   // currently selected patient ID
   selectedPatientId: string | null;
+  // currently selected patient object (for PatientSelector persistence)
+  selectedPatient: any | null;
 }
