@@ -1,0 +1,523 @@
+# usePatientContext Hook
+
+A reusable React hook for fetching and aggregating patient context data from multiple API sources. This hook is designed to provide comprehensive patient information to the Bedrock agent for enhanced conversations while maintaining excellent performance and extensibility.
+
+## Overview
+
+The `usePatientContext` hook solves the problem of slow patient context retrieval by aggregating data from multiple fast REST/GraphQL endpoints instead of relying on a single slow database round-trip through the Bedrock agent.
+
+### Key Features
+
+- ⚡ **Fast Performance**: Parallel data fetching from multiple sources (≤3s P95)
+- 🔧 **Extensible**: Easy to add new data providers without modifying existing code
+- 🛡️ **Type Safe**: Full TypeScript support with comprehensive type definitions
+- 🔄 **Smart Caching**: Built-in caching with configurable stale and cache times
+- 🎯 **Error Resilient**: Graceful handling of partial failures
+- 📊 **Rich Context**: Aggregates demographics, charts, visits, packages, and appointments
+
+## Installation
+
+The hook is already available in your project. Simply import it:
+
+```tsx
+import { usePatientContext } from '@/lib/hooks/patientContext';
+```
+
+## Basic Usage
+
+```tsx
+import { usePatientContext } from '@/lib/hooks/patientContext';
+
+function PatientChat() {
+  const { context, isLoading, isError, refetch } = usePatientContext('PT-1001', {
+    providerId: 'PR-2001'
+  });
+
+  if (isLoading) {
+    return <div>Loading patient context...</div>;
+  }
+
+  if (isError) {
+    return <div>Failed to load patient context</div>;
+  }
+
+  return (
+    <div>
+      <h2>{context.demographics.firstName} {context.demographics.lastName}</h2>
+      <p>Charts: {context.charts.length}</p>
+      <p>Visits: {context.visits.enrichedVisits.length}</p>
+    </div>
+  );
+}
+```
+
+## API Reference
+
+### Hook Signature
+
+```typescript
+usePatientContext(
+  patientId: string | null,
+  options?: UsePatientContextOptions
+): UsePatientContextResult
+```
+
+### Parameters
+
+#### `patientId: string | null`
+The unique identifier for the patient. Pass `null` to reset the hook state.
+
+#### `options: UsePatientContextOptions` (optional)
+Configuration options for the hook.
+
+```typescript
+interface UsePatientContextOptions {
+  providerId?: string;           // Provider ID for filtering charts
+  enableAutoRefetch?: boolean;   // Enable automatic refetching
+  staleTime?: number;           // Time in ms before data is considered stale (default: 5 min)
+  cacheTime?: number;           // Time in ms to keep data in cache (default: 10 min)
+  maxCharts?: number;           // Limit number of charts returned (most recent first)
+}
+```
+
+### Return Value
+
+```typescript
+interface UsePatientContextResult {
+  context: PatientContext | null;  // Aggregated patient data
+  isLoading: boolean;              // True while fetching data
+  isError: boolean;                // True if any critical error occurred
+  error?: any;                     // Error details if available
+  refetch: () => void;            // Function to manually refetch data
+}
+```
+
+## Data Structure
+
+The hook returns a comprehensive `PatientContext` object:
+
+```typescript
+interface PatientContext {
+  patientId: string;
+  demographics: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+    gender: string;
+    address: string;
+    allergies: string[];
+    alerts: string[];
+    // ... more fields
+  };
+  charts: Array<{
+    id: string;
+    content: string;
+    approved: boolean;
+    chartType: string;
+    treatmentType: string;
+    // ... more fields
+  }>;
+  visits: {
+    enrichedVisits: Array<{
+      visitDate: string;
+      treatment: {
+        procedure: string;
+        areasTreated: string[];
+        // ... more fields
+      };
+      // ... more fields
+    }>;
+    packages: {
+      activePackages: Array<{
+        packageName: string;
+        sessionsRemaining: number;
+        // ... more fields
+      }>;
+    };
+    appointments: {
+      upcomingAppointments: Array<{
+        startTime: string;
+        status: string;
+        // ... more fields
+      }>;
+    };
+  };
+  metadata: {
+    sourceTimestamps: {
+      demographics: string;
+      charts: string;
+      visits: string;
+    };
+    dataFreshness: string;
+    contextVersion: string;
+  };
+}
+```
+
+## Advanced Usage
+
+### With Error Handling
+
+```tsx
+function RobustPatientView() {
+  const { context, isLoading, isError, error, refetch } = usePatientContext(
+    selectedPatientId,
+    { providerId: 'PR-2001' }
+  );
+
+  const handleRetry = () => {
+    refetch();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="animate-spin w-4 h-4 border-2 border-blue-500 rounded-full"></div>
+        <span>Loading patient context...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="bg-red-50 p-4 rounded-md">
+        <h3>Failed to load patient context</h3>
+        <p>{error?.message || 'Unknown error occurred'}</p>
+        <button onClick={handleRetry} className="mt-2 px-4 py-2 bg-red-600 text-white rounded">
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Render patient context */}
+    </div>
+  );
+}
+```
+
+### Limiting Chart Results
+
+```tsx
+// Get only the 3 most recent charts for faster processing
+const { context } = usePatientContext(patientId, {
+  providerId: 'PR-2001',
+  maxCharts: 3  // Only return 3 most recent charts
+});
+```
+
+```tsx
+// Long-lived cache for patient demographics
+const { context } = usePatientContext(patientId, {
+  staleTime: 10 * 60 * 1000,  // 10 minutes
+  cacheTime: 30 * 60 * 1000,  // 30 minutes
+  providerId: 'PR-2001'
+});
+```
+
+### Conditional Fetching
+
+```tsx
+function ConditionalPatientData() {
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  
+  const { context, isLoading } = usePatientContext(
+    selectedPatient?.id || null,  // Only fetch when patient is selected
+    { providerId: 'PR-2001' }
+  );
+
+  return (
+    <div>
+      <PatientSelector onSelect={setSelectedPatient} />
+      {selectedPatient && (
+        <PatientDetails context={context} isLoading={isLoading} />
+      )}
+    </div>
+  );
+}
+```
+
+## Integration with Bedrock Agent
+
+The primary use case is passing patient context to the Bedrock agent:
+
+```tsx
+function ChatWithContext() {
+  const { context, isLoading, isError } = usePatientContext(patientId, {
+    providerId: 'PR-2001'
+  });
+
+  const sendMessageWithContext = useCallback((message: string) => {
+    if (context) {
+      dispatch(addMessage({
+        id: uuidv4(),
+        threadId: currentThread,
+        sender: "user",
+        text: message,
+        context: context,  // Include patient context
+        createdAt: Date.now(),
+      }));
+    }
+  }, [context, dispatch, currentThread]);
+
+  // ... rest of component
+}
+```
+
+## Extending with New Providers
+
+The hook uses a provider pattern that makes it easy to add new data sources:
+
+### 1. Create a New Provider
+
+```typescript
+// lib/hooks/patientContext/providers/medicationsProvider.ts
+import { store } from '@/lib/store';
+import { medicationsApi } from '@/lib/store/api';
+import type { ContextProvider } from '@/lib/types/patientContext';
+
+export const medicationsProvider: ContextProvider<Medication[]> = {
+  key: 'medications',
+  
+  fetch: async (patientId: string): Promise<Medication[]> => {
+    const result = await store.dispatch(
+      medicationsApi.endpoints.getPatientMedications.initiate(patientId)
+    ).unwrap();
+    
+    return result.data.medications;
+  },
+};
+```
+
+### 2. Update the Type Definition
+
+```typescript
+// lib/types/patientContext.ts
+export interface PatientContext {
+  // ... existing fields
+  medications?: Medication[];  // Add new optional field
+}
+```
+
+### 3. Register the Provider
+
+```typescript
+// lib/hooks/patientContext/providers/index.ts
+import { medicationsProvider } from './medicationsProvider';
+
+export const providers: ContextProvider<any>[] = [
+  demographicsProvider,
+  visitsProvider,
+  chartsProvider,
+  medicationsProvider,  // Add new provider
+];
+```
+
+That's it! The new provider will automatically be included in all future context fetches.
+
+## Performance Considerations
+
+### Parallel Execution
+All providers execute in parallel using `Promise.all`, significantly reducing total fetch time.
+
+### Caching Strategy
+- **Stale Time**: How long data is considered fresh (default: 5 minutes)
+- **Cache Time**: How long data stays in memory (default: 10 minutes)
+- Data is refetched automatically when it becomes stale
+
+### Error Resilience
+- Individual provider failures don't prevent other providers from succeeding
+- Demographics provider failure is treated as critical (whole fetch fails)
+- Other provider failures result in partial context (with empty arrays/objects)
+
+## Testing
+
+The hook includes comprehensive unit tests. Run them with:
+
+```bash
+npm test usePatientContext
+```
+
+Key test scenarios:
+- ✅ Successful data fetching and aggregation
+- ✅ Partial provider failures (graceful degradation)
+- ✅ Complete failure handling
+- ✅ Caching behavior
+- ✅ Provider extensibility
+
+## Best Practices
+
+### 1. Always Handle Loading States
+```tsx
+if (isLoading) {
+  return <LoadingSpinner />;
+}
+```
+
+### 2. Provide Fallbacks for Missing Data
+```tsx
+const chartCount = context?.charts?.length || 0;
+```
+
+### 3. Use Conditional Fetching
+```tsx
+// Only fetch when you actually need the data
+const { context } = usePatientContext(showDetails ? patientId : null);
+```
+
+### 4. Implement Proper Error Boundaries
+```tsx
+<ErrorBoundary fallback={<PatientContextError />}>
+  <ComponentUsingPatientContext />
+</ErrorBoundary>
+```
+
+### 5. Optimize Re-renders
+```tsx
+const patientName = useMemo(
+  () => context ? `${context.demographics.firstName} ${context.demographics.lastName}` : '',
+  [context]
+);
+```
+
+## Common Pitfalls
+
+❌ **Don't fetch context unnecessarily**
+```tsx
+// Bad: Always fetching
+const { context } = usePatientContext(patientId);
+```
+
+✅ **Do fetch conditionally**
+```tsx
+// Good: Fetch only when needed
+const { context } = usePatientContext(isModalOpen ? patientId : null);
+```
+
+❌ **Don't ignore loading states**
+```tsx
+// Bad: Assuming data is always available
+return <div>{context.demographics.firstName}</div>;
+```
+
+✅ **Do handle all states properly**
+```tsx
+// Good: Handle loading and error states
+if (isLoading) return <Loading />;
+if (isError) return <Error />;
+return <div>{context.demographics.firstName}</div>;
+```
+
+## Troubleshooting
+
+### Duplicate API Calls (Normal Behavior)
+
+If you see duplicate API calls in your network tab, this is usually **normal** and expected:
+
+#### ✅ **Common Causes (All Normal):**
+
+**1. React.StrictMode (Development Only)**
+```jsx
+// If your app has this wrapper, effects run twice in development:
+<React.StrictMode>
+  <App />
+</React.StrictMode>
+```
+
+**2. ServiceWorker Caching** 
+- First call: Direct network request
+- Second call: Intercepted and served from ServiceWorker cache
+- Look for "Fulfilled by ServiceWorker" in network tab
+
+**3. RTK Query + ServiceWorker Interaction**
+- RTK Query makes initial request
+- ServiceWorker intercepts subsequent requests for caching
+
+#### 🔍 **Debug Duplicate Calls**
+
+Use the debugging utilities:
+
+```typescript
+import { diagnoseDuplicateCalls } from '@/lib/utils/debugApiCalls';
+
+// Run this in your browser console:
+diagnoseDuplicateCalls();
+```
+
+Or check individual causes:
+
+```typescript
+import { checkStrictMode, checkServiceWorker } from '@/lib/utils/debugApiCalls';
+
+checkStrictMode();     // Check if React.StrictMode is causing double effects
+checkServiceWorker();  // Check ServiceWorker status
+```
+
+#### 📊 **Enhanced Hook Debugging**
+
+The `usePatientContext` hook now includes detailed logging:
+
+```
+[usePatientContext] 🚀 FETCH #1 - Starting for patient: PT-1002
+[usePatientContext] 📡 FETCH #1 - demographics provider starting
+[usePatientContext] ✅ FETCH #1 - demographics provider completed
+[usePatientContext] 📡 FETCH #1 - charts provider starting  
+[usePatientContext] ✅ FETCH #1 - charts provider completed
+[usePatientContext] 🏁 FETCH #1 - Context fetched successfully
+```
+
+If you see `FETCH #2` immediately after `FETCH #1`, it's likely React.StrictMode.
+
+### Chart Filtering Issues
+
+The hook includes extensive logging to help debug chart filtering. Check your browser console for:
+
+```
+[chartsProvider] Retrieved 10 total charts from provider PR-2001
+[chartsProvider] All chart patientIds: [{
+  id: 'CH-001', patientId: 'PT-1002'
+}, {
+  id: 'CH-002', patientId: 'PT-1003'  
+}]
+[chartsProvider] ✅ Chart CH-001 matches patient PT-1002
+[chartsProvider] ❌ Chart CH-002 has patientId PT-1003, doesn't match PT-1002
+[chartsProvider] Found 1 charts for patient PT-1002
+```
+
+**If you see charts for other patients in your context:**
+1. Check the console logs to see which charts are being filtered
+2. Verify the `patientId` parameter is correct
+3. Ensure the API is returning the expected `patientId` field in chart objects
+
+### Hook Returns `isLoading: true` Forever
+- Check that all required API endpoints are available
+- Verify providerId is correct and exists in the system
+- Check browser network tab for failed requests
+
+### Context is Partial/Missing Data
+- Check individual provider implementations
+- Look for API endpoint errors in console
+- Verify patient exists and has data for all providers
+
+### Performance Issues
+- Reduce `staleTime` if you need fresher data
+- Increase `cacheTime` if you want longer caching
+- Consider conditional fetching to avoid unnecessary requests
+
+## Related Documentation
+
+- [Bedrock Agent Integration Guide](../bedrock/integration.md)
+- [RTK Query API Documentation](../api/rtk-query.md)
+- [Patient Management System](../patients/overview.md)
+
+## Support
+
+For questions about this hook:
+1. Check the unit tests for usage examples
+2. Review the provider implementations
+3. Check the RTK Query endpoints being used
+4. Reach out to the frontend development team

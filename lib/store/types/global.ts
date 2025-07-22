@@ -3,6 +3,7 @@ import {
   testMedSpa as _testMedSpa,
   testNurse as _testNurse,
 } from "@/mock/chat.data";
+import type { Patient } from "./patient";
 
 // Define the state structure for this slice
 export interface GlobalState {
@@ -17,4 +18,6 @@ export interface GlobalState {
 
   // currently selected patient ID
   selectedPatientId: string | null;
+  // currently selected patient object (for PatientSelector persistence)
+  selectedPatient: Patient | null; // UPDATED: Changed from any | null to Patient | null
 }

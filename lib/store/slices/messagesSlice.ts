@@ -4,13 +4,14 @@ import { PayloadAction as ReduxPayloadAction, createSlice } from "@reduxjs/toolk
 // Your existing Sender type
 type Sender = "user" | "assistant";
 
-// Update Message interface to include threadId and createdAt
+// Update Message interface to include threadId, createdAt, and optional context
 export interface Message {
   id: string;
   threadId: string; // Added to associate message with a thread
   sender: Sender;
   text: string;
   createdAt: number; // Added for sorting or display
+  context?: any; // Optional patient context for Bedrock agent
 }
 
 interface MessagesState {
@@ -27,6 +28,8 @@ export const messagesSlice = createSlice({
   reducers: {
     // addMessage now expects a full Message object, including threadId and createdAt
     addMessage(state, action: ReduxPayloadAction<Message>) {
+      console.log("Message Slice:", { data: action.payload });
+
       state.items.push(action.payload);
     },
     updateMessage(state, action: ReduxPayloadAction<{ id: string; text: string }>) {

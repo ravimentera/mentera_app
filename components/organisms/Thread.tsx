@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import type { FC, ReactNode } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 
@@ -38,13 +38,21 @@ import { Button } from "@/components/atoms";
 import { Input } from "@/components/atoms/Input";
 import { MarkdownText } from "@/components/molecules/MarkdownText";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
+import { usePatientContext } from "@/lib/hooks/patientContext";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { AppDispatch } from "@/lib/store";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
+import { useAppSelector } from "@/lib/store/hooks";
+import { selectUser } from "@/lib/store/slices/authSlice";
 import { UploadedFile, removeFile, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
-import { setSelectedPatientId } from "@/lib/store/slices/globalStateSlice";
+import {
+  clearSelectedPatient,
+  selectSelectedPatient,
+  setSelectedPatient,
+} from "@/lib/store/slices/globalStateSlice";
 import { addMessage } from "@/lib/store/slices/messagesSlice";
 import { getActiveThreadId } from "@/lib/store/slices/threadsSlice";
+import type { Patient } from "@/lib/store/types/patient";
 import { getFirstProvider } from "@/utils/provider.utils";
 
 // Helper function to cleanly parse potential JSON from the assistant's message
@@ -310,9 +318,24 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   message,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const dispatch = useDispatch<AppDispatch>();
   const thread = useSelector(getActiveThreadId) as string;
-  const { data: patients, isLoading } = useGetPatientsByProviderQuery("PR-2001");
+  const user = useAppSelector(selectUser);
+  const providerId = user?.providerId || "PR-2001";
+
+  // CHANGED: Use global state instead of local state
+  const selectedPatient = useSelector(selectSelectedPatient);
+
+  const { data: patients, isLoading } = useGetPatientsByProviderQuery(providerId);
+
+  // Use the patient context hook
+  const {
+    context,
+    isLoading: isContextLoading,
+    isError: isContextError,
+  } = usePatientContext(selectedPatient?.patientId || null, { providerId });
 
   const filteredPatients = useMemo(() => {
     if (!patients) return [];
@@ -324,23 +347,151 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     );
   }, [patients, searchTerm]);
 
-  const handleSelectPatient = (patient: any) => {
-    dispatch(setSelectedPatientId(patient.patientId));
-    const newPrompt = `${originalPrompt} for patient ${patient.firstName} ${patient.lastName}`;
-    dispatch(
-      addMessage({
-        id: uuidv4(),
-        threadId: thread,
-        sender: "user",
-        text: newPrompt,
-        createdAt: Date.now(),
-      }),
-    );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
+  useEffect(() => {
+    // Conditional logging only when context status changes
+    if (selectedPatient) {
+      console.log(
+        `[PatientSelector] Context status for ${selectedPatient.firstName} ${selectedPatient.lastName}: Loading=${isContextLoading}, Error=${isContextError}, HasContext=${!!context}`,
+      );
+    }
+  }, [selectedPatient, isContextLoading, isContextError, !!context]);
+
+  // Effect to handle context ready state
+  useEffect(() => {
+    if (selectedPatient && context && !isContextLoading && isProcessing) {
+      console.log("[PatientSelector] Context ready, processing message...", {
+        selectedPatient: selectedPatient.patientId,
+        contextReady: !!context,
+        isContextLoading,
+        isProcessing,
+      });
+
+      // Create the enhanced prompt with patient context
+      const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
+
+      console.log({ context });
+
+      // Add message with patient context
+      dispatch(
+        addMessage({
+          id: uuidv4(),
+          threadId: thread,
+          sender: "user",
+          text: newPrompt,
+          context: context, // Include the patient context
+          createdAt: Date.now(),
+        }),
+      );
+
+      console.log("[PatientSelector] Message sent, patient selection persisted in global state");
+
+      // Reset processing state but KEEP the patient selected in global state
+      setIsProcessing(false);
+    }
+  }, [selectedPatient, context, isContextLoading, isProcessing, dispatch, thread, originalPrompt]);
+
+  // Effect to handle context errors
+  useEffect(() => {
+    if (selectedPatient && isContextError && !isContextLoading && isProcessing) {
+      console.error(
+        "[PatientSelector] Context error, proceeding without context:",
+        selectedPatient.patientId,
+      );
+
+      // Still proceed with the message but without context
+      const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
+      dispatch(
+        addMessage({
+          id: uuidv4(),
+          threadId: thread,
+          sender: "user",
+          text: newPrompt,
+          createdAt: Date.now(),
+        }),
+      );
+
+      console.log("[PatientSelector] Error handled, patient selection persisted in global state");
+      setIsProcessing(false);
+    }
+  }, [
+    selectedPatient,
+    isContextError,
+    isContextLoading,
+    isProcessing,
+    dispatch,
+    thread,
+    originalPrompt,
+  ]);
+
+  const handleSelectPatient = (patient: Patient) => {
+    // Prevent selecting a different patient while processing
+    if (isProcessing || isContextLoading) {
+      console.log("[PatientSelector] Cannot select patient while processing");
+      return;
+    }
+
+    console.log("[PatientSelector] Patient selected:", {
+      patientId: patient.patientId,
+      name: `${patient.firstName} ${patient.lastName}`,
+    });
+
+    // CHANGED: Use global state instead of local state
+    dispatch(setSelectedPatient(patient));
+    setIsProcessing(true);
+  };
+
+  const handleClearPatient = () => {
+    console.log("[PatientSelector] Manually clearing patient selection");
+    // CHANGED: Use global state action to clear
+    dispatch(clearSelectedPatient());
   };
 
   return (
-    <div className="bg-white p-4  border-slate-200 w-full max-w-lg">
+    <div className="bg-white p-4 border-slate-200 w-full max-w-lg">
       <p className="font-medium text-slate-800 mb-3">{message}</p>
+
+      {/* Show currently selected patient with option to clear */}
+      {selectedPatient && !isProcessing && (
+        <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm text-green-700">
+                Selected: {selectedPatient.firstName} {selectedPatient.lastName}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearPatient}
+              className="text-green-600 hover:text-green-800 text-sm underline"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading state when fetching context */}
+      {(isContextLoading || isProcessing) && selectedPatient && (
+        <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin h-4 w-4 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+            <span className="text-sm text-blue-700">
+              Loading context for {selectedPatient.firstName} {selectedPatient.lastName}...
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {isContextError && selectedPatient && (
+        <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+          <span className="text-sm text-yellow-700">
+            Warning: Could not load full context for {selectedPatient.firstName}{" "}
+            {selectedPatient.lastName}. Proceeding with basic information.
+          </span>
+        </div>
+      )}
       <div className="relative mb-3">
         <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
         <Input
@@ -356,20 +507,48 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         {!isLoading && filteredPatients.length === 0 && (
           <p className="p-4 text-center text-slate-500">No patients found.</p>
         )}
-        {filteredPatients.map((patient) => (
-          <button
-            type="button"
-            key={patient.id}
-            onClick={() => handleSelectPatient(patient)}
-            className="w-full text-left p-3 border-b last:border-b-0 hover:bg-brand-50 transition-colors"
-          >
-            <p className="font-semibold text-slate-800">
-              {patient.firstName} {patient.lastName}
-            </p>
-            <p className="text-sm text-slate-500">{patient.email}</p>
-            <p className="text-sm text-slate-500">{patient.phone}</p>
-          </button>
-        ))}
+        {filteredPatients.map((patient) => {
+          const isSelected = selectedPatient?.patientId === patient.patientId;
+          const isDisabled = isProcessing || isContextLoading;
+          const isDifferentPatient =
+            selectedPatient && selectedPatient.patientId !== patient.patientId;
+
+          return (
+            <button
+              type="button"
+              key={patient.id}
+              onClick={() => !isDisabled && handleSelectPatient(patient as Patient)}
+              disabled={isDisabled}
+              className={`w-full text-left p-3 border-b last:border-b-0 transition-colors ${
+                isSelected
+                  ? "bg-green-100 border-green-200"
+                  : isDifferentPatient && selectedPatient
+                    ? "bg-gray-100 cursor-not-allowed opacity-50"
+                    : isDisabled
+                      ? "bg-gray-50 cursor-not-allowed opacity-60"
+                      : "hover:bg-brand-50 cursor-pointer"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-slate-800">
+                    {patient.firstName} {patient.lastName}
+                    {isSelected && (
+                      <span className="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded-full">
+                        Selected
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-sm text-slate-500">{patient.email}</p>
+                  <p className="text-sm text-slate-500">{patient.phone}</p>
+                </div>
+                {isSelected && isContextLoading && (
+                  <div className="animate-spin h-5 w-5 border-2 border-green-500 rounded-full border-t-transparent"></div>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -379,7 +558,6 @@ const AssistantMessage: FC = () => {
   const message = useMessage();
   const { getState } = useThreadRuntime();
   const messages = getState().messages;
-  console.log({ messages });
 
   const fullText = message.content.map((c) => (c.type === "text" ? c.text : "")).join("");
   const parsedAction = tryParseAction(fullText);
