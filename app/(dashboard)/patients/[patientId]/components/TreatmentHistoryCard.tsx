@@ -32,7 +32,6 @@ const TreatmentHistoryCard = ({
   onViewAll,
   showBorder = true,
 }: TreatmentHistoryCardProps) => {
-  console.log("showBorder", showBorder);
   const formatRelativeDate = (dateString: string) => {
     try {
       const date = new Date(dateString);

@@ -7,11 +7,13 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerHeader,
+  DrawerTitle,
   VoiceRecording,
 } from "@/components/organisms";
 import { PatientOverview } from "@/components/organisms/approvals/PatientOverview";
 import {
   useApproveChartMutation,
+  useGenerateSOAPMutation,
   useGetChartDetailQuery,
   useGetPatientsByProviderQuery,
   useUpdateChartContentMutation,
@@ -42,6 +44,7 @@ export function ChartDetailDrawer({
   const [showVoiceRecording, setShowVoiceRecording] = useState(false);
   const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
   const [hasCompletedRecording, setHasCompletedRecording] = useState(false);
+  const [transcriptionSessionId, setTranscriptionSessionId] = useState<string | null>(null);
 
   // Reset editing state when drawer closes
   useEffect(() => {
@@ -53,6 +56,7 @@ export function ChartDetailDrawer({
       setShowVoiceRecording(false);
       setIsRecordingInProgress(false);
       setHasCompletedRecording(false);
+      setTranscriptionSessionId(null);
     }
   }, [open]);
 
@@ -85,6 +89,9 @@ export function ChartDetailDrawer({
 
   // Add the approve mutation
   const [approveChart, { isLoading: isApproving }] = useApproveChartMutation();
+
+  // Add the generate SOAP mutation
+  const [generateSOAP, { isLoading: isGeneratingSOAP }] = useGenerateSOAPMutation();
 
   // Find patient data
   const patient = patients.find((p) => p.patientId === (patientId || chart?.patientId));
@@ -169,6 +176,59 @@ export function ChartDetailDrawer({
     setIsEditing(false);
   };
 
+  const handleGenerateSOAP = async () => {
+    if (!transcriptionSessionId) {
+      toast.error("No transcription session available for SOAP generation");
+      return;
+    }
+
+    try {
+      console.log("Generating SOAP notes for session:", transcriptionSessionId);
+
+      const response = await generateSOAP({
+        sessionId: transcriptionSessionId,
+        body: {
+          templateId: "2736d184-08dc-4c18-8a7d-3487503bd799",
+          treatmentId: "cb1aef45-2b3f-44f1-b5d0-9e7f5f6de4e7",
+          aiOptions: {
+            tone: "professional",
+            detail: "brief",
+          },
+        },
+      }).unwrap();
+
+      // Format SOAP sections into chart content
+      const soapSections = response.data.soapSections;
+      const soapContent = `**SOAP Notes (Generated)**
+
+**Subjective:**
+${soapSections.subjective}
+
+**Objective:**
+${soapSections.objective}
+
+**Assessment:**
+${soapSections.assessment}
+
+**Plan:**
+${soapSections.plan}`;
+
+      // Update chart content with SOAP notes
+      const newContent = chart?.content ? `${chart.content}\n\n${soapContent}` : soapContent;
+
+      await handleContentSave(newContent);
+      toast.success("SOAP notes generated and added to chart!");
+
+      // Reset recording states
+      setHasCompletedRecording(false);
+      setShowVoiceRecording(false);
+      setTranscriptionSessionId(null);
+    } catch (error: any) {
+      console.error("Failed to generate SOAP notes:", error);
+      toast.error(error?.data?.message || "Failed to generate SOAP notes. Please try again.");
+    }
+  };
+
   // Parse chart content into SOAP sections
   const parseChartContent = (content: string) => {
     // For now, we'll display the content as is since the API returns a single content field
@@ -183,6 +243,7 @@ export function ChartDetailDrawer({
 
   const soapSections = chart ? parseChartContent(chart.content) : null;
 
+  // Early return must come AFTER all hooks
   if (!open) return null;
 
   return (
@@ -191,6 +252,9 @@ export function ChartDetailDrawer({
         <DrawerContent size="wide" direction="right">
           {/* Header */}
           <DrawerHeader className="border-b border-gray-200 px-5 py-3">
+            <DrawerTitle className="sr-only">
+              Chart Details for {patient?.firstName} {patient?.lastName}
+            </DrawerTitle>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* Avatar */}
@@ -264,7 +328,7 @@ export function ChartDetailDrawer({
                   </Tabs>
 
                   <div className="flex items-center gap-2">
-                    {!isEditing && (
+                    {!showVoiceRecording && !isEditing && (
                       <button
                         type="button"
                         onClick={handleContentEdit}
@@ -274,24 +338,31 @@ export function ChartDetailDrawer({
                         <Edit className="w-5 h-5 text-gray-600" />
                       </button>
                     )}
-                    <button
-                      type="button"
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <Copy className="w-5 h-5 text-gray-600" />
-                    </button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        console.log("Record button clicked!");
-                        setShowVoiceRecording(true);
-                        setIsRecordingInProgress(true);
-                        setHasCompletedRecording(false); // Reset completed state
-                      }}
-                    >
-                      <Mic className="w-4 h-4 mr-2" />
-                      Record
-                    </Button>
+                    {!showVoiceRecording && (
+                      <button
+                        type="button"
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <Copy
+                          className="w-5 h-5 text-gray-600"
+                          onClick={() => handleCopySection(chart?.content || "")}
+                        />
+                      </button>
+                    )}
+                    {!showVoiceRecording && (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          console.log("Record button clicked!");
+                          setShowVoiceRecording(true);
+                          setIsRecordingInProgress(true);
+                          setHasCompletedRecording(false); // Reset completed state
+                        }}
+                      >
+                        <Mic className="w-4 h-4 mr-2" />
+                        Record
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -308,19 +379,14 @@ export function ChartDetailDrawer({
                         setIsRecordingInProgress(false);
                         // Don't set hasCompletedRecording to true if user just cancels
                       }}
-                      onSave={(transcription: string) => {
-                        console.log("Voice transcription:", transcription);
-                        // Insert transcription into chart content
-                        const newContent = chart?.content
-                          ? `${chart.content}\n\n**Voice Recording Transcription:**\n${transcription}`
-                          : `**Voice Recording Transcription:**\n${transcription}`;
-                        handleContentSave(newContent);
-                        setShowVoiceRecording(false);
-                        setIsRecordingInProgress(false);
+                      onRecordingStateChange={setIsRecordingInProgress}
+                      onRecordingComplete={() => {
+                        console.log("VoiceRecording onRecordingComplete called");
                         setHasCompletedRecording(true);
                       }}
-                      onRecordingStateChange={setIsRecordingInProgress}
-                      onRecordingComplete={() => setHasCompletedRecording(true)}
+                      onSessionCreated={setTranscriptionSessionId}
+                      patientId={patientId || chart?.patientId || "PT-1001"}
+                      chartType={activeTab}
                     />
                   </div>
                 ) : isLoadingChart ? (
@@ -360,17 +426,11 @@ export function ChartDetailDrawer({
                     null : hasCompletedRecording ? (
                       /* Show Generate SOAP button only after recording is completed */
                       <Button
-                        onClick={() => {
-                          // TODO: Implement SOAP generation logic
-                          console.log("Generate SOAP clicked");
-                          toast.success("SOAP notes generated!");
-                          // Reset the completed recording state after generating SOAP
-                          setHasCompletedRecording(false);
-                          setShowVoiceRecording(false);
-                        }}
-                        className="bg-brand-blue hover:bg-brand-blue-dark text-white"
+                        onClick={handleGenerateSOAP}
+                        disabled={isGeneratingSOAP}
+                        className="bg-brand-blue hover:bg-brand-blue-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Generate SOAP
+                        {isGeneratingSOAP ? "Generating SOAP..." : "Generate SOAP"}
                       </Button>
                     ) : /* No buttons when showing start recording card */
                     null

@@ -12,6 +12,7 @@ export function middleware(request: NextRequest) {
   // For dashboard routes, check auth token
   if (
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/home") ||
     pathname.startsWith("/appointments") ||
     pathname.startsWith("/profile") ||
     pathname.startsWith("/settings")
@@ -46,6 +47,7 @@ export const config = {
   matcher: [
     // Match the root path and dashboard paths
     "/",
+    "/home/:path*",
     "/dashboard/:path*",
     "/appointments/:path*",
     "/profile/:path*",

@@ -3,20 +3,13 @@
 // Auth interceptor
 export * from "./authInterceptor";
 
-// Users API
-export * from "./usersApi";
-
-// Patients API
-export * from "./patientsApi";
-
-// Auth API
+// APIs
 export * from "./authApi";
-
-// Communications API
-export * from "./communicationsApi";
-
-// Charts API
 export * from "./chartsApi";
+export * from "./communicationsApi";
+export * from "./patientsApi";
+export * from "./transcriptionApi";
+export * from "./usersApi";
 
 // Future APIs
 // export { appointmentsApi } from './appointmentsApi';
