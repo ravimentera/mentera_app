@@ -2,7 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
 // Import APIs
-import { authApi, chartsApi, communicationsApi, patientsApi, usersApi } from "./api";
+import {
+  authApi,
+  chartsApi,
+  communicationsApi,
+  patientsApi,
+  transcriptionApi,
+  usersApi,
+} from "./api";
 
 // Import slices
 import {
@@ -15,6 +22,7 @@ import {
   messagesReducer,
   patientsReducer,
   threadsReducer,
+  transcriptionReducer,
   userRoleReducer,
 } from "./slices";
 
@@ -26,6 +34,7 @@ export const store = configureStore({
     [patientsApi.reducerPath]: patientsApi.reducer,
     [communicationsApi.reducerPath]: communicationsApi.reducer,
     [chartsApi.reducerPath]: chartsApi.reducer,
+    [transcriptionApi.reducerPath]: transcriptionApi.reducer,
 
     // Regular slices
     auth: authReducer,
@@ -38,6 +47,7 @@ export const store = configureStore({
     patients: patientsReducer,
     fileUploads: fileUploadsReducer,
     threads: threadsReducer,
+    transcription: transcriptionReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -46,6 +56,7 @@ export const store = configureStore({
       patientsApi.middleware,
       communicationsApi.middleware,
       chartsApi.middleware,
+      transcriptionApi.middleware,
     ),
 });
 

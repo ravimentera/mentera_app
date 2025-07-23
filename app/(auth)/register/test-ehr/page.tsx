@@ -163,7 +163,7 @@ export default function TestEHRRegistrationPage() {
           <div className="space-y-3">
             <Button
               onClick={() => {
-                window.location.href = "/dashboard";
+                window.location.href = "/home";
               }}
               className="w-full"
             >
