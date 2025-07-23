@@ -332,8 +332,8 @@ export function VoiceRecording({
               <div className="bg-red-100 border border-red-200 rounded p-3 text-sm text-red-800">
                 <div className="font-medium mb-2">How to enable microphone access:</div>
                 <ol className="list-decimal list-inside space-y-1 text-xs">
-                  <li>Look for the microphone icon in your browser's address bar</li>
-                  <li>Click on it and select "Allow" for microphone access</li>
+                  <li>Look for the microphone icon in your browser&apos;s address bar</li>
+                  <li>Click on it and select &quot;Allow&quot; for microphone access</li>
                   <li>Or go to browser Settings → Privacy → Microphone → Allow this site</li>
                   <li>Refresh the page if needed and try again</li>
                 </ol>

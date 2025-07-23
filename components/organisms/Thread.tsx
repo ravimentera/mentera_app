@@ -355,7 +355,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         `[PatientSelector] Context status for ${selectedPatient.firstName} ${selectedPatient.lastName}: Loading=${isContextLoading}, Error=${isContextError}, HasContext=${!!context}`,
       );
     }
-  }, [selectedPatient, isContextLoading, isContextError, !!context]);
+  }, [selectedPatient, isContextLoading, isContextError, context]);
 
   // Effect to handle context ready state
   useEffect(() => {
