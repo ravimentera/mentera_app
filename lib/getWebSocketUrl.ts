@@ -1,9 +1,8 @@
 // libs/getWebSocketUrl.ts
 
-export function getWebSocketUrl(): string {
+export function getWebSocketUrl(endpoint?: string): string {
   // Check if running in a development environment
   // In Next.js, NODE_ENV is 'development' during `next dev`
-  // const isDevelopment = process.env.NODE_ENV === "production";
   const isDevelopment = process.env.NODE_ENV === "development";
 
   if (isDevelopment) {
@@ -16,4 +15,19 @@ export function getWebSocketUrl(): string {
   }
 
   return "wss://ws.mentera.ai/ws/";
+}
+
+// New function for transcription WebSocket URLs
+export function getTranscriptionWebSocketUrl(): string {
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  if (isDevelopment) {
+    // For development, use the same API base URL as HTTP calls
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://34.204.48.222:5004";
+    return apiBaseUrl.replace(/^https?:/, "ws:");
+  }
+
+  // For production, use secure WebSocket
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://34.204.48.222:5004";
+  return apiBaseUrl.replace(/^https?:/, "wss:");
 }
