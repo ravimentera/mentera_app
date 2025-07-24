@@ -1,31 +1,30 @@
+import { getTranscriptionWebSocketUrl } from "@/lib/getWebSocketUrl";
 import { NextRequest } from "next/server";
-
-const WS_BASE_URL = process.env.API_BASE_URL || "http://34.204.48.222:5004";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const searchParams = url.searchParams;
 
-  // Get the token from query params
   const token = searchParams.get("token");
-
   if (!token) {
     return new Response("Token required", { status: 400 });
   }
 
-  // Create WebSocket URL
-  const wsUrl =
-    WS_BASE_URL.replace(/^http/, "ws") + "/api/providers/ws/transcription?token=" + token;
+  // Use centralized WebSocket URL logic
+  const wsBaseUrl = getTranscriptionWebSocketUrl();
+  const wsUrl = wsBaseUrl + "/api/providers/ws/transcription?token=" + encodeURIComponent(token);
 
-  console.log("WebSocket Proxy - Redirecting to:", wsUrl);
+  console.log("WebSocket Proxy - Base URL:", wsBaseUrl);
+  console.log("WebSocket Proxy - Final URL:", wsUrl);
+  console.log("WebSocket Proxy - Environment:", process.env.NODE_ENV);
 
-  // For WebSocket connections, we need to upgrade the connection
-  // This is a simplified approach - you might need a more sophisticated proxy
   return new Response(
     JSON.stringify({
       wsUrl,
-      message: "Use this URL for WebSocket connection",
-      note: "Direct WebSocket proxy not supported in Edge Runtime. Use returned URL directly.",
+      message: `Using ${wsBaseUrl.startsWith("wss:") ? "secure (WSS)" : "standard (WS)"} WebSocket connection`,
+      protocol: wsBaseUrl.startsWith("wss:") ? "wss" : "ws",
+      environment: process.env.NODE_ENV,
+      baseUrl: wsBaseUrl,
     }),
     {
       status: 200,
