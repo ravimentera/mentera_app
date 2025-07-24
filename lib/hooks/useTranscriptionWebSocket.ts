@@ -117,12 +117,28 @@ export function useTranscriptionWebSocket({
       }
 
       try {
-        // Extract token from transcriptionEndpoint and build WebSocket URL
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://34.204.48.222:5004";
-        const wsBaseUrl = apiBaseUrl.replace(/^http/, "ws");
-        const wsUrl = `${wsBaseUrl}${transcriptionEndpoint}`;
+        // Use proxy approach similar to HTTP API calls to handle HTTPS/WSS requirement
+        // This avoids the SecurityError when connecting from HTTPS pages
 
-        console.log("Connecting to WebSocket:", wsUrl);
+        // Extract token from transcription endpoint
+        const tokenMatch = transcriptionEndpoint.match(/token=([^&]+)/);
+        const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : "";
+
+        if (!token) {
+          throw new Error("No token found in transcription endpoint");
+        }
+
+        // Get WebSocket URL from our proxy (similar to how HTTP API calls work)
+        const proxyResponse = await fetch(`/api/ws-proxy?token=${encodeURIComponent(token)}`);
+        if (!proxyResponse.ok) {
+          throw new Error(`Proxy request failed: ${proxyResponse.statusText}`);
+        }
+
+        const proxyData = await proxyResponse.json();
+        const wsUrl = proxyData.wsUrl;
+
+        console.log("Connecting to WebSocket via proxy:", wsUrl);
+        console.log("WebSocket protocol:", proxyData.protocol);
 
         const ws = new WebSocket(wsUrl);
         audioWsRef.current = ws;
