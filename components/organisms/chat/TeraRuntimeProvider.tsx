@@ -19,7 +19,7 @@ import {
   useExternalStoreRuntime,
 } from "@assistant-ui/react";
 import React, { PropsWithChildren, useCallback, useMemo } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 import { useWebSocketChat } from "./useWebSocketChat";
@@ -192,6 +192,26 @@ export function TeraRuntimeProvider({
     forceFresh,
     cacheDebug,
     activeThreadId,
+    onPatientSelectionRequired: (message, files) => {
+      console.log("TeraRuntimeProvider: Patient selection required", {
+        message: message.substring(0, 50) + "...",
+      });
+
+      // Add an assistant message with the patient selection request
+      // This will trigger the existing PatientSelector component in Thread.tsx
+      const assistantMessage: ReduxMessage = {
+        id: uuidv4(),
+        threadId: activeThreadId,
+        sender: "assistant",
+        text: JSON.stringify({
+          action: "REQUEST_PATIENT_SELECTION",
+          message: "Please select a patient to continue with your request.",
+        }),
+        createdAt: Date.now(),
+      };
+
+      dispatch(addMessage(assistantMessage));
+    },
   });
 
   // This ref now tracks sent messages on a per-thread basis.
