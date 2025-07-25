@@ -1,5 +1,5 @@
 // utils/queryClassifier.ts
-interface QueryClassification {
+export interface QueryClassification {
   scope: "patient" | "provider" | "medspa";
   requiresPatient: boolean;
   confidence: number;

@@ -1,6 +1,6 @@
+import { FeatureFlagKey, featureFlagService } from "@/lib/featureFlags";
 // hooks/useFeatureFlag.ts
 import { useCallback, useEffect, useState } from "react";
-import { featureFlagService, FeatureFlagKey } from "@/lib/featureFlags";
 
 export function useFeatureFlag(flag: FeatureFlagKey) {
   const [isEnabled, setIsEnabled] = useState(featureFlagService.isEnabled(flag));

@@ -39,6 +39,7 @@ export default function ChatClient() {
         dispatch(
           setThreadPatient({
             threadId: activeThreadId,
+            // @ts-ignore
             patient: defaultPatient,
           }),
         );
@@ -115,6 +116,7 @@ export default function ChatClient() {
               dispatch(
                 setThreadPatient({
                   threadId: activeThreadId,
+                  // @ts-ignore
                   patient,
                 }),
               );

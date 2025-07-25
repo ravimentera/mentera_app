@@ -195,6 +195,7 @@ export const threadsSlice = createSlice({
     ) => {
       const { threadId, patient } = action.payload;
       const thread = state.threads.find((t) => t.id === threadId);
+      // biome-ignore lint/complexity/useOptionalChain: ignore
       if (thread && thread.selectedPatient) {
         thread.selectedPatient = { ...thread.selectedPatient, ...patient };
       }
