@@ -13,6 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/molecules";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 
 import {
   selectAllLayouts,
@@ -26,6 +27,8 @@ export function DynamicLayoutContainer() {
   const allLayouts = useSelector(selectAllLayouts); // Array of LayoutEntry { key: string, data: LayoutAST }
   const isLoading = useSelector(selectIsLayoutLoading);
   const error = useSelector(selectLayoutError);
+
+  const isDynamicLayoutEnabled = useFeatureFlag("dynamicLayout");
 
   // State to control which accordion item (identified by LayoutEntry.key) is open
   const [openAccordionItemKey, setOpenAccordionItemKey] = useState<string | undefined>(undefined);
@@ -49,6 +52,11 @@ export function DynamicLayoutContainer() {
   // useEffect(() => {
   //   console.log("DynamicLayoutContainer: isLoading:", isLoading, "Error:", error);
   // }, [isLoading, error]);
+
+  // Early return if feature is disabled
+  if (!isDynamicLayoutEnabled) {
+    return null; // or return a fallback component
+  }
 
   return (
     <div className="flex flex-col h-full p-4 space-y-4 bg-background text-foreground">

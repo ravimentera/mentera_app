@@ -10,6 +10,7 @@ import { v4 as uuid } from "uuid";
 import { getWebSocketUrl } from "@/lib/getWebSocketUrl";
 import type { AppDispatch } from "@/lib/store";
 import { store } from "@/lib/store";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 
 import { fetchDynamicLayout } from "@/lib/store/slices/dynamicLayoutSlice";
 import {
@@ -117,7 +118,9 @@ export function useWebSocketChat({
         text: cleaned,
         createdAt: Date.now(),
       };
-      if (cleaned.trim()) dispatch(fetchDynamicLayout(cleaned));
+      if (cleaned.trim() && isFeatureEnabled("dynamicLayout")) {
+        dispatch(fetchDynamicLayout(cleaned));
+      }
       dispatch(addMessage(ai));
       dispatch(
         updateThreadLastMessageAt({

@@ -26,6 +26,8 @@ import {
 } from "@/lib/store/slices/threadsSlice";
 import { cn } from "@/lib/utils";
 
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+
 // The ChatClient component is now focused only on the chat UI.
 const ChatClient: FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -170,6 +172,8 @@ const Page = () => {
   const dispatch = useDispatch<AppDispatch>();
   const isSidePanelExpanded = useSelector(selectIsSidePanelExpanded);
 
+  const isDynamicLayoutEnabled = useFeatureFlag("dynamicLayout");
+
   const handleToggleSidePanel = () => {
     dispatch(toggleSidePanel());
   };
@@ -185,7 +189,7 @@ const Page = () => {
         <ChatClient />
       </div>
 
-      {isSidePanelExpanded && (
+      {isSidePanelExpanded && isDynamicLayoutEnabled && (
         <div className="w-1/2 flex-shrink-0 bg-background overflow-hidden">
           <DynamicLayoutContainer />
         </div>

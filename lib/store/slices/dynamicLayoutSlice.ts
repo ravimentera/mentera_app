@@ -6,6 +6,7 @@ import {
   setIsChatSidebarOpen,
   setSidePanelExpanded,
 } from "./globalStateSlice";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 
 const initialState: DynamicLayoutState = {
   layouts: [],
@@ -19,9 +20,13 @@ export const fetchDynamicLayout = createAsyncThunk<
   string, // First argument to the payload creator (markdownKey)
   ThunkApiConfig // Type for thunkAPI
 >("dynamicLayout/fetchLayout", async (markdownKey, thunkAPI) => {
+  if (!isFeatureEnabled("dynamicLayout")) {
+    return thunkAPI.rejectWithValue("Dynamic layout feature is disabled");
+  }
+
   try {
     const { dispatch, getState, rejectWithValue } = thunkAPI;
-    const activePatientID = (getState() as RootState).globalState.selectedPatientId;
+    const activePatientID = (getState() as RootState).threads.selectedPatientId;
     const latestUserMessage = (getState() as RootState).messages.items
       .filter((message) => message.sender === "user")
       .at(-1)?.text;
