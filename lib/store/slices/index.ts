@@ -27,4 +27,3 @@ export { default as messagesReducer } from "./messagesSlice";
 export { default as userRoleReducer } from "./userRoleSlice";
 export { default as fileUploadsReducer } from "./fileUploadsSlice";
 export { default as threadsReducer } from "./threadsSlice";
-export { default as threadClassificationsReducer } from "./threadClassificationsSlice";

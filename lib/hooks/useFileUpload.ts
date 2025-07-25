@@ -1,6 +1,6 @@
 // lib/hooks/useFileUpload.ts
 import { addFile, removeFile } from "@/lib/store/slices/fileUploadsSlice";
-import { selectSelectedPatientId } from "@/lib/store/slices/globalStateSlice";
+import { selectActiveThreadPatientId } from "@/lib/store/slices/threadsSlice";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuid } from "uuid";
@@ -11,7 +11,8 @@ import { v4 as uuid } from "uuid";
  */
 export function useFileUpload() {
   const dispatch = useDispatch();
-  const patientId = useSelector(selectSelectedPatientId);
+  // CHANGED: Use thread-specific patient ID instead of global
+  const patientId = useSelector(selectActiveThreadPatientId);
 
   const uploadFile = useCallback(
     async (file: File) => {

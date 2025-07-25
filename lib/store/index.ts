@@ -14,7 +14,6 @@ import {
   globalStateReducer,
   messagesReducer,
   patientsReducer,
-  threadClassificationsReducer,
   threadsReducer,
   userRoleReducer,
 } from "./slices";
@@ -39,7 +38,6 @@ export const store = configureStore({
     patients: patientsReducer,
     fileUploads: fileUploadsReducer,
     threads: threadsReducer,
-    threadClassifications: threadClassificationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(

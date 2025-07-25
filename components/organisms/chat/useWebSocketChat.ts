@@ -19,18 +19,19 @@ import {
 } from "@/lib/store/slices/fileUploadsSlice";
 import {
   selectPatientDatabase,
-  selectSelectedPatientId,
   selectTestMedSpa,
   selectTestNurse,
 } from "@/lib/store/slices/globalStateSlice";
 import { Message as ReduxMessage, addMessage } from "@/lib/store/slices/messagesSlice";
-import { updateThreadLastMessageAt } from "@/lib/store/slices/threadsSlice";
-
 import {
+  selectActiveThreadPatientId,
+  // New imports for thread-based classification and patient management
   selectNeedsFirstQueryEnhancement,
   selectThreadClassification,
   setThreadClassification,
-} from "@/lib/store/slices/threadClassificationsSlice";
+  updateThreadLastMessageAt,
+} from "@/lib/store/slices/threadsSlice";
+
 import { sanitizeMarkdown } from "@/lib/utils";
 import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
 import { logValidationEvent } from "@/utils/responseValidator";
@@ -57,7 +58,12 @@ export function useWebSocketChat({
 }: UseChatWebSocketProps) {
   const dispatch = useDispatch<AppDispatch>();
   const patientDatabase = useSelector(selectPatientDatabase);
-  const currentPatientId = useSelector(selectSelectedPatientId) as string;
+
+  // CHANGED: Use thread-specific patient ID instead of global
+  const currentPatientId = useSelector((state: any) =>
+    selectActiveThreadPatientId(state),
+  ) as string;
+
   const testMedSpa = useSelector(selectTestMedSpa);
   const testNurse = useSelector(selectTestNurse);
 
@@ -67,6 +73,7 @@ export function useWebSocketChat({
   }, [activeThreadId]);
 
   /* ---------------- Redux selectors for thread classification - */
+  // CHANGED: Use thread-specific selectors instead of threadClassificationsSlice
   const threadClassification = useSelector((state: any) =>
     selectThreadClassification(state, activeThreadId),
   );
@@ -221,7 +228,7 @@ export function useWebSocketChat({
           return handlePatientSelectionRequired(text, files);
         }
 
-        // Store classification in Redux
+        // Store classification in Redux (now in threadsSlice)
         currentClassification = apiResult.classification;
         dispatch(
           setThreadClassification({
