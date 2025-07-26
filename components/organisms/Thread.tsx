@@ -40,6 +40,7 @@ import { MarkdownText } from "@/components/molecules/MarkdownText";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { usePatientContext } from "@/lib/hooks/patientContext";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
+import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
 import { AppDispatch } from "@/lib/store";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
@@ -324,6 +325,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   const thread = useSelector(getActiveThreadId) as string;
   const user = useAppSelector(selectUser);
   const providerId = user?.providerId || "PR-2001";
+  const { processFirstMessage, needsFirstMessageProcessing } = useFirstMessageHandler();
 
   // CHANGED: Use thread-specific patient instead of global state
   const selectedPatient = useSelector(selectActiveThreadPatient);
@@ -372,6 +374,15 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
 
       console.log({ context });
 
+      // Check if this is the first message for the thread
+      const isFirstMessage = needsFirstMessageProcessing(thread);
+
+      // Process first message BEFORE adding the message to ensure proper ordering
+      if (isFirstMessage) {
+        console.log(`[PatientSelector] Processing first message for thread ${thread}`);
+        processFirstMessage(thread, newPrompt);
+      }
+
       // Add message with patient context
       dispatch(
         addMessage({
@@ -401,6 +412,16 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
 
       // Still proceed with the message but without context
       const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
+
+      // Check if this is the first message for the thread
+      const isFirstMessage = needsFirstMessageProcessing(thread);
+
+      // Process first message BEFORE adding the message to ensure proper ordering
+      if (isFirstMessage) {
+        console.log(`[PatientSelector] Processing first message for thread ${thread}`);
+        processFirstMessage(thread, newPrompt);
+      }
+
       dispatch(
         addMessage({
           id: uuidv4(),

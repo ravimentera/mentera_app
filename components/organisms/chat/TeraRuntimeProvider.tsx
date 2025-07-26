@@ -1,5 +1,6 @@
 "use client";
 
+import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
 import { store } from "@/lib/store";
 import type { AppDispatch, RootState } from "@/lib/store";
 import { clear, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
@@ -8,7 +9,12 @@ import {
   addMessage,
   deleteMessagesForThread,
 } from "@/lib/store/slices/messagesSlice";
-import { addThread, deleteThread, setActiveThreadId } from "@/lib/store/slices/threadsSlice";
+import {
+  addThread,
+  clearThreadPatient,
+  deleteThread,
+  setActiveThreadId,
+} from "@/lib/store/slices/threadsSlice";
 import {
   AssistantRuntimeProvider as AUIProvider,
   AppendMessage,
@@ -51,12 +57,14 @@ function makeItemRuntime(idFn: () => string | undefined) {
       const { threads, activeThreadId } = store.getState().threads;
       const id = idFn() ?? ""; // fallback for safety
       const thread = threads.find((t) => t.id === id);
+      const title = thread?.name ?? "Untitled";
+
       return {
         id,
         threadId: id,
         remoteId: thread?.remoteId,
         externalId: thread?.externalId,
-        title: thread?.name ?? "Untitled",
+        title,
         status: "regular" as const,
         isMain: id === activeThreadId,
       };
@@ -112,10 +120,12 @@ function createReduxThreadListRuntime(
     // state
     getState() {
       const s = slice();
+      // Only show threads that have processed their first message
+      const visibleThreads = s.threads.filter((t) => t.isFirstQueryProcessed === true);
       return {
         mainThreadId: s.activeThreadId ?? "",
         newThread: undefined,
-        threads: s.threads.map((t) => t.id),
+        threads: visibleThreads.map((t) => t.id),
         archivedThreads: [],
       };
     },
@@ -153,6 +163,8 @@ function createReduxThreadListRuntime(
     async switchToNewThread() {
       const id = uuidv4();
       dispatch(addThread({ id, name: "New Chat", activate: true }));
+      // Clear any patient selection for the new thread
+      dispatch(clearThreadPatient(id));
       getOrCreateItem(id).__emit?.("switched-to");
     },
   };
@@ -173,6 +185,7 @@ export function TeraRuntimeProvider({
   cacheDebug,
 }: TeraRuntimeProviderProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const { processFirstMessage, needsFirstMessageProcessing } = useFirstMessageHandler();
 
   /*  messages for active thread */
   const messages = useSelector((s: RootState) =>
@@ -271,6 +284,15 @@ Use the following JSON data as the single source of truth to accurately answer t
     async (msg: AppendMessage): Promise<void> => {
       const text = msg.content[0]?.type === "text" ? msg.content[0].text : "";
 
+      // Check if this is the first message for the thread
+      const isFirstMessage = needsFirstMessageProcessing(activeThreadId);
+
+      // Process first message BEFORE adding the message to ensure proper ordering
+      if (isFirstMessage) {
+        console.log(`[TeraRuntimeProvider] Processing first message for thread ${activeThreadId}`);
+        processFirstMessage(activeThreadId, text);
+      }
+
       const reduxMsg: ReduxMessage = {
         id: uuidv4(),
         threadId: activeThreadId,
@@ -278,10 +300,12 @@ Use the following JSON data as the single source of truth to accurately answer t
         text,
         createdAt: Date.now(),
       };
+
       dispatch(addMessage(reduxMsg));
+
       // The useEffect above will detect this new message and send it.
     },
-    [activeThreadId, dispatch],
+    [activeThreadId, dispatch, needsFirstMessageProcessing, processFirstMessage],
   );
 
   const onReload: Parameters<typeof useExternalStoreRuntime<ReduxMessage>>[0]["onReload"] =
@@ -358,11 +382,21 @@ Use the following JSON data as the single source of truth to accurately answer t
     coreThreads.adapter.threads = threadListRuntime
       .getState()
       .threads.map((id) => threadListRuntime.getItemById(id));
+
+    // Debug: Log the current threads state
+    const currentState = threadListRuntime.getState();
+    console.log(`[TeraRuntimeProvider] Visible threads: ${currentState.threads.length}`);
   }, [coreThreads, threadListRuntime, activeThreadId]);
 
   useEffect(() => {
     patchAdapter();
   }, [patchAdapter]);
+
+  // Re-patch adapter when threads change
+  const allThreads = useSelector((s: RootState) => s.threads.threads);
+  useEffect(() => {
+    patchAdapter();
+  }, [allThreads, patchAdapter]);
 
   (messageRuntime as any).threads = threadListRuntime;
   (messageRuntime as any).archive = async (id: string) => {

@@ -21,6 +21,7 @@ import {
 } from "@/lib/store/slices/globalStateSlice";
 import {
   addThread,
+  clearThreadPatient,
   selectActiveThreadPatientId,
   setActiveThreadId,
 } from "@/lib/store/slices/threadsSlice";
@@ -65,16 +66,23 @@ const ChatClient: FC = () => {
     dispatch(clearFiles());
     const newThreadId = uuidv4();
     dispatch(addThread({ id: newThreadId, name: "New Chat", activate: true }));
+    // Clear any patient selection for the new thread
+    dispatch(clearThreadPatient(newThreadId));
   };
   const handleSelectChat = (threadId: string) => {
     dispatch(clearFiles());
     dispatch(setActiveThreadId(threadId));
   };
 
-  // Filter threads based on the search term
+  // Filter threads based on the search term and first message processing
   const filteredThreads = useMemo(() => {
-    if (!searchTerm) return threads;
-    return threads.filter((thread) => thread.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    // Only show threads that have processed their first message
+    const visibleThreads = threads.filter((thread) => thread.isFirstQueryProcessed === true);
+
+    if (!searchTerm) return visibleThreads;
+    return visibleThreads.filter((thread) =>
+      thread.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
   }, [threads, searchTerm]);
 
   return (
