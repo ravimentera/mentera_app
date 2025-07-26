@@ -13,7 +13,7 @@ export default function DashboardLayoutWrapper({
 
   return (
     <DashboardLayout>
-      {pathname !== "/dashboard" && <ChatDrawer />}
+      {pathname !== "/home" && <ChatDrawer />}
       {children}
     </DashboardLayout>
   );

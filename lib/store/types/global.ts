@@ -3,9 +3,8 @@ import {
   testMedSpa as _testMedSpa,
   testNurse as _testNurse,
 } from "@/mock/chat.data";
-import type { Patient } from "./patient";
 
-// Define the state structure for this slice
+// Define the state structure for this slice (removed patient selection properties)
 export interface GlobalState {
   isSidePanelExpanded: boolean;
   isChatSidebarOpen: boolean;
@@ -16,8 +15,6 @@ export interface GlobalState {
   testMedSpa: typeof _testMedSpa;
   testNurse: typeof _testNurse;
 
-  // currently selected patient ID
-  selectedPatientId: string | null;
-  // currently selected patient object (for PatientSelector persistence)
-  selectedPatient: Patient | null; // UPDATED: Changed from any | null to Patient | null
+  // REMOVED: selectedPatientId and selectedPatient
+  // These are now managed per-thread in threadsSlice
 }

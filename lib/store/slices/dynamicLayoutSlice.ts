@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from "@/lib/featureFlags";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 import type { ApiLayoutResponse, DynamicLayoutState, LayoutEntry, ThunkApiConfig } from "../types";
@@ -19,9 +20,16 @@ export const fetchDynamicLayout = createAsyncThunk<
   string, // First argument to the payload creator (markdownKey)
   ThunkApiConfig // Type for thunkAPI
 >("dynamicLayout/fetchLayout", async (markdownKey, thunkAPI) => {
+  if (!isFeatureEnabled("dynamicLayout")) {
+    return thunkAPI.rejectWithValue("Dynamic layout feature is disabled");
+  }
+
   try {
     const { dispatch, getState, rejectWithValue } = thunkAPI;
-    const activePatientID = (getState() as RootState).globalState.selectedPatientId;
+    const activeThreadId = (getState() as RootState).threads.activeThreadId;
+    // @ts-ignore
+    const activePatientID = (getState() as RootState).threads.threads[activeThreadId]
+      .selectedPatientId;
     const latestUserMessage = (getState() as RootState).messages.items
       .filter((message) => message.sender === "user")
       .at(-1)?.text;

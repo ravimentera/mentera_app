@@ -14,28 +14,38 @@ import type { AppDispatch, RootState } from "@/lib/store";
 import { loadMessages } from "@/lib/store/slices/messagesSlice";
 import { addThread, loadThreads } from "@/lib/store/slices/threadsSlice";
 
-import {
-  selectPatientDatabase,
-  selectSelectedPatientId,
-  setSelectedPatientId,
-} from "@/lib/store/slices/globalStateSlice";
+import { selectPatientDatabase } from "@/lib/store/slices/globalStateSlice";
+import { selectActiveThreadPatientId, setThreadPatient } from "@/lib/store/slices/threadsSlice";
 
 export default function ChatClient() {
   const dispatch = useDispatch<AppDispatch>();
 
-  // grab the mock patient DB and selected ID from Redux
+  // CHANGED: Use thread-specific patient ID instead of global
   const patientDB = useSelector(selectPatientDatabase);
-  const selectedId = useSelector(selectSelectedPatientId);
+  const selectedId = useSelector(selectActiveThreadPatientId);
 
   // pick a default if none is set yet
   const defaultPatientId = Object.keys(patientDB)[0] as string;
 
-  // ensure we always have a currentPatientId in Redux
+  // persist threads & messages
+  const { threads, activeThreadId } = useSelector((s: RootState) => s.threads);
+  const messages = useSelector((s: RootState) => s.messages.items);
+
+  // CHANGED: Set default patient for current thread if none is set
   useEffect(() => {
-    if (!selectedId) {
-      dispatch(setSelectedPatientId(defaultPatientId));
+    if (!selectedId && activeThreadId && defaultPatientId) {
+      const defaultPatient = patientDB[defaultPatientId];
+      if (defaultPatient) {
+        dispatch(
+          setThreadPatient({
+            threadId: activeThreadId,
+            // @ts-ignore
+            patient: defaultPatient,
+          }),
+        );
+      }
     }
-  }, [selectedId, defaultPatientId, dispatch]);
+  }, [selectedId, activeThreadId, defaultPatientId, patientDB, dispatch]);
 
   const currentPatientId = selectedId ?? defaultPatientId;
 
@@ -65,10 +75,6 @@ export default function ChatClient() {
       localStorage.removeItem("chatMessages");
     }
   }, [dispatch]);
-
-  // persist threads & messages
-  const { threads, activeThreadId } = useSelector((s: RootState) => s.threads);
-  const messages = useSelector((s: RootState) => s.messages.items);
 
   useEffect(() => {
     if (threads.length) {
@@ -102,7 +108,21 @@ export default function ChatClient() {
       <ChatTopbar
         onOpenDrawer={() => setDrawerOpen(true)}
         currentPatientId={currentPatientId}
-        setCurrentPatientId={(id) => dispatch(setSelectedPatientId(id))}
+        setCurrentPatientId={(patientId) => {
+          // CHANGED: Set patient for current thread instead of global
+          if (activeThreadId) {
+            const patient = patientDB[patientId];
+            if (patient) {
+              dispatch(
+                setThreadPatient({
+                  threadId: activeThreadId,
+                  // @ts-ignore
+                  patient,
+                }),
+              );
+            }
+          }
+        }}
         isPatientContextEnabled={isPatientContextEnabled}
         setIsPatientContextEnabled={setIsPatientContextEnabled}
         forceFresh={forceFresh}

@@ -1,7 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 import type { GlobalState } from "../types";
-import type { Patient } from "../types/patient";
 
 import {
   patientDatabase as _patientDatabase,
@@ -9,18 +8,18 @@ import {
   testNurse as _testNurse,
 } from "@/mock/chat.data";
 
-// Define the initial state
+// Define the initial state (removed patient selection properties)
 const initialState: GlobalState = {
   isSidePanelExpanded: false,
-  isChatSidebarOpen: true, // <-- NEW STATE
+  isChatSidebarOpen: true,
   streamingUISessionId: crypto.randomUUID(),
 
   patientDatabase: _patientDatabase,
   testMedSpa: _testMedSpa,
   testNurse: _testNurse,
 
-  selectedPatientId: null,
-  selectedPatient: null,
+  // REMOVED: selectedPatientId and selectedPatient
+  // These are now managed per-thread in threadsSlice
 };
 
 // Create the slice
@@ -37,61 +36,30 @@ export const globalStateSlice = createSlice({
     setIsChatSidebarOpen: (state, action: PayloadAction<boolean>) => {
       state.isChatSidebarOpen = action.payload;
     },
-    setSelectedPatientId: (state, action: PayloadAction<string>) => {
-      state.selectedPatientId = action.payload;
-    },
-    clearSelectedPatientId: (state) => {
-      state.selectedPatientId = null;
-      state.selectedPatient = null; // Also clear the patient object
-    },
-    // NEW ACTIONS FOR PATIENT OBJECT MANAGEMENT
-    setSelectedPatient: (state, action: PayloadAction<Patient>) => {
-      state.selectedPatient = action.payload;
-      state.selectedPatientId = action.payload.patientId; // Keep ID in sync
-    },
-    clearSelectedPatient: (state) => {
-      state.selectedPatient = null;
-      state.selectedPatientId = null;
-    },
-    // Update existing action to also clear patient object
-    updateSelectedPatient: (state, action: PayloadAction<Partial<Patient>>) => {
-      if (state.selectedPatient) {
-        state.selectedPatient = { ...state.selectedPatient, ...action.payload };
-      }
-    },
+
+    // REMOVED: All patient selection actions
+    // setSelectedPatientId, clearSelectedPatientId, setSelectedPatient,
+    // clearSelectedPatient, updateSelectedPatient
+    // These are now handled in threadsSlice
   },
 });
 
-// Export actions
-export const {
-  setSidePanelExpanded,
-  toggleSidePanel,
-  setIsChatSidebarOpen, // <-- NEW ACTION
-  setSelectedPatientId,
-  clearSelectedPatientId,
-  setSelectedPatient, // NEW
-  clearSelectedPatient, // NEW
-  updateSelectedPatient, // NEW
-} = globalStateSlice.actions;
+// Export actions (removed patient selection actions)
+export const { setSidePanelExpanded, toggleSidePanel, setIsChatSidebarOpen } =
+  globalStateSlice.actions;
 
-// Export selectors
+// Export selectors (removed patient selection selectors)
 export const selectIsSidePanelExpanded = (state: RootState) =>
   state.globalState.isSidePanelExpanded;
-export const selectIsChatSidebarOpen = (state: RootState) => state.globalState.isChatSidebarOpen; // <-- NEW SELECTOR
+export const selectIsChatSidebarOpen = (state: RootState) => state.globalState.isChatSidebarOpen;
 export const getStreamingUISessionId = (state: RootState) => state.globalState.streamingUISessionId;
 export const selectPatientDatabase = (state: RootState) => state.globalState.patientDatabase;
 export const selectTestMedSpa = (state: RootState) => state.globalState.testMedSpa;
 export const selectTestNurse = (state: RootState) => state.globalState.testNurse;
 
-export const selectSelectedPatientId = (state: RootState) => state.globalState.selectedPatientId;
-
-// NEW SELECTOR FOR FULL PATIENT OBJECT
-export const selectSelectedPatient = (state: RootState) => state.globalState.selectedPatient;
-
-export const selectCurrentPatient = (state: RootState) => {
-  const id = state.globalState.selectedPatientId;
-  return id ? state.globalState.patientDatabase[id] : undefined;
-};
+// REMOVED: Patient selection selectors
+// selectSelectedPatientId, selectSelectedPatient, selectCurrentPatient
+// These are now available as selectActiveThreadPatientId, selectActiveThreadPatient in threadsSlice
 
 // Export the reducer
 export default globalStateSlice.reducer;

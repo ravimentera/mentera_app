@@ -16,12 +16,17 @@ import {
   selectIsChatSidebarOpen,
   selectIsSidePanelExpanded,
   selectPatientDatabase,
-  selectSelectedPatientId,
   setIsChatSidebarOpen,
   toggleSidePanel,
 } from "@/lib/store/slices/globalStateSlice";
-import { addThread, setActiveThreadId } from "@/lib/store/slices/threadsSlice";
+import {
+  addThread,
+  selectActiveThreadPatientId,
+  setActiveThreadId,
+} from "@/lib/store/slices/threadsSlice";
 import { cn } from "@/lib/utils";
+
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 
 // The ChatClient component is now focused only on the chat UI.
 const ChatClient: FC = () => {
@@ -40,7 +45,8 @@ const ChatClient: FC = () => {
   const [forceFresh, setForceFresh] = useState(false);
   const [cacheDebug, setCacheDebug] = useState(false);
 
-  const selectedId = useSelector(selectSelectedPatientId);
+  // CHANGED: Use thread-specific patient ID instead of global
+  const selectedId = useSelector(selectActiveThreadPatientId);
   const patientDB = useSelector(selectPatientDatabase);
   const defaultPatientId = Object.keys(patientDB)[0] as string;
   const currentPatientId = selectedId ?? defaultPatientId;
@@ -166,6 +172,8 @@ const Page = () => {
   const dispatch = useDispatch<AppDispatch>();
   const isSidePanelExpanded = useSelector(selectIsSidePanelExpanded);
 
+  const isDynamicLayoutEnabled = useFeatureFlag("dynamicLayout");
+
   const handleToggleSidePanel = () => {
     dispatch(toggleSidePanel());
   };
@@ -181,7 +189,7 @@ const Page = () => {
         <ChatClient />
       </div>
 
-      {isSidePanelExpanded && (
+      {isSidePanelExpanded && isDynamicLayoutEnabled && (
         <div className="w-1/2 flex-shrink-0 bg-background overflow-hidden">
           <DynamicLayoutContainer />
         </div>

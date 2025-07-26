@@ -45,13 +45,13 @@ import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/slices/authSlice";
 import { UploadedFile, removeFile, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
-import {
-  clearSelectedPatient,
-  selectSelectedPatient,
-  setSelectedPatient,
-} from "@/lib/store/slices/globalStateSlice";
 import { addMessage } from "@/lib/store/slices/messagesSlice";
-import { getActiveThreadId } from "@/lib/store/slices/threadsSlice";
+import {
+  clearThreadPatient,
+  getActiveThreadId,
+  selectActiveThreadPatient,
+  setThreadPatient,
+} from "@/lib/store/slices/threadsSlice";
 import type { Patient } from "@/lib/store/types/patient";
 import { getFirstProvider } from "@/utils/provider.utils";
 
@@ -325,8 +325,8 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   const user = useAppSelector(selectUser);
   const providerId = user?.providerId || "PR-2001";
 
-  // CHANGED: Use global state instead of local state
-  const selectedPatient = useSelector(selectSelectedPatient);
+  // CHANGED: Use thread-specific patient instead of global state
+  const selectedPatient = useSelector(selectActiveThreadPatient);
 
   const { data: patients, isLoading } = useGetPatientsByProviderQuery(providerId);
 
@@ -436,15 +436,9 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
       name: `${patient.firstName} ${patient.lastName}`,
     });
 
-    // CHANGED: Use global state instead of local state
-    dispatch(setSelectedPatient(patient));
+    // CHANGED: Use thread-specific patient instead of global state
+    dispatch(setThreadPatient({ threadId: thread, patient }));
     setIsProcessing(true);
-  };
-
-  const handleClearPatient = () => {
-    console.log("[PatientSelector] Manually clearing patient selection");
-    // CHANGED: Use global state action to clear
-    dispatch(clearSelectedPatient());
   };
 
   return (
@@ -460,13 +454,6 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
                 Selected: {selectedPatient.firstName} {selectedPatient.lastName}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={handleClearPatient}
-              className="text-green-600 hover:text-green-800 text-sm underline"
-            >
-              Clear
-            </button>
           </div>
         </div>
       )}
