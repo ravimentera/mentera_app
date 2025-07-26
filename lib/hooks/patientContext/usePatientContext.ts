@@ -5,7 +5,7 @@ import type {
   UsePatientContextOptions,
   UsePatientContextResult,
 } from "@/lib/types/patientContext";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { providers } from "./providers";
 
 /**
@@ -36,7 +36,19 @@ export const usePatientContext = (
   const [isError, setIsError] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
   const [lastFetch, setLastFetch] = useState<number>(0);
-  const [fetchCount, setFetchCount] = useState<number>(0);
+
+  // Add ref to track if we should skip fetch due to fresh data
+  const lastFetchRef = useRef<number>(0);
+  const contextRef = useRef<PatientContext | null>(null);
+
+  // Use ref for fetchCount to avoid circular dependencies
+  const fetchCountRef = useRef<number>(0);
+
+  // Update refs when state changes
+  useEffect(() => {
+    lastFetchRef.current = lastFetch;
+    contextRef.current = context;
+  }, [lastFetch, context]);
 
   // Debug: Log when hook is called
   // useEffect(() => {
@@ -68,7 +80,7 @@ export const usePatientContext = (
 
     // Check if we have fresh data (within stale time)
     const now = Date.now();
-    const isFresh = context && now - lastFetch < staleTime;
+    const isFresh = contextRef.current && now - lastFetchRef.current < staleTime;
 
     if (isFresh && !enableAutoRefetch) {
       return; // Use cached data
@@ -78,9 +90,9 @@ export const usePatientContext = (
     setIsError(false);
     setError(null);
 
-    const currentFetchCount = fetchCount + 1;
+    const currentFetchCount = fetchCountRef.current + 1;
     try {
-      setFetchCount(currentFetchCount);
+      fetchCountRef.current = currentFetchCount;
 
       // console.log(`[usePatientContext] 🚀 FETCH #${currentFetchCount} - Starting for patient: ${patientId}`);
       // console.log(`[usePatientContext] 📊 FETCH #${currentFetchCount} - Fresh data check: isFresh=${isFresh}, timeSinceLastFetch=${now - lastFetch}ms`);
@@ -174,22 +186,14 @@ export const usePatientContext = (
       setIsError(true);
       setIsLoading(false);
     }
-  }, [
-    patientId,
-    providerId,
-    staleTime,
-    enableAutoRefetch,
-    context,
-    lastFetch,
-    maxCharts,
-    fetchCount,
-  ]);
+  }, [patientId, providerId, staleTime, enableAutoRefetch, maxCharts]);
 
   /**
    * Manual refetch function
    */
   const refetch = useCallback(() => {
     setLastFetch(0); // Force fresh fetch
+    lastFetchRef.current = 0; // Also update ref
     fetchPatientContext();
   }, [fetchPatientContext]);
 

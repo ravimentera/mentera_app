@@ -15,6 +15,9 @@ export interface Thread {
   remoteId?: string; // ← optional, nothing breaks if undefined
   externalId?: string;
 
+  // Store original first message for better search
+  originalFirstMessage?: string;
+
   // Thread Classification (merged from threadClassificationsSlice)
   scope?: "patient" | "provider" | "medspa";
   requiresPatient?: boolean;
@@ -98,9 +101,17 @@ export const threadsSlice = createSlice({
     },
 
     /* -------- UPDATE METADATA -------------------------------------------- */
-    updateThreadName: (state, action: PayloadAction<{ id: string; name: string }>) => {
+    updateThreadName: (
+      state,
+      action: PayloadAction<{ id: string; name: string; originalMessage?: string }>,
+    ) => {
       const thread = state.threads.find((t) => t.id === action.payload.id);
-      if (thread) thread.name = action.payload.name;
+      if (thread) {
+        thread.name = action.payload.name;
+        if (action.payload.originalMessage) {
+          thread.originalFirstMessage = action.payload.originalMessage;
+        }
+      }
     },
 
     updateThreadLastMessageAt: (

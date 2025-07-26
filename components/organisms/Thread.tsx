@@ -40,6 +40,7 @@ import { MarkdownText } from "@/components/molecules/MarkdownText";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { usePatientContext } from "@/lib/hooks/patientContext";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
+import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
 import { AppDispatch } from "@/lib/store";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
@@ -324,18 +325,31 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   const thread = useSelector(getActiveThreadId) as string;
   const user = useAppSelector(selectUser);
   const providerId = user?.providerId || "PR-2001";
+  const { processFirstMessage, needsFirstMessageProcessing } = useFirstMessageHandler();
 
   // CHANGED: Use thread-specific patient instead of global state
   const selectedPatient = useSelector(selectActiveThreadPatient);
 
   const { data: patients, isLoading } = useGetPatientsByProviderQuery(providerId);
 
+  // @TODO: Remove this after removing the Mock Data.
+  // Helper function to check if a patient ID is from mock data
+  const isMockPatientId = (patientId: string): boolean => {
+    return patientId.startsWith("PT-") && patientId.length <= 7; // Mock IDs like "PT-1003"
+  };
+
+  // FIXED: Don't call usePatientContext with mock patient IDs to prevent unnecessary API calls
+  const patientIdForContext =
+    selectedPatient?.patientId && !isMockPatientId(selectedPatient.patientId)
+      ? selectedPatient.patientId
+      : null;
+
   // Use the patient context hook
   const {
     context,
     isLoading: isContextLoading,
     isError: isContextError,
-  } = usePatientContext(selectedPatient?.patientId || null, { providerId });
+  } = usePatientContext(patientIdForContext, { providerId });
 
   const filteredPatients = useMemo(() => {
     if (!patients) return [];
@@ -347,7 +361,6 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     );
   }, [patients, searchTerm]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   useEffect(() => {
     // Conditional logging only when context status changes
     if (selectedPatient) {
@@ -357,8 +370,9 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     }
   }, [selectedPatient, isContextLoading, isContextError, context]);
 
-  // Effect to handle context ready state
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   useEffect(() => {
+    // Effect to handle context ready state
     if (selectedPatient && context && !isContextLoading && isProcessing) {
       console.log("[PatientSelector] Context ready, processing message...", {
         selectedPatient: selectedPatient.patientId,
@@ -371,6 +385,15 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
       const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
 
       console.log({ context });
+
+      // Check if this is the first message for the thread
+      const isFirstMessage = needsFirstMessageProcessing(thread);
+
+      // Process first message BEFORE adding the message to ensure proper ordering
+      if (isFirstMessage) {
+        console.log(`[PatientSelector] Processing first message for thread ${thread}`);
+        processFirstMessage(thread, newPrompt);
+      }
 
       // Add message with patient context
       dispatch(
@@ -391,8 +414,9 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     }
   }, [selectedPatient, context, isContextLoading, isProcessing, dispatch, thread, originalPrompt]);
 
-  // Effect to handle context errors
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   useEffect(() => {
+    // Effect to handle context errors
     if (selectedPatient && isContextError && !isContextLoading && isProcessing) {
       console.error(
         "[PatientSelector] Context error, proceeding without context:",
@@ -401,6 +425,16 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
 
       // Still proceed with the message but without context
       const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
+
+      // Check if this is the first message for the thread
+      const isFirstMessage = needsFirstMessageProcessing(thread);
+
+      // Process first message BEFORE adding the message to ensure proper ordering
+      if (isFirstMessage) {
+        console.log(`[PatientSelector] Processing first message for thread ${thread}`);
+        processFirstMessage(thread, newPrompt);
+      }
+
       dispatch(
         addMessage({
           id: uuidv4(),
@@ -447,13 +481,26 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
 
       {/* Show currently selected patient with option to clear */}
       {selectedPatient && !isProcessing && (
-        <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-md">
+        <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm text-green-700">
-                Selected: {selectedPatient.firstName} {selectedPatient.lastName}
+              <span className="text-sm text-blue-700">
+                Currently selected: {selectedPatient.firstName} {selectedPatient.lastName}
               </span>
+              <div className="text-xs text-blue-600 mt-1">
+                You can choose a different patient for this specific request
+              </div>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                dispatch(clearThreadPatient(thread));
+              }}
+              className="text-blue-600 hover:text-blue-800 text-xs"
+            >
+              Clear
+            </Button>
           </div>
         </div>
       )}
@@ -490,6 +537,44 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         />
       </div>
       <div className="max-h-60 overflow-y-auto border rounded-md bg-white scrollbar">
+        {/* Option to proceed without patient */}
+        <button
+          type="button"
+          onClick={() => {
+            // Clear any selected patient and proceed with the original prompt
+            dispatch(clearThreadPatient(thread));
+
+            const isFirstMessage = needsFirstMessageProcessing(thread);
+            if (isFirstMessage) {
+              processFirstMessage(thread, originalPrompt);
+            }
+
+            dispatch(
+              addMessage({
+                id: uuidv4(),
+                threadId: thread,
+                sender: "user",
+                text: originalPrompt,
+                createdAt: Date.now(),
+              }),
+            );
+          }}
+          disabled={isProcessing || isContextLoading}
+          className={`w-full text-left p-3 border-b transition-colors ${
+            isProcessing || isContextLoading
+              ? "bg-gray-50 cursor-not-allowed opacity-60"
+              : "hover:bg-yellow-50 cursor-pointer border-yellow-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+            <div>
+              <p className="font-medium text-slate-800">Proceed without patient context</p>
+              <p className="text-sm text-slate-500">Continue with general assistance</p>
+            </div>
+          </div>
+        </button>
+
         {isLoading && <p className="p-4 text-center text-slate-500">Loading patients...</p>}
         {!isLoading && filteredPatients.length === 0 && (
           <p className="p-4 text-center text-slate-500">No patients found.</p>
@@ -497,8 +582,6 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         {filteredPatients.map((patient) => {
           const isSelected = selectedPatient?.patientId === patient.patientId;
           const isDisabled = isProcessing || isContextLoading;
-          const isDifferentPatient =
-            selectedPatient && selectedPatient.patientId !== patient.patientId;
 
           return (
             <button
@@ -509,11 +592,9 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
               className={`w-full text-left p-3 border-b last:border-b-0 transition-colors ${
                 isSelected
                   ? "bg-green-100 border-green-200"
-                  : isDifferentPatient && selectedPatient
-                    ? "bg-gray-100 cursor-not-allowed opacity-50"
-                    : isDisabled
-                      ? "bg-gray-50 cursor-not-allowed opacity-60"
-                      : "hover:bg-brand-50 cursor-pointer"
+                  : isDisabled
+                    ? "bg-gray-50 cursor-not-allowed opacity-60"
+                    : "hover:bg-brand-50 cursor-pointer"
               }`}
             >
               <div className="flex items-center justify-between">

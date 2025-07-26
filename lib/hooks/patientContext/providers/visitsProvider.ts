@@ -34,8 +34,36 @@ export const visitsProvider: ContextProvider<{
         .dispatch(patientsApi.endpoints.getPatientVisits.initiate(patientId))
         .unwrap();
 
-      // Transform the enriched visits data
-      const enrichedVisits: PatientVisit[] = result.data.enrichedVisits.map((visit) => ({
+      // Add defensive checks for undefined data
+      if (!result?.data) {
+        console.warn("[visitsProvider] API returned no data for patient:", patientId);
+        return {
+          enrichedVisits: [],
+          packages: {
+            totalCount: 0,
+            activeCount: 0,
+            activePackages: [],
+          },
+          appointments: {
+            totalCount: 0,
+            upcomingAppointments: [],
+          },
+        };
+      }
+
+      // Check if enrichedVisits exists and is an array
+      const enrichedVisitsData = result.data.enrichedVisits;
+      if (!Array.isArray(enrichedVisitsData)) {
+        console.warn(
+          "[visitsProvider] enrichedVisits is not an array:",
+          enrichedVisitsData,
+          "for patient:",
+          patientId,
+        );
+      }
+
+      // Transform the enriched visits data with safe array handling
+      const enrichedVisits: PatientVisit[] = (enrichedVisitsData || []).map((visit) => ({
         id: visit.id,
         patientId: visit.patientId,
         visitDate: visit.visitDate,
@@ -73,8 +101,19 @@ export const visitsProvider: ContextProvider<{
         })),
       }));
 
-      // Transform packages data
-      const activePackages: PatientPackage[] = result.data.packages.activePackages.map((pkg) => ({
+      // Transform packages data with safe array handling
+      const packagesData = result.data.packages;
+      const activePackagesData = packagesData?.activePackages;
+      if (!Array.isArray(activePackagesData)) {
+        console.warn(
+          "[visitsProvider] activePackages is not an array:",
+          activePackagesData,
+          "for patient:",
+          patientId,
+        );
+      }
+
+      const activePackages: PatientPackage[] = (activePackagesData || []).map((pkg) => ({
         id: pkg.id,
         packageName: pkg.packageName,
         treatmentType: pkg.treatmentType,
@@ -90,19 +129,21 @@ export const visitsProvider: ContextProvider<{
       return {
         enrichedVisits,
         packages: {
-          totalCount: result.data.packages.totalCount,
-          activeCount: result.data.packages.activeCount,
+          totalCount: packagesData?.totalCount || 0,
+          activeCount: packagesData?.activeCount || 0,
           activePackages,
         },
         appointments: {
-          totalCount: result.data.appointments.totalCount,
-          upcomingAppointments: result.data.appointments.upcomingAppointments.map((apt) => ({
-            id: apt.id,
-            startTime: apt.startTime,
-            endTime: apt.endTime,
-            status: apt.status,
-            notes: apt.notes,
-          })),
+          totalCount: result.data.appointments?.totalCount || 0,
+          upcomingAppointments: (result.data.appointments?.upcomingAppointments || []).map(
+            (apt) => ({
+              id: apt.id,
+              startTime: apt.startTime,
+              endTime: apt.endTime,
+              status: apt.status,
+              notes: apt.notes,
+            }),
+          ),
         },
       };
     } catch (error) {

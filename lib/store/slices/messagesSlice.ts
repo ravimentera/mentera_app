@@ -12,6 +12,8 @@ export interface Message {
   text: string;
   createdAt: number; // Added for sorting or display
   context?: any; // Optional patient context for Bedrock agent
+  shouldSend?: boolean; // Flag to indicate if this message should be sent to backend
+  isSent?: boolean; // Flag to track if message was already sent
 }
 
 interface MessagesState {
@@ -32,10 +34,21 @@ export const messagesSlice = createSlice({
 
       state.items.push(action.payload);
     },
-    updateMessage(state, action: ReduxPayloadAction<{ id: string; text: string }>) {
+    updateMessage(
+      state,
+      action: ReduxPayloadAction<{ id: string; text?: string; context?: any; isSent?: boolean }>,
+    ) {
       const index = state.items.findIndex((msg) => msg.id === action.payload.id);
       if (index !== -1) {
-        state.items[index].text = action.payload.text;
+        if (action.payload.text !== undefined) {
+          state.items[index].text = action.payload.text;
+        }
+        if (action.payload.context !== undefined) {
+          state.items[index].context = action.payload.context;
+        }
+        if (action.payload.isSent !== undefined) {
+          state.items[index].isSent = action.payload.isSent;
+        }
       }
     },
     deleteMessage(state, action: ReduxPayloadAction<string>) {
