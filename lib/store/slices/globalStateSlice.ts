@@ -2,6 +2,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 import type { GlobalState } from "../types";
 
+// @TODO: Remove this after removing the Mock Data.
 import {
   patientDatabase as _patientDatabase,
   testMedSpa as _testMedSpa,
@@ -14,6 +15,7 @@ const initialState: GlobalState = {
   isChatSidebarOpen: true,
   streamingUISessionId: crypto.randomUUID(),
 
+  // @TODO: Remove this after removing the Mock Data.
   patientDatabase: _patientDatabase,
   testMedSpa: _testMedSpa,
   testNurse: _testNurse,
@@ -53,6 +55,7 @@ export const selectIsSidePanelExpanded = (state: RootState) =>
   state.globalState.isSidePanelExpanded;
 export const selectIsChatSidebarOpen = (state: RootState) => state.globalState.isChatSidebarOpen;
 export const getStreamingUISessionId = (state: RootState) => state.globalState.streamingUISessionId;
+// @TODO: Remove or update this after removing the Mock Data.
 export const selectPatientDatabase = (state: RootState) => state.globalState.patientDatabase;
 export const selectTestMedSpa = (state: RootState) => state.globalState.testMedSpa;
 export const selectTestNurse = (state: RootState) => state.globalState.testNurse;

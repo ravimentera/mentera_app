@@ -1,4 +1,5 @@
 import { Button } from "@/components/atoms";
+import { Tooltip } from "@/components/atoms/Tooltip";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { ThreadListItemPrimitive, ThreadListPrimitive } from "@assistant-ui/react";
 import { ArchiveIcon, PlusIcon } from "lucide-react";
@@ -44,8 +45,9 @@ const ThreadListItem: FC = () => {
 
 const ThreadListItemTitle: FC = () => {
   return (
+    // @ts-ignore
     <ThreadListItemPrimitive.Title fallback="New Chat">
-      {(title) => {
+      {(title: string) => {
         // Check if the title is truncated (longer than ~40 characters)
         const shouldShowTooltip = title && title.length > 40;
 

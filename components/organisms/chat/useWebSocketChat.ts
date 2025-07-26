@@ -509,7 +509,8 @@ export function useWebSocketChat({
       socketRef.current?.close();
       socketRef.current = null;
     };
-  }, [isMockActive, activeThreadId, testMedSpa.medspaId, stashAssistantMessage]);
+    // @TODO: Remove this after removing the Mock Data.
+  }, [isMockActive, testMedSpa.medspaId]); // FIXED: Removed stashAssistantMessage to prevent reconnection
 
   const send = isMockActive
     ? (txt: string, files?: UploadedFile[]) => {
