@@ -44,9 +44,18 @@ const ThreadListItem: FC = () => {
 
 const ThreadListItemTitle: FC = () => {
   return (
-    <p className="text-sm">
-      <ThreadListItemPrimitive.Title fallback="New Chat" />
-    </p>
+    <ThreadListItemPrimitive.Title fallback="New Chat">
+      {(title) => {
+        // Check if the title is truncated (longer than ~40 characters)
+        const shouldShowTooltip = title && title.length > 40;
+
+        return (
+          <Tooltip content={title} disabled={!shouldShowTooltip} side="right" align="start">
+            <p className="text-sm truncate">{title}</p>
+          </Tooltip>
+        );
+      }}
+    </ThreadListItemPrimitive.Title>
   );
 };
 
