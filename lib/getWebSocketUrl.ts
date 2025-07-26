@@ -23,11 +23,11 @@ export function getTranscriptionWebSocketUrl(): string {
 
   if (isDevelopment) {
     // For development, use the same API base URL as HTTP calls
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://34.204.48.222:5004";
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "wss://ws.mentera.ai/transcription";
     return apiBaseUrl.replace(/^https?:/, "ws:");
   }
 
   // For production, use secure WebSocket
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://34.204.48.222:5004";
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "wss://ws.mentera.ai/transcription";
   return apiBaseUrl.replace(/^https?:/, "wss:");
 }
