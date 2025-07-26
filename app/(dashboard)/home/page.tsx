@@ -81,17 +81,17 @@ const ChatClient: FC = () => {
     const visibleThreads = threads.filter((thread) => thread.isFirstQueryProcessed === true);
 
     if (!searchTerm) return visibleThreads;
-    
+
     const searchLower = searchTerm.toLowerCase();
     return visibleThreads.filter((thread) => {
       // Search in thread name (case-insensitive)
       const nameMatch = thread.name.toLowerCase().includes(searchLower);
-      
+
       // Also search in original first message if available
-      const originalMessageMatch = thread.originalFirstMessage 
+      const originalMessageMatch = thread.originalFirstMessage
         ? thread.originalFirstMessage.toLowerCase().includes(searchLower)
         : false;
-      
+
       return nameMatch || originalMessageMatch;
     });
   }, [threads, searchTerm]);
@@ -153,25 +153,29 @@ const ChatClient: FC = () => {
                   filteredThreads.map((thread) => {
                     // Check if the thread name should show a tooltip (longer than ~30 characters for sidebar)
                     const shouldShowTooltip = thread.name && thread.name.length > 30;
-                    
+
                     // Create tooltip content that shows both the full title and original message if available
                     const tooltipContent = shouldShowTooltip ? (
                       <div className="max-w-xs">
                         <div className="font-medium">{thread.name}</div>
-                        {thread.originalFirstMessage && thread.originalFirstMessage !== thread.name && (
-                          <div className="text-xs opacity-75 mt-1">
-                            Original: {thread.originalFirstMessage.length > 100 
-                              ? thread.originalFirstMessage.substring(0, 100) + '...' 
-                              : thread.originalFirstMessage}
-                          </div>
-                        )}
+                        {thread.originalFirstMessage &&
+                          thread.originalFirstMessage !== thread.name && (
+                            <div className="text-xs opacity-75 mt-1">
+                              Original:{" "}
+                              {thread.originalFirstMessage.length > 100
+                                ? thread.originalFirstMessage.substring(0, 100) + "..."
+                                : thread.originalFirstMessage}
+                            </div>
+                          )}
                       </div>
-                    ) : thread.name;
-                    
+                    ) : (
+                      thread.name
+                    );
+
                     return (
-                      <Tooltip 
+                      <Tooltip
                         key={thread.id}
-                        content={tooltipContent} 
+                        content={tooltipContent}
                         disabled={!shouldShowTooltip}
                         side="right"
                         align="start"
@@ -181,7 +185,8 @@ const ChatClient: FC = () => {
                           onClick={() => handleSelectChat(thread.id)}
                           className={cn(
                             "w-full justify-start h-9 px-2 text-gray-600 hover:bg-slate-100 text-sm",
-                            activeThreadId === thread.id && "bg-slate-200 text-gray-800 font-semibold",
+                            activeThreadId === thread.id &&
+                              "bg-slate-200 text-gray-800 font-semibold",
                           )}
                         >
                           <span className="truncate">{thread.name}</span>

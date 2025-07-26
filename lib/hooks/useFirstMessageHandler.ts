@@ -48,13 +48,15 @@ export const useFirstMessageHandler = () => {
         const newTitle = generateThreadTitle(messageText);
 
         console.log(`[useFirstMessageHandler] Updated thread name: "${newTitle}" for ${threadId}`);
-        
+
         // Update thread name and store original message for search
-        dispatch(updateThreadName({ 
-        id: threadId, 
-        name: newTitle,
-        originalMessage: messageText 
-      }));
+        dispatch(
+          updateThreadName({
+            id: threadId,
+            name: newTitle,
+            originalMessage: messageText,
+          }),
+        );
       } else if (thread) {
         console.log(`[useFirstMessageHandler] Thread ${threadId} already processed, skipping`);
       } else {

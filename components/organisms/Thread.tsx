@@ -349,7 +349,6 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     );
   }, [patients, searchTerm]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   useEffect(() => {
     // Conditional logging only when context status changes
     if (selectedPatient) {
@@ -359,8 +358,9 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     }
   }, [selectedPatient, isContextLoading, isContextError, context]);
 
-  // Effect to handle context ready state
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   useEffect(() => {
+    // Effect to handle context ready state
     if (selectedPatient && context && !isContextLoading && isProcessing) {
       console.log("[PatientSelector] Context ready, processing message...", {
         selectedPatient: selectedPatient.patientId,
@@ -402,8 +402,9 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     }
   }, [selectedPatient, context, isContextLoading, isProcessing, dispatch, thread, originalPrompt]);
 
-  // Effect to handle context errors
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   useEffect(() => {
+    // Effect to handle context errors
     if (selectedPatient && isContextError && !isContextLoading && isProcessing) {
       console.error(
         "[PatientSelector] Context error, proceeding without context:",

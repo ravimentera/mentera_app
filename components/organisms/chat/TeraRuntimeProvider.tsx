@@ -394,6 +394,7 @@ Use the following JSON data as the single source of truth to accurately answer t
 
   // Re-patch adapter when threads change
   const allThreads = useSelector((s: RootState) => s.threads.threads);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
   useEffect(() => {
     patchAdapter();
   }, [allThreads, patchAdapter]);

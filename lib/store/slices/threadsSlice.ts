@@ -14,7 +14,7 @@ export interface Thread {
   lastMessageAt: number; // unix-ms
   remoteId?: string; // ← optional, nothing breaks if undefined
   externalId?: string;
-  
+
   // Store original first message for better search
   originalFirstMessage?: string;
 
@@ -101,7 +101,10 @@ export const threadsSlice = createSlice({
     },
 
     /* -------- UPDATE METADATA -------------------------------------------- */
-    updateThreadName: (state, action: PayloadAction<{ id: string; name: string; originalMessage?: string }>) => {
+    updateThreadName: (
+      state,
+      action: PayloadAction<{ id: string; name: string; originalMessage?: string }>,
+    ) => {
       const thread = state.threads.find((t) => t.id === action.payload.id);
       if (thread) {
         thread.name = action.payload.name;
