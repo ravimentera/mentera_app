@@ -1,5 +1,6 @@
 import {
   classifyQuery,
+  classifyQueryWithBedrock,
   getPatientSelectionMessage,
   requiresPatientContext,
 } from "@/utils/queryClassifier";
@@ -55,8 +56,8 @@ export async function POST(
       threadId: threadId.substring(0, 8) + "...",
     });
 
-    // Step 1: Classify the query
-    const classification = classifyQuery(text, threadId);
+    // Step 1: Classify the query using Bedrock with fallback to keyword-based
+    const classification = await classifyQueryWithBedrock(text, threadId);
 
     // Step 2: Check if query enhancement should be applied (first message only)
     const shouldEnhance = shouldEnhanceQuery(threadId, existingMessages);
