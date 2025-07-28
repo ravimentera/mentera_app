@@ -60,7 +60,7 @@ export function useWebSocketChat({
   const dispatch = useDispatch<AppDispatch>();
   const patientDatabase = useSelector(selectPatientDatabase);
 
-  // CHANGED: Use thread-specific patient ID instead of global
+  // Use thread-specific patient ID (removed mock patient logic)
   const currentPatientId = useSelector((state: any) =>
     selectActiveThreadPatientId(state),
   ) as string;
