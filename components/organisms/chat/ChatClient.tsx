@@ -137,42 +137,7 @@ export default function ChatClient() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Hide ChatTopbar when on /home route */}
-        {pathname !== "/home" && (
-          <ChatTopbar
-            onOpenDrawer={() => setDrawerOpen(true)}
-            currentPatientId={currentPatientId}
-            setCurrentPatientId={(patientId) => {
-              // FIXED: Prevent assignment of mock patient IDs that would cause API errors
-              const isMockId = patientId.startsWith("PT-") && patientId.length <= 7;
-              if (isMockId) {
-                console.warn(
-                  `[ChatClient] Preventing assignment of mock patient ${patientId} to avoid API errors`,
-                );
-                return;
-              }
-
-              // CHANGED: Set patient for current thread instead of global
-              if (activeThreadId) {
-                const patient = patientDB[patientId];
-                if (patient) {
-                  dispatch(
-                    setThreadPatient({
-                      threadId: activeThreadId,
-                      // @ts-ignore
-                      patient,
-                    }),
-                  );
-                }
-              }
-            }}
-            isPatientContextEnabled={isPatientContextEnabled}
-            setIsPatientContextEnabled={setIsPatientContextEnabled}
-            forceFresh={forceFresh}
-            setForceFresh={setForceFresh}
-            cacheDebug={cacheDebug}
-            setCacheDebug={setCacheDebug}
-          />
-        )}
+        {pathname !== "/home" && <ChatTopbar onOpenDrawer={() => setDrawerOpen(true)} />}
 
         {activeThreadId ? (
           <TeraRuntimeProvider
