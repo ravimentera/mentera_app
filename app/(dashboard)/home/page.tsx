@@ -204,21 +204,23 @@ const Page = () => {
         </div>
       )}
 
-      <div className="absolute top-3 right-3 z-20">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleToggleSidePanel}
-          aria-label={isSidePanelExpanded ? "Collapse side panel" : "Expand side panel"}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          {isSidePanelExpanded ? (
-            <PanelRightClose className="h-5 w-5" />
-          ) : (
-            <PanelRightOpen className="h-5 w-5" />
-          )}
-        </Button>
-      </div>
+      {isDynamicLayoutEnabled && (
+        <div className="absolute top-3 right-3 z-20">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleToggleSidePanel}
+            aria-label={isSidePanelExpanded ? "Collapse side panel" : "Expand side panel"}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            {isSidePanelExpanded ? (
+              <PanelRightClose className="h-5 w-5" />
+            ) : (
+              <PanelRightOpen className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

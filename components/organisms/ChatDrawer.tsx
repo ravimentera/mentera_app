@@ -25,8 +25,11 @@ import {
   toggleSidePanel,
 } from "@/lib/store/slices/globalStateSlice";
 
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+
 export function ChatDrawer() {
   const [isOpen, setIsOpen] = useState(false);
+  const isDynamicLayoutEnabled = useFeatureFlag("dynamicLayout");
 
   const dispatch = useDispatch<AppDispatch>();
   const isSidePanelExpandedGlobal = useSelector(selectIsSidePanelExpanded);
@@ -78,19 +81,21 @@ export function ChatDrawer() {
           </div>
 
           <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleToggleSidePanel}
-              aria-label={isSidePanelExpandedGlobal ? "Collapse side panel" : "Expand side panel"}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              {isSidePanelExpandedGlobal ? (
-                <PanelLeftClose className="h-5 w-5" />
-              ) : (
-                <PanelRightClose className="h-5 w-5" />
-              )}
-            </Button>
+            {isDynamicLayoutEnabled && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleToggleSidePanel}
+                aria-label={isSidePanelExpandedGlobal ? "Collapse side panel" : "Expand side panel"}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {isSidePanelExpandedGlobal ? (
+                  <PanelLeftClose className="h-5 w-5" />
+                ) : (
+                  <PanelRightClose className="h-5 w-5" />
+                )}
+              </Button>
+            )}
             <DrawerClose asChild>
               <Button
                 variant="outline"
@@ -105,7 +110,7 @@ export function ChatDrawer() {
         </DrawerHeader>
 
         <div className="flex flex-1 h-full overflow-hidden">
-          {isSidePanelExpandedGlobal && (
+          {isSidePanelExpandedGlobal && isDynamicLayoutEnabled && (
             <div className="w-3/5 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 bg-background overflow-hidden">
               <DynamicLayoutContainer />
             </div>
