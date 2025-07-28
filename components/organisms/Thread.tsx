@@ -327,29 +327,17 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   const providerId = user?.providerId || "PR-2001";
   const { processFirstMessage, needsFirstMessageProcessing } = useFirstMessageHandler();
 
-  // CHANGED: Use thread-specific patient instead of global state
+  // Use thread-specific patient as single source of truth
   const selectedPatient = useSelector(selectActiveThreadPatient);
 
   const { data: patients, isLoading } = useGetPatientsByProviderQuery(providerId);
 
-  // @TODO: Remove this after removing the Mock Data.
-  // Helper function to check if a patient ID is from mock data
-  const isMockPatientId = (patientId: string): boolean => {
-    return patientId.startsWith("PT-") && patientId.length <= 7; // Mock IDs like "PT-1003"
-  };
-
-  // FIXED: Don't call usePatientContext with mock patient IDs to prevent unnecessary API calls
-  const patientIdForContext =
-    selectedPatient?.patientId && !isMockPatientId(selectedPatient.patientId)
-      ? selectedPatient.patientId
-      : null;
-
-  // Use the patient context hook
+  // Use the patient context hook for the selected patient
   const {
     context,
     isLoading: isContextLoading,
     isError: isContextError,
-  } = usePatientContext(patientIdForContext, { providerId });
+  } = usePatientContext(selectedPatient?.patientId || null, { providerId });
 
   const filteredPatients = useMemo(() => {
     if (!patients) return [];
@@ -362,7 +350,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   }, [patients, searchTerm]);
 
   useEffect(() => {
-    // Conditional logging only when context status changes
+    // Log context status changes for debugging
     if (selectedPatient) {
       console.log(
         `[PatientSelector] Context status for ${selectedPatient.firstName} ${selectedPatient.lastName}: Loading=${isContextLoading}, Error=${isContextError}, HasContext=${!!context}`,
@@ -370,94 +358,85 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     }
   }, [selectedPatient, isContextLoading, isContextError, context]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
+  // Simple, clean approach - wait for context loading to complete
   useEffect(() => {
-    // Effect to handle context ready state
-    if (selectedPatient && context && !isContextLoading && isProcessing) {
-      console.log("[PatientSelector] Context ready, processing message...", {
-        selectedPatient: selectedPatient.patientId,
-        contextReady: !!context,
-        isContextLoading,
-        isProcessing,
-      });
+    if (selectedPatient && isProcessing) {
+      console.log("[PatientSelector] Starting processing for patient:", selectedPatient.patientId);
 
-      // Create the enhanced prompt with patient context
-      const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
-
-      console.log({ context });
-
-      // Check if this is the first message for the thread
-      const isFirstMessage = needsFirstMessageProcessing(thread);
-
-      // Process first message BEFORE adding the message to ensure proper ordering
-      if (isFirstMessage) {
-        console.log(`[PatientSelector] Processing first message for thread ${thread}`);
-        processFirstMessage(thread, newPrompt);
+      // Wait for context loading to complete (either success or error)
+      if (isContextLoading) {
+        console.log("[PatientSelector] Waiting for context to load...");
+        return; // Don't proceed while loading
       }
 
-      // Add message with patient context
-      dispatch(
-        addMessage({
-          id: uuidv4(),
-          threadId: thread,
-          sender: "user",
-          text: newPrompt,
-          context: context, // Include the patient context
-          createdAt: Date.now(),
-        }),
-      );
+      // Give the usePatientContext hook a moment to start loading
+      // This prevents race condition where we process before context loading begins
+      const contextTimeout = setTimeout(() => {
+        // Double-check if context loading started after our delay
+        if (isContextLoading) {
+          console.log("[PatientSelector] Context loading started, waiting...");
+          return;
+        }
 
-      console.log("[PatientSelector] Message sent, patient selection persisted in global state");
+        // Context loading is complete (or never started) - proceed with message
+        const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
 
-      // Reset processing state but KEEP the patient selected in global state
-      setIsProcessing(false);
-    }
-  }, [selectedPatient, context, isContextLoading, isProcessing, dispatch, thread, originalPrompt]);
+        console.log("[PatientSelector] Processing message with patient:", {
+          selectedPatient: selectedPatient.patientId,
+          hasContext: !!context,
+          isContextError,
+          isContextLoading,
+        });
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reason for ignoring
-  useEffect(() => {
-    // Effect to handle context errors
-    if (selectedPatient && isContextError && !isContextLoading && isProcessing) {
-      console.error(
-        "[PatientSelector] Context error, proceeding without context:",
-        selectedPatient.patientId,
-      );
+        // Check if this is the first message for the thread
+        const isFirstMessage = needsFirstMessageProcessing(thread);
 
-      // Still proceed with the message but without context
-      const newPrompt = `${originalPrompt} for patient ${selectedPatient.firstName} ${selectedPatient.lastName}`;
+        // Process first message BEFORE adding the message to ensure proper ordering
+        if (isFirstMessage) {
+          console.log(`[PatientSelector] Processing first message for thread ${thread}`);
+          processFirstMessage(thread, newPrompt);
+        }
 
-      // Check if this is the first message for the thread
-      const isFirstMessage = needsFirstMessageProcessing(thread);
-
-      // Process first message BEFORE adding the message to ensure proper ordering
-      if (isFirstMessage) {
-        console.log(`[PatientSelector] Processing first message for thread ${thread}`);
-        processFirstMessage(thread, newPrompt);
-      }
-
-      dispatch(
-        addMessage({
+        // Add message with patient context (if available)
+        const messageData: any = {
           id: uuidv4(),
           threadId: thread,
           sender: "user",
           text: newPrompt,
           createdAt: Date.now(),
-        }),
-      );
+          shouldSend: true,
+          isSent: false,
+        };
 
-      console.log("[PatientSelector] Error handled, patient selection persisted in global state");
-      setIsProcessing(false);
+        // Include context if successfully loaded
+        if (context && !isContextError) {
+          messageData.context = context;
+          console.log("[PatientSelector] Including patient context in message");
+        } else if (isContextError) {
+          console.warn("[PatientSelector] Context loading failed, proceeding without context");
+        } else {
+          console.log("[PatientSelector] No context available, proceeding without context");
+        }
+
+        dispatch(addMessage(messageData));
+        console.log("[PatientSelector] Message sent successfully");
+        setIsProcessing(false);
+      }, 100); // Small delay to let context hook initialize
+
+      return () => clearTimeout(contextTimeout);
     }
   }, [
     selectedPatient,
-    isContextError,
-    isContextLoading,
     isProcessing,
-    dispatch,
-    thread,
+    isContextLoading,
+    context,
+    isContextError,
     originalPrompt,
+    thread,
+    dispatch,
+    needsFirstMessageProcessing,
+    processFirstMessage,
   ]);
-
   const handleSelectPatient = (patient: Patient) => {
     // Prevent selecting a different patient while processing
     if (isProcessing || isContextLoading) {
@@ -470,11 +449,10 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
       name: `${patient.firstName} ${patient.lastName}`,
     });
 
-    // CHANGED: Use thread-specific patient instead of global state
+    // Use thread-specific patient management
     dispatch(setThreadPatient({ threadId: thread, patient }));
     setIsProcessing(true);
   };
-
   return (
     <div className="bg-white p-4 border-slate-200 w-full max-w-lg">
       <p className="font-medium text-slate-800 mb-3">{message}</p>
@@ -491,16 +469,6 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
                 You can choose a different patient for this specific request
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                dispatch(clearThreadPatient(thread));
-              }}
-              className="text-blue-600 hover:text-blue-800 text-xs"
-            >
-              Clear
-            </Button>
           </div>
         </div>
       )}
@@ -537,44 +505,6 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         />
       </div>
       <div className="max-h-60 overflow-y-auto border rounded-md bg-white scrollbar">
-        {/* Option to proceed without patient */}
-        <button
-          type="button"
-          onClick={() => {
-            // Clear any selected patient and proceed with the original prompt
-            dispatch(clearThreadPatient(thread));
-
-            const isFirstMessage = needsFirstMessageProcessing(thread);
-            if (isFirstMessage) {
-              processFirstMessage(thread, originalPrompt);
-            }
-
-            dispatch(
-              addMessage({
-                id: uuidv4(),
-                threadId: thread,
-                sender: "user",
-                text: originalPrompt,
-                createdAt: Date.now(),
-              }),
-            );
-          }}
-          disabled={isProcessing || isContextLoading}
-          className={`w-full text-left p-3 border-b transition-colors ${
-            isProcessing || isContextLoading
-              ? "bg-gray-50 cursor-not-allowed opacity-60"
-              : "hover:bg-yellow-50 cursor-pointer border-yellow-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-            <div>
-              <p className="font-medium text-slate-800">Proceed without patient context</p>
-              <p className="text-sm text-slate-500">Continue with general assistance</p>
-            </div>
-          </div>
-        </button>
-
         {isLoading && <p className="p-4 text-center text-slate-500">Loading patients...</p>}
         {!isLoading && filteredPatients.length === 0 && (
           <p className="p-4 text-center text-slate-500">No patients found.</p>
