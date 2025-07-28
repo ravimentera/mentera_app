@@ -29,6 +29,7 @@ import {
   XCircleIcon,
 } from "lucide-react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import type { FC, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -54,6 +55,7 @@ import {
   setThreadPatient,
 } from "@/lib/store/slices/threadsSlice";
 import type { Patient } from "@/lib/store/types/patient";
+import { cn } from "@/lib/utils";
 import { getFirstProvider } from "@/utils/provider.utils";
 
 // Helper function to cleanly parse potential JSON from the assistant's message
@@ -124,9 +126,15 @@ const ThreadScrollToBottom: FC = () => {
 };
 
 const ThreadWelcome: FC = () => {
+  const pathname = usePathname();
   return (
     <ThreadPrimitive.Empty>
-      <div className="flex h-full w-full flex-col items-center justify-center px-4">
+      <div
+        className={cn(
+          "flex h-full w-full flex-col items-center justify-center px-4",
+          pathname !== "/home" ? "pt-60 pb-20" : "",
+        )}
+      >
         <div className="w-full max-w-3xl text-center flex flex-col items-center">
           <h1 className="text-5xl font-bold bg-gradient-brand bg-clip-text text-transparent">
             Hello, {getFirstProvider()?.firstName ?? "Lucy"}
@@ -497,6 +505,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
       <div className="relative mb-3">
         <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
         <Input
+          disabled={isProcessing || selectedPatient?.patientId !== null}
           type="text"
           placeholder="Search patient by name or phone..."
           value={searchTerm}
@@ -511,7 +520,8 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         )}
         {filteredPatients.map((patient) => {
           const isSelected = selectedPatient?.patientId === patient.patientId;
-          const isDisabled = isProcessing || isContextLoading;
+          const isDisabled =
+            isProcessing || isContextLoading || selectedPatient?.patientId !== null;
 
           return (
             <button
