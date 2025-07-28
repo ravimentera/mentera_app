@@ -338,6 +338,14 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
   // Use thread-specific patient as single source of truth
   const selectedPatient = useSelector(selectActiveThreadPatient);
 
+  // Debug logging to verify the fix
+  console.log("[PatientSelector] Debug - selectedPatient state:", {
+    selectedPatient: selectedPatient,
+    isNull: selectedPatient === null,
+    isTruthy: !!selectedPatient,
+    shouldBeDisabled: !!selectedPatient,
+  });
+
   const { data: patients, isLoading } = useGetPatientsByProviderQuery(providerId);
 
   // Use the patient context hook for the selected patient
@@ -465,16 +473,16 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
     <div className="bg-white p-4 border-slate-200 w-full max-w-lg">
       <p className="font-medium text-slate-800 mb-3">{message}</p>
 
-      {/* Show currently selected patient with option to clear */}
+      {/* Show currently selected patient */}
       {selectedPatient && !isProcessing && (
         <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-sm text-blue-700">
-                Currently selected: {selectedPatient.firstName} {selectedPatient.lastName}
+                Patient selected: {selectedPatient.firstName} {selectedPatient.lastName}
               </span>
               <div className="text-xs text-blue-600 mt-1">
-                You can choose a different patient for this specific request
+                Patient selector is disabled. Start a new thread to select a different patient.
               </div>
             </div>
           </div>
@@ -505,7 +513,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
       <div className="relative mb-3">
         <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
         <Input
-          disabled={isProcessing || selectedPatient?.patientId !== null}
+          disabled={isProcessing || !!selectedPatient}
           type="text"
           placeholder="Search patient by name or phone..."
           value={searchTerm}
@@ -520,8 +528,7 @@ const PatientSelector: FC<{ originalPrompt: string; message: string }> = ({
         )}
         {filteredPatients.map((patient) => {
           const isSelected = selectedPatient?.patientId === patient.patientId;
-          const isDisabled =
-            isProcessing || isContextLoading || selectedPatient?.patientId !== null;
+          const isDisabled = isProcessing || isContextLoading || !!selectedPatient;
 
           return (
             <button
