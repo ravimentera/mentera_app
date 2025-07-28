@@ -49,7 +49,7 @@ export const authApi = createApi({
             data: {
               success: true,
               user: {
-                id: "test-user-id",
+                id: "PR-2001",
                 email: credentials.email,
                 role: "admin",
                 medspaId: "MS-1001",

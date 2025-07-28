@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest) {
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     sub: "test-user",
-    id: "test-user-id",
+    id: "PR-2001",
     email: "admin@mentera.ai",
     medspaId: MEDSPA_ID,
     providerId: "PR-2001",
