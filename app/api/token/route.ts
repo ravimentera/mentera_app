@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest) {
   const token = jwt.sign(payload, JWT_SECRET, {
     issuer: JWT_ISSUER,
     audience: JWT_AUDIENCE,
-    expiresIn: "1Day",
+    expiresIn: "7d",
   });
 
   // Return as JSON
