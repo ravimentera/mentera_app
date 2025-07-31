@@ -31,6 +31,7 @@ export { Footer } from "./Footer";
 export { LayoutRenderer } from "./LayoutRenderer";
 export { MockPatientOverviewPanel } from "./MockPatientOverviewPanel";
 export { ProfileForm } from "./ProfileForm";
+export { PromptsDrawer } from "./PromptsDrawer";
 export { Sidebar } from "./Sidebar";
 export {
   Table,

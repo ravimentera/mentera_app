@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   ActionBarPrimitive,
   ComposerPrimitive,
@@ -57,6 +58,24 @@ import {
 import type { Patient } from "@/lib/store/types/patient";
 import { cn } from "@/lib/utils";
 import { getFirstProvider } from "@/utils/provider.utils";
+import { PromptsDrawer } from "@/components/organisms/PromptsDrawer";
+import type { Prompt } from "@/app/constants/prompts-config";
+
+// Utility function to get time-based greeting
+const getTimeBasedGreeting = (): string => {
+  const now = new Date();
+  const hour = now.getHours();
+
+  if (hour >= 5 && hour < 12) {
+    return "Good morning";
+  } else if (hour >= 12 && hour < 17) {
+    return "Good afternoon";
+  } else if (hour >= 17 && hour < 21) {
+    return "Good evening";
+  } else {
+    return "Hello";
+  }
+};
 
 // Helper function to cleanly parse potential JSON from the assistant's message
 const tryParseAction = (content: string) => {
@@ -83,11 +102,35 @@ const tryParseAction = (content: string) => {
   return null;
 };
 
+const ComposerWithPrompt: FC<{ onOpenPromptsDrawer: () => void; selectedPrompt: string | null; onClearPrompt: () => void }> = ({ 
+  onOpenPromptsDrawer, 
+  selectedPrompt, 
+  onClearPrompt 
+}) => {
+  return <Composer onOpenPromptsDrawer={onOpenPromptsDrawer} selectedPrompt={selectedPrompt} onClearPrompt={onClearPrompt} />;
+};
+
 export const Thread: FC = () => {
+  const [isPromptsDrawerOpen, setIsPromptsDrawerOpen] = useState(false);
+  const [selectedPromptText, setSelectedPromptText] = useState<string | null>(null);
+
+  const handlePromptSelect = (prompt: Prompt) => {
+    setSelectedPromptText(prompt.text);
+    setIsPromptsDrawerOpen(false);
+  };
+
+  const clearSelectedPrompt = () => {
+    setSelectedPromptText(null);
+  };
+
   return (
     <ThreadPrimitive.Root className="bg-background box-border flex h-full flex-col overflow-hidden">
       <ThreadPrimitive.Viewport className="flex h-full flex-col items-center overflow-y-scroll scroll-smooth bg-inherit px-4">
-        <ThreadWelcome />
+        <ThreadWelcome 
+          onOpenPromptsDrawer={() => setIsPromptsDrawerOpen(true)}
+          selectedPrompt={selectedPromptText}
+          onClearPrompt={clearSelectedPrompt}
+        />
 
         <ThreadPrimitive.Messages
           components={{
@@ -103,10 +146,20 @@ export const Thread: FC = () => {
         <ThreadPrimitive.If empty={false}>
           <div className="sticky bottom-0 mt-3 flex w-full max-w-2xl flex-col items-center justify-end rounded-t-lg bg-inherit pb-4">
             <ThreadScrollToBottom />
-            <Composer />
+            <ComposerWithPrompt 
+              onOpenPromptsDrawer={() => setIsPromptsDrawerOpen(true)}
+              selectedPrompt={selectedPromptText}
+              onClearPrompt={clearSelectedPrompt}
+            />
           </div>
         </ThreadPrimitive.If>
       </ThreadPrimitive.Viewport>
+
+      <PromptsDrawer
+        open={isPromptsDrawerOpen}
+        onOpenChange={setIsPromptsDrawerOpen}
+        onPromptSelect={handlePromptSelect}
+      />
     </ThreadPrimitive.Root>
   );
 };
@@ -125,8 +178,22 @@ const ThreadScrollToBottom: FC = () => {
   );
 };
 
+<<<<<<< Updated upstream
 const ThreadWelcome: FC = () => {
   const pathname = usePathname();
+=======
+interface ThreadWelcomeProps {
+  onOpenPromptsDrawer: () => void;
+}
+
+interface ThreadWelcomeProps {
+  onOpenPromptsDrawer: () => void;
+  selectedPrompt: string | null;
+  onClearPrompt: () => void;
+}
+
+const ThreadWelcome: FC<ThreadWelcomeProps> = ({ onOpenPromptsDrawer, selectedPrompt, onClearPrompt }) => {
+>>>>>>> Stashed changes
   return (
     <ThreadPrimitive.Empty>
       <div
@@ -136,21 +203,20 @@ const ThreadWelcome: FC = () => {
         )}
       >
         <div className="w-full max-w-3xl text-center flex flex-col items-center">
-          <h1 className="text-5xl font-bold bg-gradient-brand bg-clip-text text-transparent">
-            Hello, {getFirstProvider()?.firstName ?? "Lucy"}
+          <h1 className="text-5xl font-bold text-brand-gradient pb-4">
+            {getTimeBasedGreeting()}, {getFirstProvider()?.firstName ?? ""}
           </h1>
-          <h2 className="text-2xl mt-2 text-slate-600">Your Medspa&lsquo;s Smartest Assistant</h2>
-          <p className="mt-4 text-slate-500 max-w-lg">
-            From appointment management to compliance, Mentera empowers your entire team to work
-            smarter.
-          </p>
 
           <div className="w-full mt-8 flex flex-col items-center">
             <div className="w-full max-w-2xl">
-              <Composer />
+              <ComposerWithPrompt 
+                onOpenPromptsDrawer={onOpenPromptsDrawer}
+                selectedPrompt={selectedPrompt}
+                onClearPrompt={onClearPrompt}
+              />
             </div>
           </div>
-          <ThreadWelcomeSuggestions />
+          {/* <ThreadWelcomeSuggestions /> */}
         </div>
       </div>
     </ThreadPrimitive.Empty>
@@ -246,15 +312,52 @@ const FilePreview: FC = () => {
   );
 };
 
-const Composer: FC = () => {
+interface ComposerProps {
+  onOpenPromptsDrawer: () => void;
+  selectedPrompt?: string | null;
+  onClearPrompt?: () => void;
+}
+
+const Composer: FC<ComposerProps> = ({ onOpenPromptsDrawer, selectedPrompt, onClearPrompt }) => {
+  const runtime = useThreadRuntime();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFile } = useFileUpload();
+  const [inputValue, setInputValue] = useState("");
 
   const files = useSelector(selectAllFiles);
 
+  // Handle selected prompt by setting input value
+  useEffect(() => {
+    if (selectedPrompt) {
+      setInputValue(selectedPrompt);
+      onClearPrompt?.();
+    }
+  }, [selectedPrompt, onClearPrompt]);
+
   const triggerBrowse = () => fileInputRef.current?.click();
 
-  const handleChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleSend = () => {
+    if (inputValue.trim()) {
+      runtime.append({
+        role: "user",
+        content: [{ type: "text", text: inputValue.trim() }],
+      });
+      setInputValue("");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     if (!e.target.files) return;
     const incoming = Array.from(e.target.files);
     if (incoming.length + files.length > 5) {
@@ -274,23 +377,26 @@ const Composer: FC = () => {
 
   return (
     <div className="p-[2px] rounded-xl border border-gradient-blue shadow-lg w-full">
-      <ComposerPrimitive.Root className="flex w-full flex-col rounded-[14px] bg-white">
+      <div className="flex w-full flex-col rounded-[14px] bg-white">
         <FilePreview />
         <div className="flex w-full items-center pl-2.5 pr-1">
-          <ComposerPrimitive.Input
+          <textarea
             rows={1}
             autoFocus
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             placeholder="Ask anything to mentera..."
             className="placeholder:text-slate-400 max-h-40 flex-grow resize-none border-none bg-transparent px-2 py-4 text-sm outline-none focus:ring-0"
           />
-          <ComposerPrimitive.Send asChild>
-            <Button
-              size="icon"
-              className="my-2.5 bg-gradient-to-br from-gradient-dark-start to-gradient-dark-end text-white rounded-lg w-8 h-8 hover:opacity-90 transition-opacity shrink-0"
-            >
-              <SendHorizontalIcon className="h-5 w-5" />
-            </Button>
-          </ComposerPrimitive.Send>
+          <Button
+            size="icon"
+            onClick={handleSend}
+            disabled={!inputValue.trim()}
+            className="my-2.5 bg-gradient-to-br from-gradient-dark-start to-gradient-dark-end text-white rounded-lg w-8 h-8 hover:opacity-90 transition-opacity shrink-0 disabled:opacity-50"
+          >
+            <SendHorizontalIcon className="h-5 w-5" />
+          </Button>
         </div>
         <div className="border-t border-slate-200 flex items-center px-2.5 py-1">
           <TooltipIconButton
@@ -302,12 +408,16 @@ const Composer: FC = () => {
             <PaperclipIcon className="h-5 w-5 text-black" />
           </TooltipIconButton>
           <div className="border-l border-slate-200 h-4 mx-2" />
-          <Button variant="ghost" className="text-slate-500 p-1.5 h-auto text-sm font-medium">
+          <Button 
+            variant="ghost" 
+            className="text-slate-500 p-1.5 h-auto text-sm font-medium hover:text-brand-blue transition-colors"
+            onClick={onOpenPromptsDrawer}
+          >
             Explore Prompts
           </Button>
-          <input ref={fileInputRef} type="file" hidden onChange={handleChange} multiple />
+          <input ref={fileInputRef} type="file" hidden onChange={handleFileChange} multiple />
         </div>
-      </ComposerPrimitive.Root>
+      </div>
     </div>
   );
 };
