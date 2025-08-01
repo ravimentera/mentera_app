@@ -42,11 +42,17 @@ import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { usePatientContext } from "@/lib/hooks/patientContext";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
+import { usePDFUpload } from "@/lib/hooks/usePDFUpload";
 import { AppDispatch } from "@/lib/store";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/slices/authSlice";
-import { UploadedFile, removeFile, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
+import {
+  UploadedFile,
+  removeFile,
+  selectAllFiles,
+  selectPDFFilesByThread,
+} from "@/lib/store/slices/fileUploadsSlice";
 import { addMessage } from "@/lib/store/slices/messagesSlice";
 import {
   clearThreadPatient,
@@ -248,13 +254,18 @@ const FilePreview: FC = () => {
 
 const Composer: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const { uploadFile } = useFileUpload();
+  const { uploadPDF } = usePDFUpload();
 
   const files = useSelector(selectAllFiles);
+  const activeThreadId = useSelector(getActiveThreadId);
+  const pdfFiles = useSelector((state: any) => selectPDFFilesByThread(state, activeThreadId || ""));
 
   const triggerBrowse = () => fileInputRef.current?.click();
+  const triggerPDFBrowse = () => pdfInputRef.current?.click();
 
-  const handleChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     if (!e.target.files) return;
     const incoming = Array.from(e.target.files);
     if (incoming.length + files.length > 5) {
@@ -267,6 +278,34 @@ const Composer: FC = () => {
         await uploadFile(file);
       } catch (err) {
         console.error("File upload failed:", err);
+      }
+    }
+    e.target.value = "";
+  };
+
+  const handlePDFChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    if (!e.target.files) return;
+    const incoming = Array.from(e.target.files);
+
+    // Validate PDF files
+    const validPDFs = incoming.filter((file) => file.type === "application/pdf");
+    if (validPDFs.length !== incoming.length) {
+      alert("Please select only PDF files.");
+      e.target.value = "";
+      return;
+    }
+
+    if (validPDFs.length + pdfFiles.length > 3) {
+      alert("You can upload a maximum of 3 PDF files per thread.");
+      e.target.value = "";
+      return;
+    }
+
+    for (const file of validPDFs) {
+      try {
+        await uploadPDF(file);
+      } catch (err) {
+        console.error("PDF upload failed:", err);
       }
     }
     e.target.value = "";
@@ -294,18 +333,44 @@ const Composer: FC = () => {
         </div>
         <div className="border-t border-slate-200 flex items-center px-2.5 py-1">
           <TooltipIconButton
-            tooltip="Attach file"
+            tooltip="Attach image/file"
             variant="ghost"
             className="h-auto p-1.5"
             onClick={triggerBrowse}
           >
             <PaperclipIcon className="h-5 w-5 text-black" />
           </TooltipIconButton>
+
+          <TooltipIconButton
+            tooltip="Upload PDF document"
+            variant="ghost"
+            className="h-auto p-1.5"
+            onClick={triggerPDFBrowse}
+          >
+            <FileTextIcon className="h-5 w-5 text-black" />
+          </TooltipIconButton>
+
           <div className="border-l border-slate-200 h-4 mx-2" />
           <Button variant="ghost" className="text-slate-500 p-1.5 h-auto text-sm font-medium">
             Explore Prompts
           </Button>
-          <input ref={fileInputRef} type="file" hidden onChange={handleChange} multiple />
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            onChange={handleFileChange}
+            multiple
+            accept="image/*,.txt,.csv,.json"
+          />
+          <input
+            ref={pdfInputRef}
+            type="file"
+            hidden
+            onChange={handlePDFChange}
+            multiple
+            accept=".pdf"
+          />
         </div>
       </ComposerPrimitive.Root>
     </div>

@@ -16,7 +16,11 @@ import { fetchDynamicLayout } from "@/lib/store/slices/dynamicLayoutSlice";
 import {
   UploadedFile,
   clear as clearFiles,
+  clearSearchResults,
   selectAllFiles,
+  selectPDFFilesByThread,
+  setSearchResults,
+  setSearching,
 } from "@/lib/store/slices/fileUploadsSlice";
 import {
   selectPatientDatabase,
@@ -33,6 +37,8 @@ import {
   updateThreadLastMessageAt,
 } from "@/lib/store/slices/threadsSlice";
 
+import { searchDocuments } from "@/lib/api/files";
+import type { SearchResult } from "@/lib/api/files";
 import { sanitizeMarkdown } from "@/lib/utils";
 import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
 import { logValidationEvent } from "@/utils/responseValidator";
@@ -220,18 +226,63 @@ export function useWebSocketChat({
 
       let messageText = text;
       let currentClassification = threadClassification;
+      let documentChunks: SearchResult[] = [];
 
-      // LAYER 1: Only call API for first query in thread
+      // Get PDF files for current thread
+      const threadPDFFiles = store
+        .getState()
+        .fileUploads.pdfFiles.filter(
+          (pdf) => pdf.threadId === activeThreadId && pdf.status === "processed",
+        );
+
+      // If we have processed PDF files, search for relevant content
+      if (threadPDFFiles.length > 0) {
+        console.log(`🔍 Searching ${threadPDFFiles.length} PDF files for relevant content`);
+
+        try {
+          dispatch(setSearching(true));
+
+          const searchResult = await searchDocuments(text, {
+            fileIds: threadPDFFiles.map((f) => f.fileId).filter((id) => !!id) as string[],
+            maxResults: 5,
+            minScore: 0.7,
+          });
+
+          if (searchResult.success && searchResult.results && searchResult.results.length > 0) {
+            documentChunks = searchResult.results; // Store the chunks
+
+            // Store search results in Redux
+            dispatch(
+              setSearchResults({
+                results: searchResult.results,
+                query: text,
+              }),
+            );
+
+            // Enhance message with document context
+            const documentContext = formatDocumentContext(searchResult.results);
+            messageText = `${text}\n\n---\n**Document Context:**\n${documentContext}`;
+
+            console.log(`✅ Found ${searchResult.results.length} relevant document sections`);
+          } else {
+            dispatch(clearSearchResults());
+            console.log(`ℹ️ No relevant content found in uploaded documents`);
+          }
+        } catch (error) {
+          console.error("Document search failed:", error);
+          dispatch(clearSearchResults());
+        }
+      }
+
+      // Continue with existing classification logic...
       if (needsFirstQueryEnhancement) {
         console.log(`🔍 FIRST_QUERY: Calling classifier for thread ${activeThreadId}`);
         const apiResult = await classifyQueryViaAPI(text, files);
 
-        // Handle patient selection requirement
         if (apiResult.action === "REQUEST_PATIENT_SELECTION") {
           return handlePatientSelectionRequired(text, files);
         }
 
-        // Store classification in Redux (now in threadsSlice)
         currentClassification = apiResult.classification;
         dispatch(
           setThreadClassification({
@@ -245,31 +296,35 @@ export function useWebSocketChat({
           }),
         );
 
-        // Use enhanced query for first message
-        messageText = apiResult.enhancedQuery || text;
+        // Use enhanced query for first message (combine with document context if available)
+        if (apiResult.enhancedQuery) {
+          const hasDocumentContext =
+            threadPDFFiles.length > 0 && messageText.includes("Document Context:");
+          messageText = hasDocumentContext
+            ? messageText.replace(text, apiResult.enhancedQuery)
+            : apiResult.enhancedQuery;
+        }
 
         console.log("FIRST_QUERY: Thread classified and enhanced", {
           threadId: activeThreadId,
           // @ts-ignore
           scope: currentClassification.scope,
           enhanced: !!apiResult.enhancedQuery,
+          hasDocuments: threadPDFFiles.length > 0,
           originalLength: text.length,
           enhancedLength: messageText.length,
         });
       } else {
-        // Subsequent queries: use stored classification, check patient requirement
         console.log("SUBSEQUENT_QUERY: Using stored classification", {
           threadId: activeThreadId,
           scope: currentClassification?.scope,
           requiresPatient: currentClassification?.requiresPatient,
+          hasDocuments: threadPDFFiles.length > 0,
         });
 
         if (currentClassification?.requiresPatient && !currentPatientId) {
           return handlePatientSelectionRequired(text, files);
         }
-
-        // Use original text for subsequent queries (no enhancement)
-        messageText = text;
       }
 
       // Log validation event
@@ -299,6 +354,9 @@ export function useWebSocketChat({
           threadId: activeThreadId,
           queryEnhanced: needsFirstQueryEnhancement,
           classification: currentClassification,
+          hasDocumentContext: threadPDFFiles.length > 0,
+          documentCount: threadPDFFiles.length,
+          documentChunks,
         },
       };
 
@@ -311,7 +369,8 @@ export function useWebSocketChat({
       setLoading(true);
 
       if (!hasDoc) {
-        payload.message = messageText;
+        console.log(JSON.stringify({ payload }, null, 2));
+        payload.message = messageText; // Use enhanced message with document context
         socketRef.current.send(JSON.stringify(payload));
         return;
       }
@@ -339,6 +398,8 @@ export function useWebSocketChat({
         },
       };
 
+      console.log(JSON.stringify({ payload }, null, 2));
+
       socketRef.current.send(JSON.stringify(payload));
       dispatch(clearFiles());
     },
@@ -357,8 +418,23 @@ export function useWebSocketChat({
       classifyQueryViaAPI,
       needsFirstQueryEnhancement,
       threadClassification,
+      searchDocuments,
     ],
   );
+
+  // Helper function to format document context
+  const formatDocumentContext = (results: SearchResult[]): string => {
+    if (results.length === 0) return "";
+
+    return results
+      .map((result, index) => {
+        return `**${result.metadata.fileName} (Section ${result.metadata.chunkIndex + 1}):**
+${result.content.trim()}
+
+*Relevance Score: ${(result.score * 100).toFixed(1)}%*`;
+      })
+      .join("\n\n---\n\n");
+  };
 
   /* ---------------- mock handler ------------------------------ */
   const { isMockActive, mockSendMessage, initialMockConnectedState } = useChatMockHandler({
