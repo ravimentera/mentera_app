@@ -18,7 +18,7 @@ import {
   clear as clearFiles,
   clearSearchResults,
   selectAllFiles,
-  selectPDFFilesByThread,
+  selectDocumentFilesByThread,
   setSearchResults,
   setSearching,
 } from "@/lib/store/slices/fileUploadsSlice";
@@ -228,22 +228,22 @@ export function useWebSocketChat({
       let currentClassification = threadClassification;
       let documentChunks: SearchResult[] = [];
 
-      // Get PDF files for current thread
-      const threadPDFFiles = store
+      // Get document files for current thread
+      const threadDocumentFiles = store
         .getState()
-        .fileUploads.pdfFiles.filter(
-          (pdf) => pdf.threadId === activeThreadId && pdf.status === "processed",
+        .fileUploads.documentFiles.filter(
+          (doc) => doc.threadId === activeThreadId && doc.status === "processed",
         );
 
-      // If we have processed PDF files, search for relevant content
-      if (threadPDFFiles.length > 0) {
-        console.log(`🔍 Searching ${threadPDFFiles.length} PDF files for relevant content`);
+      // If we have processed document files, search for relevant content
+      if (threadDocumentFiles.length > 0) {
+        console.log(`🔍 Searching ${threadDocumentFiles.length} document files for relevant content`);
 
         try {
           dispatch(setSearching(true));
 
           const searchResult = await searchDocuments(text, {
-            fileIds: threadPDFFiles.map((f) => f.fileId).filter((id) => !!id) as string[],
+            fileIds: threadDocumentFiles.map((f) => f.fileId).filter((id) => !!id) as string[],
             maxResults: 5,
             minScore: 0.7,
           });
@@ -299,7 +299,7 @@ export function useWebSocketChat({
         // Use enhanced query for first message (combine with document context if available)
         if (apiResult.enhancedQuery) {
           const hasDocumentContext =
-            threadPDFFiles.length > 0 && messageText.includes("Document Context:");
+            threadDocumentFiles.length > 0 && messageText.includes("Document Context:");
           messageText = hasDocumentContext
             ? messageText.replace(text, apiResult.enhancedQuery)
             : apiResult.enhancedQuery;
@@ -310,7 +310,7 @@ export function useWebSocketChat({
           // @ts-ignore
           scope: currentClassification.scope,
           enhanced: !!apiResult.enhancedQuery,
-          hasDocuments: threadPDFFiles.length > 0,
+          hasDocuments: threadDocumentFiles.length > 0,
           originalLength: text.length,
           enhancedLength: messageText.length,
         });
@@ -319,7 +319,7 @@ export function useWebSocketChat({
           threadId: activeThreadId,
           scope: currentClassification?.scope,
           requiresPatient: currentClassification?.requiresPatient,
-          hasDocuments: threadPDFFiles.length > 0,
+          hasDocuments: threadDocumentFiles.length > 0,
         });
 
         if (currentClassification?.requiresPatient && !currentPatientId) {
@@ -354,8 +354,8 @@ export function useWebSocketChat({
           threadId: activeThreadId,
           queryEnhanced: needsFirstQueryEnhancement,
           classification: currentClassification,
-          hasDocumentContext: threadPDFFiles.length > 0,
-          documentCount: threadPDFFiles.length,
+          hasDocumentContext: threadDocumentFiles.length > 0,
+          documentCount: threadDocumentFiles.length,
           documentChunks,
         },
       };
@@ -428,10 +428,7 @@ export function useWebSocketChat({
 
     return results
       .map((result, index) => {
-        return `**${result.metadata.fileName} (Section ${result.metadata.chunkIndex + 1}):**
-${result.content.trim()}
-
-*Relevance Score: ${(result.score * 100).toFixed(1)}%*`;
+        return `**${result.metadata.fileName} (Section ${result.metadata.chunkIndex + 1}):**\n${result.content.trim()}\n\n*Relevance Score: ${(result.score * 100).toFixed(1)}%*`;
       })
       .join("\n\n---\n\n");
   };
@@ -463,7 +460,7 @@ ${result.content.trim()}
       try {
         /* ---- get JWT ---------------------------------------- */
         const tokRes = await fetch("/api/token");
-        if (!tokRes.ok) throw new Error(`token api ${tokRes.status}`);
+        if (!tokRes) throw new Error(`token api ${tokRes.status}`);
         const { token } = await tokRes.json();
 
         /* ---- open socket ------------------------------------ */

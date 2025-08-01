@@ -1,5 +1,5 @@
-import { uploadPDFFile } from "@/lib/api/files";
-import { addPDFFile, updatePDFFileStatus } from "@/lib/store/slices/fileUploadsSlice";
+import { uploadDocumentFile } from "@/lib/api/files";
+import { addDocumentFile, updateDocumentFileStatus } from "@/lib/store/slices/fileUploadsSlice";
 import { getActiveThreadId } from "@/lib/store/slices/threadsSlice";
 import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,12 +13,12 @@ export interface UploadProgress {
   estimatedTimeRemaining?: number;
 }
 
-export function usePDFUpload() {
+export function useDocumentUpload() {
   const dispatch = useDispatch();
   const activeThreadId = useSelector(getActiveThreadId);
   const [uploads, setUploads] = useState<Map<string, UploadProgress>>(new Map());
 
-  const uploadPDF = useCallback(
+  const uploadDocument = useCallback(
     async (file: File): Promise<boolean> => {
       if (!activeThreadId) {
         console.error("No active thread ID");
@@ -58,7 +58,7 @@ export function usePDFUpload() {
 
       // Add to Redux store with pending status
       dispatch(
-        addPDFFile({
+        addDocumentFile({
           id: tempFileId,
           name: file.name,
           threadId: activeThreadId,
@@ -91,7 +91,7 @@ export function usePDFUpload() {
           });
         }, 500);
 
-        const result = await uploadPDFFile(file, activeThreadId);
+        const result = await uploadDocumentFile(file, activeThreadId);
 
         clearInterval(progressInterval);
 
@@ -121,7 +121,7 @@ export function usePDFUpload() {
 
             // Update Redux with successful upload
             dispatch(
-              updatePDFFileStatus({
+              updateDocumentFileStatus({
                 id: tempFileId,
                 status: "processed",
                 fileId: result.fileId,
@@ -151,7 +151,7 @@ export function usePDFUpload() {
 
         // Update Redux with error
         dispatch(
-          updatePDFFileStatus({
+          updateDocumentFileStatus({
             id: tempFileId,
             status: "error",
             error: errorMessage,
@@ -160,7 +160,7 @@ export function usePDFUpload() {
 
         updateProgress(0, "error", 0);
 
-        console.error("PDF upload failed:", error);
+        console.error("document upload failed:", error);
         return false;
       }
     },
@@ -187,7 +187,7 @@ export function usePDFUpload() {
   }, []);
 
   return {
-    uploadPDF,
+    uploadDocument,
     getUploadProgress,
     getAllUploads,
     cancelUpload,

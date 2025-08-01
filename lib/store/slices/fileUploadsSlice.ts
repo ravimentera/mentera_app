@@ -10,7 +10,7 @@ export interface UploadedFile {
   previewUrl: string;
 }
 
-export interface PDFFile {
+export interface DocumentFile {
   id: string;
   name: string;
   threadId: string;
@@ -39,7 +39,7 @@ export interface SearchResult {
 
 interface State {
   files: UploadedFile[]; // Existing files for backward compatibility
-  pdfFiles: PDFFile[]; // New PDF files
+  documentFiles: DocumentFile[]; // New document files
   searchResults: SearchResult[];
   isSearching: boolean;
   lastSearchQuery?: string;
@@ -47,7 +47,7 @@ interface State {
 
 const initialState: State = {
   files: [],
-  pdfFiles: [],
+  documentFiles: [],
   searchResults: [],
   isSearching: false,
 };
@@ -67,24 +67,24 @@ export const fileUploadsSlice = createSlice({
       state.files = [];
     },
 
-    // New PDF file actions
-    addPDFFile(state, action: PayloadAction<PDFFile>) {
-      state.pdfFiles.push(action.payload);
+    // New document file actions
+    addDocumentFile(state, action: PayloadAction<DocumentFile>) {
+      state.documentFiles.push(action.payload);
     },
-    updatePDFFileStatus(
+    updateDocumentFileStatus(
       state,
       action: PayloadAction<{
         id: string;
-        status?: PDFFile["status"];
+        status?: DocumentFile["status"];
         fileId?: string;
         chunkCount?: number;
         error?: string;
-        metadata?: PDFFile["metadata"];
+        metadata?: DocumentFile["metadata"];
       }>,
     ) {
-      const index = state.pdfFiles.findIndex((f) => f.id === action.payload.id);
+      const index = state.documentFiles.findIndex((f) => f.id === action.payload.id);
       if (index !== -1) {
-        const file = state.pdfFiles[index];
+        const file = state.documentFiles[index];
         if (action.payload.status !== undefined) file.status = action.payload.status;
         if (action.payload.fileId !== undefined) file.fileId = action.payload.fileId;
         if (action.payload.chunkCount !== undefined) file.chunkCount = action.payload.chunkCount;
@@ -92,8 +92,8 @@ export const fileUploadsSlice = createSlice({
         if (action.payload.metadata !== undefined) file.metadata = action.payload.metadata;
       }
     },
-    removePDFFile(state, action: PayloadAction<string>) {
-      state.pdfFiles = state.pdfFiles.filter((f) => f.id !== action.payload);
+    removeDocumentFile(state, action: PayloadAction<string>) {
+      state.documentFiles = state.documentFiles.filter((f) => f.id !== action.payload);
     },
 
     // Search actions
@@ -124,11 +124,11 @@ export const fileUploadsSlice = createSlice({
 
 // Selectors
 export const selectAllFiles = (s: RootState) => s.fileUploads.files;
-export const selectAllPDFFiles = (s: RootState) => s.fileUploads.pdfFiles;
-export const selectPDFFilesByThread = (s: RootState, threadId: string) =>
-  s.fileUploads.pdfFiles.filter((f) => f.threadId === threadId);
-export const selectProcessedPDFFiles = (s: RootState) =>
-  s.fileUploads.pdfFiles.filter((f) => f.status === "processed");
+export const selectAllDocumentFiles = (s: RootState) => s.fileUploads.documentFiles;
+export const selectDocumentFilesByThread = (s: RootState, threadId: string) =>
+  s.fileUploads.documentFiles.filter((f) => f.threadId === threadId);
+export const selectProcessedDocumentFiles = (s: RootState) =>
+  s.fileUploads.documentFiles.filter((f) => f.status === "processed");
 export const selectSearchResults = (s: RootState) => s.fileUploads.searchResults;
 export const selectIsSearching = (s: RootState) => s.fileUploads.isSearching;
 export const selectLastSearchQuery = (s: RootState) => s.fileUploads.lastSearchQuery;
@@ -140,9 +140,9 @@ export const {
   clear,
 
   // New actions
-  addPDFFile,
-  updatePDFFileStatus,
-  removePDFFile,
+  addDocumentFile,
+  updateDocumentFileStatus,
+  removeDocumentFile,
   setSearchResults,
   setSearching,
   clearSearchResults,

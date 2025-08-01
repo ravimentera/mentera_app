@@ -1,4 +1,4 @@
-export interface PDFUploadResult {
+export interface DocumentUploadResult {
   success: boolean;
   fileId?: string;
   fileName?: string;
@@ -29,11 +29,11 @@ export interface SearchResponse {
   error?: string;
 }
 
-export async function uploadPDFFile(
+export async function uploadDocumentFile(
   file: File,
   threadId: string,
   userId?: string,
-): Promise<PDFUploadResult> {
+): Promise<DocumentUploadResult> {
   try {
     const formData = new FormData();
     formData.append("file", file);

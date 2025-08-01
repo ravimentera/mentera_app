@@ -14,8 +14,8 @@ interface UploadResponse {
   error?: string;
 }
 
-// Alternative PDF text extraction function
-async function extractPDFText(buffer: Buffer): Promise<{
+// Alternative document text extraction function
+async function extractDocumentText(buffer: Buffer): Promise<{
   text: string;
   pages: number;
   error?: string;
@@ -72,14 +72,14 @@ async function extractPDFText(buffer: Buffer): Promise<{
           pages: estimatedPages,
         };
       } else {
-        throw new Error("No readable text found in PDF");
+        throw new Error("No readable text found in document");
       }
     } catch (fallbackError) {
       return {
         text: "",
         pages: 0,
         error:
-          "Could not extract text from PDF. The file may be image-based, encrypted, or corrupted.",
+          "Could not extract text from document. The file may be image-based, encrypted, or corrupted.",
       };
     }
   }
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
     // File validation
     const maxSizeBytes = 10 * 1024 * 1024; // 10MB
     if (file.type !== "application/pdf") {
-      return NextResponse.json({ success: false, error: "File must be a PDF" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "File must be a document" }, { status: 400 });
     }
 
     if (file.size > maxSizeBytes) {
@@ -132,20 +132,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Extract text from PDF
-    console.log("Extracting text from PDF...");
-    const pdfResult = await extractPDFText(buffer);
+    // Extract text from document
+    console.log("Extracting text from document...");
+    const documentResult = await extractDocumentText(buffer);
 
-    if (pdfResult.error) {
-      return NextResponse.json({ success: false, error: pdfResult.error }, { status: 422 });
+    if (documentResult.error) {
+      return NextResponse.json({ success: false, error: documentResult.error }, { status: 422 });
     }
 
-    const extractedText = pdfResult.text;
-    const pages = pdfResult.pages;
+    const extractedText = documentResult.text;
+    const pages = documentResult.pages;
 
     if (!extractedText || extractedText.trim().length < 10) {
       return NextResponse.json(
-        { success: false, error: "No meaningful text content found in PDF" },
+        { success: false, error: "No meaningful text content found in document" },
         { status: 422 },
       );
     }
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
 
     if (chunks.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Could not create meaningful chunks from PDF content" },
+        { success: false, error: "Could not create meaningful chunks from document content" },
         { status: 422 },
       );
     }
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
 
     const processingTime = Date.now() - startTime;
 
-    console.log(`PDF upload completed successfully: ${file.name} (${fileId})`);
+    console.log(`document upload completed successfully: ${file.name} (${fileId})`);
 
     return NextResponse.json({
       success: true,
@@ -233,7 +233,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
 
 export async function GET() {
   return NextResponse.json({
-    message: "PDF Upload API is working",
+    message: "Document Upload API is working",
     timestamp: new Date().toISOString(),
     status: "healthy",
   });

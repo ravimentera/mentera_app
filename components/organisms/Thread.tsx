@@ -42,7 +42,7 @@ import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { usePatientContext } from "@/lib/hooks/patientContext";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
-import { usePDFUpload } from "@/lib/hooks/usePDFUpload";
+import { useDocumentUpload } from "@/lib/hooks/useDocumentUpload";
 import { AppDispatch } from "@/lib/store";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
@@ -51,7 +51,7 @@ import {
   UploadedFile,
   removeFile,
   selectAllFiles,
-  selectPDFFilesByThread,
+  selectDocumentFilesByThread,
 } from "@/lib/store/slices/fileUploadsSlice";
 import { addMessage } from "@/lib/store/slices/messagesSlice";
 import {
@@ -254,16 +254,18 @@ const FilePreview: FC = () => {
 
 const Composer: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
   const { uploadFile } = useFileUpload();
-  const { uploadPDF } = usePDFUpload();
+  const { uploadDocument } = useDocumentUpload();
 
   const files = useSelector(selectAllFiles);
   const activeThreadId = useSelector(getActiveThreadId);
-  const pdfFiles = useSelector((state: any) => selectPDFFilesByThread(state, activeThreadId || ""));
+  const documentFiles = useSelector((state: any) =>
+    selectDocumentFilesByThread(state, activeThreadId || ""),
+  );
 
   const triggerBrowse = () => fileInputRef.current?.click();
-  const triggerPDFBrowse = () => pdfInputRef.current?.click();
+  const triggerDocumentBrowse = () => documentInputRef.current?.click();
 
   const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     if (!e.target.files) return;
@@ -283,29 +285,29 @@ const Composer: FC = () => {
     e.target.value = "";
   };
 
-  const handlePDFChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+  const handleDocumentChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     if (!e.target.files) return;
     const incoming = Array.from(e.target.files);
 
-    // Validate PDF files
-    const validPDFs = incoming.filter((file) => file.type === "application/pdf");
-    if (validPDFs.length !== incoming.length) {
-      alert("Please select only PDF files.");
+    // Validate document files
+    const validDocuments = incoming.filter((file) => file.type === "application/pdf");
+    if (validDocuments.length !== incoming.length) {
+      alert("Please select only document files.");
       e.target.value = "";
       return;
     }
 
-    if (validPDFs.length + pdfFiles.length > 3) {
-      alert("You can upload a maximum of 3 PDF files per thread.");
+    if (validDocuments.length + documentFiles.length > 3) {
+      alert("You can upload a maximum of 3 document files per thread.");
       e.target.value = "";
       return;
     }
 
-    for (const file of validPDFs) {
+    for (const file of validDocuments) {
       try {
-        await uploadPDF(file);
+        await uploadDocument(file);
       } catch (err) {
-        console.error("PDF upload failed:", err);
+        console.error("document upload failed:", err);
       }
     }
     e.target.value = "";
@@ -342,10 +344,10 @@ const Composer: FC = () => {
           </TooltipIconButton>
 
           <TooltipIconButton
-            tooltip="Upload PDF document"
+            tooltip="Upload document"
             variant="ghost"
             className="h-auto p-1.5"
-            onClick={triggerPDFBrowse}
+            onClick={triggerDocumentBrowse}
           >
             <FileTextIcon className="h-5 w-5 text-black" />
           </TooltipIconButton>
@@ -364,10 +366,10 @@ const Composer: FC = () => {
             accept="image/*,.txt,.csv,.json"
           />
           <input
-            ref={pdfInputRef}
+            ref={documentInputRef}
             type="file"
             hidden
-            onChange={handlePDFChange}
+            onChange={handleDocumentChange}
             multiple
             accept=".pdf"
           />
