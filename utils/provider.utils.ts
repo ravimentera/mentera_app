@@ -2,6 +2,9 @@ import { getFullName, getInitials } from "@/lib/utils";
 import { providers } from "../mock/providers.data";
 import { ProviderWithAvatar } from "../types/user.types";
 
+// Logged-in user configuration - single source of truth
+const LOGGED_IN_USER_PROVIDER_ID = "PR-2001";
+
 /**
  * Get the first provider from the providers data
  * @returns The first provider or null if no providers exist
@@ -49,4 +52,38 @@ export function getProviderFullName(provider: ProviderWithAvatar): string {
  */
 export function getProviderInitials(provider: ProviderWithAvatar): string {
   return getInitials(getFullName(provider.firstName, provider.lastName));
+}
+
+/**
+ * Get the currently logged-in user as a provider
+ * @returns The logged-in provider or null if not found
+ */
+export function getLoggedInUser(): ProviderWithAvatar | null {
+  return getProviderById(LOGGED_IN_USER_PROVIDER_ID);
+}
+
+/**
+ * Get the logged-in user's first name
+ * @returns First name of the logged-in user
+ */
+export function getLoggedInUserFirstName(): string {
+  const user = getLoggedInUser();
+  return user?.firstName || "User";
+}
+
+/**
+ * Get the logged-in user's full name
+ * @returns Full name of the logged-in user
+ */
+export function getLoggedInUserFullName(): string {
+  const user = getLoggedInUser();
+  return user ? getProviderFullName(user) : "Unknown User";
+}
+
+/**
+ * Get the logged-in user's provider ID
+ * @returns Provider ID of the logged-in user
+ */
+export function getLoggedInUserProviderId(): string {
+  return LOGGED_IN_USER_PROVIDER_ID;
 }

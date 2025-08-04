@@ -27,6 +27,7 @@ const buttonVariants = cva(
         "outline-ghost": "text-brand-blue hover:text-brand-blue-hover",
         "gradient-light":
           "bg-gradient-to-r from-brand-blue-light/90 to-brand-blue-light text-brand-blue-dark shadow-sm hover:opacity-90 [&>svg]:text-brand-blue-dark",
+        "flat-transparent": "bg-transparent",
       },
       size: {
         default: "h-9 px-4 py-2",

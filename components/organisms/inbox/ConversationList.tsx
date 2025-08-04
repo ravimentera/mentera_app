@@ -3,8 +3,9 @@ import { Button, Input } from "@/components/atoms";
 import { ConversationListItem } from "@/components/molecules/ConversationListItem";
 import { InboxTabButton } from "@/components/molecules/InboxTabButton";
 import { cn } from "@/lib/utils";
-import { Filter, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useState } from "react";
+import { NewConversationDialog } from "./NewConversationDialog";
 
 export interface ConversationListProps {
   conversations: ChatConversation[];
@@ -12,6 +13,13 @@ export interface ConversationListProps {
   onConversationSelect: (conversation: ChatConversation) => void;
   counts: InboxCounts;
   className?: string;
+  onCommunicationCompose?: (
+    patientId: string,
+    patientName: string,
+    email: string,
+    phone: string,
+    channel: "SMS" | "EMAIL",
+  ) => void;
 }
 
 export function ConversationList({
@@ -20,9 +28,11 @@ export function ConversationList({
   onConversationSelect,
   counts,
   className,
+  onCommunicationCompose,
 }: ConversationListProps) {
   const [activeTab, setActiveTab] = useState<InboxTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isConversationDialogOpen, setIsConversationDialogOpen] = useState(false);
 
   // Filter conversations based on active tab and search
   const filteredConversations = conversations.filter((conversation) => {
@@ -53,7 +63,8 @@ export function ConversationList({
           <Button
             variant="default"
             size="icon"
-            className="w-9 h-9 bg-brand-blue hover:bg-brand-blue-hover rounded-xl"
+            className="w-9 h-9 cursor-pointer rounded-xl"
+            onClick={() => setIsConversationDialogOpen(true)}
           >
             <Plus className="w-4 h-4 text-white" />
           </Button>
@@ -61,9 +72,9 @@ export function ConversationList({
 
         {/* Search and Filter */}
         <div className="flex items-center gap-2 mb-2">
-          <div className="px-2">
+          {/* <div className="px-2">
             <Filter className="w-4 h-4 text-ui-icon-muted" />
-          </div>
+          </div> */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -118,6 +129,14 @@ export function ConversationList({
           </div>
         )}
       </div>
+
+      {/* Conversation Dialog */}
+      <NewConversationDialog
+        open={isConversationDialogOpen}
+        onOpenChange={setIsConversationDialogOpen}
+        onContinue={(selectedPatient: string, conversationId?: string) => {}}
+        onCommunicationCompose={onCommunicationCompose}
+      />
     </div>
   );
 }
