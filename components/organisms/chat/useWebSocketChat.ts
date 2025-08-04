@@ -237,7 +237,9 @@ export function useWebSocketChat({
 
       // If we have processed document files, search for relevant content
       if (threadDocumentFiles.length > 0) {
-        console.log(`🔍 Searching ${threadDocumentFiles.length} document files for relevant content`);
+        console.log(
+          `🔍 Searching ${threadDocumentFiles.length} document files for relevant content`,
+        );
 
         try {
           dispatch(setSearching(true));
@@ -428,7 +430,7 @@ export function useWebSocketChat({
 
     return results
       .map((result, index) => {
-        return `**${result.metadata.fileName} (Section ${result.metadata.chunkIndex + 1}):**\n${result.content.trim()}\n\n*Relevance Score: ${(result.score * 100).toFixed(1)}%*`;
+        return `**Section ${result.metadata.chunkIndex + 1}:**\n${result.content.trim()}\n\n*Relevance Score: ${(result.score * 100).toFixed(1)}%*`;
       })
       .join("\n\n---\n\n");
   };

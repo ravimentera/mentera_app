@@ -1,3 +1,5 @@
+import { processFile } from "@/lib/processors";
+import { sanitizeFileName } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 
@@ -14,77 +16,6 @@ interface UploadResponse {
   error?: string;
 }
 
-// Alternative document text extraction function
-async function extractDocumentText(buffer: Buffer): Promise<{
-  text: string;
-  pages: number;
-  error?: string;
-}> {
-  try {
-    // Try to use pdf-parse with proper error handling
-    const pdfParse = require("pdf-parse/lib/pdf-parse.js");
-
-    const options = {
-      normalizeWhitespace: false,
-      disableCombineTextItems: false,
-    };
-
-    const data = await pdfParse(buffer, options);
-
-    return {
-      text: data.text || "",
-      pages: data.numpages || 0,
-    };
-  } catch (pdfParseError) {
-    console.log("pdf-parse failed, trying alternative method:", pdfParseError.message);
-
-    try {
-      // Fallback text extraction
-      const bufferString = buffer.toString("binary");
-      const textRegex = /BT\s*(.*?)\s*ET/gs;
-      const matches = bufferString.match(textRegex);
-
-      let extractedText = "";
-      if (matches) {
-        matches.forEach((match) => {
-          const cleanText = match
-            .replace(/BT|ET/g, "")
-            .replace(/Tj|TJ|Tm|Td|TD/g, " ")
-            .replace(/\([^)]*\)/g, (match) => {
-              return match.slice(1, -1);
-            })
-            .replace(/[<>]/g, "")
-            .replace(/\s+/g, " ")
-            .trim();
-
-          if (cleanText.length > 2) {
-            extractedText += cleanText + " ";
-          }
-        });
-      }
-
-      const pageBreaks = (bufferString.match(/\/Type\s*\/Page/g) || []).length;
-      const estimatedPages = Math.max(1, pageBreaks);
-
-      if (extractedText.trim().length > 10) {
-        return {
-          text: extractedText.trim(),
-          pages: estimatedPages,
-        };
-      } else {
-        throw new Error("No readable text found in document");
-      }
-    } catch (fallbackError) {
-      return {
-        text: "",
-        pages: 0,
-        error:
-          "Could not extract text from document. The file may be image-based, encrypted, or corrupted.",
-      };
-    }
-  }
-}
-
 export async function POST(request: NextRequest): Promise<NextResponse<UploadResponse>> {
   const startTime = Date.now();
 
@@ -96,9 +27,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
     const file = formData.get("file") as File;
     const threadId = formData.get("threadId") as string;
 
+    const sanitizedFileName = sanitizeFileName(file.name);
+
     console.log("Form data contents:", {
       hasFile: !!file,
-      fileName: file?.name,
+      fileName: sanitizedFileName,
       fileSize: file?.size,
       fileType: file?.type,
       threadId,
@@ -112,36 +45,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
       );
     }
 
-    // File validation
-    const maxSizeBytes = 10 * 1024 * 1024; // 10MB
-    if (file.type !== "application/pdf") {
-      return NextResponse.json({ success: false, error: "File must be a document" }, { status: 400 });
+    const processingResult = await processFile(file);
+
+    if (!processingResult.success) {
+      return NextResponse.json({ success: false, error: processingResult.error }, { status: 400 });
     }
 
-    if (file.size > maxSizeBytes) {
-      return NextResponse.json(
-        { success: false, error: `File size must be less than ${maxSizeBytes / 1024 / 1024}MB` },
-        { status: 400 },
-      );
-    }
-
-    const fileId = uuidv4();
-
-    // Convert file to buffer
-    console.log("Converting file to buffer...");
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Extract text from document
-    console.log("Extracting text from document...");
-    const documentResult = await extractDocumentText(buffer);
-
-    if (documentResult.error) {
-      return NextResponse.json({ success: false, error: documentResult.error }, { status: 422 });
-    }
-
-    const extractedText = documentResult.text;
-    const pages = documentResult.pages;
+    const { text: extractedText, pages } = processingResult;
 
     if (!extractedText || extractedText.trim().length < 10) {
       return NextResponse.json(
@@ -149,6 +59,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
         { status: 422 },
       );
     }
+
+    const fileId = uuidv4();
 
     // Chunk the text
     console.log("Chunking document...");
@@ -189,30 +101,33 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
       const { vectorStoreService } = await import("@/lib/services/vector-store");
 
       // This actually creates embeddings and stores them
-      await vectorStoreService.createVectorStore(fileId, file.name, chunks, threadId, {
-        pages,
+      await vectorStoreService.createVectorStore(fileId, sanitizedFileName, chunks, threadId, {
+        pages: pages || 0,
         wordCount,
       });
       console.log("Vector store created successfully for fileId:", fileId);
     } catch (vectorError) {
       console.error("Vector store creation failed:", vectorError);
       return NextResponse.json(
-        { success: false, error: "Failed to create document embeddings: " + vectorError.message },
+        {
+          success: false,
+          error: "Failed to create document embeddings: " + (vectorError as Error).message,
+        },
         { status: 500 },
       );
     }
 
     const processingTime = Date.now() - startTime;
 
-    console.log(`document upload completed successfully: ${file.name} (${fileId})`);
+    console.log(`document upload completed successfully: ${sanitizedFileName} (${fileId})`);
 
     return NextResponse.json({
       success: true,
       fileId,
-      fileName: file.name,
+      fileName: sanitizedFileName,
       chunkCount: chunks.length,
       metadata: {
-        pages,
+        pages: pages || 0,
         wordCount,
         processingTimeMs: processingTime,
       },

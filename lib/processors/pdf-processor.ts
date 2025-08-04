@@ -1,4 +1,10 @@
-import pdfParse from "pdf-parse";
+/**
+ * @file PDF Processor
+ * @module lib/processors/pdf-processor
+ * @description This module provides functions for extracting text from PDF files and validating them.
+ * It utilizes the 'pdf-parse' library for text extraction and includes a fallback mechanism.
+ */
+const pdfParse = require("pdf-parse/lib/pdf-parse.js");
 
 export interface PDFExtractionResult {
   success: boolean;

@@ -40,9 +40,9 @@ import { Input } from "@/components/atoms/Input";
 import { MarkdownText } from "@/components/molecules/MarkdownText";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { usePatientContext } from "@/lib/hooks/patientContext";
+import { useDocumentUpload } from "@/lib/hooks/useDocumentUpload";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
-import { useDocumentUpload } from "@/lib/hooks/useDocumentUpload";
 import { AppDispatch } from "@/lib/store";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
@@ -290,9 +290,13 @@ const Composer: FC = () => {
     const incoming = Array.from(e.target.files);
 
     // Validate document files
-    const validDocuments = incoming.filter((file) => file.type === "application/pdf");
+    const validDocuments = incoming.filter(
+      (file) =>
+        file.type === "application/pdf" ||
+        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    );
     if (validDocuments.length !== incoming.length) {
-      alert("Please select only document files.");
+      alert("Please select only PDF or DOCX files.");
       e.target.value = "";
       return;
     }
@@ -371,7 +375,7 @@ const Composer: FC = () => {
             hidden
             onChange={handleDocumentChange}
             multiple
-            accept=".pdf"
+            accept=".pdf,.docx"
           />
         </div>
       </ComposerPrimitive.Root>
