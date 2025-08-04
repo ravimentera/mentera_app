@@ -1,0 +1,15 @@
+
+.gitignore
+components/organisms/Thread.tsx
+components/organisms/chat/useWebSocketChat.ts
+lib/store/slices/fileUploadsSlice.ts
+package.json
+pnpm-lock.yaml
+app/api/files/
+changed_files.txt
+lib/api/
+lib/hooks/usePDFUpload.ts
+lib/services/
+lib/storage/
+lib/utils/document-chunker.ts
+lib/utils/pdf-processor.ts
