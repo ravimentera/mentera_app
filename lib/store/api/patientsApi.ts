@@ -53,6 +53,10 @@ export interface PatientDetailsResponse {
       voiceOptIn: boolean;
       directMailOptIn: boolean;
     };
+    preferredChannels?: {
+      communication?: "SMS" | "EMAIL" | "PUSH" | "VOICE";
+      marketing?: "SMS" | "EMAIL" | "PUSH" | "VOICE";
+    };
   };
   timestamp: string;
 }

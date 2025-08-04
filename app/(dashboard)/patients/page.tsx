@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/atoms/table";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
+import { getLoggedInUserProviderId } from "@/utils/provider.utils";
 import { ChevronDownIcon, Filter, MoreHorizontalIcon, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -46,7 +47,9 @@ export default function PatientsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // API call to fetch patients from slice
-  const { data: apiPatients, isLoading: apiLoading } = useGetPatientsByProviderQuery("PR-2001");
+  const { data: apiPatients, isLoading: apiLoading } = useGetPatientsByProviderQuery(
+    getLoggedInUserProviderId(),
+  );
 
   // Use API data or fallback to empty array
   const patientsData = apiPatients || [];

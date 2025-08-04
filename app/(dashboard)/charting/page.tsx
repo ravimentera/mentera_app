@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/molecules";
 import { useGetProviderChartsQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/slices/authSlice";
+import { getLoggedInUserFullName } from "@/utils/provider.utils";
 import { Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Toaster } from "sonner";
@@ -86,7 +87,7 @@ const getPatientName = (patientId: string) => {
 const getProviderName = (providerIds: string[]) => {
   // This could be enhanced to fetch actual provider names from API
   const providerNames: Record<string, string> = {
-    "PR-2001": "Rachel Garcia",
+    "PR-2001": getLoggedInUserFullName(),
     "PR-2002": "Kate Wilson",
     "PR-2003": "Jackson Smith",
   };

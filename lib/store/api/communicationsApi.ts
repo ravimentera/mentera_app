@@ -311,6 +311,168 @@ export interface EditApproveApprovalResponse {
   timestamp: string;
 }
 
+// Types for create communication
+export interface CreateCommunicationRequest {
+  patientId: string;
+  providerId: string;
+  channel: "SMS" | "EMAIL";
+  content: string;
+  messageType: "GENERAL" | "FOLLOW_UP" | "APPOINTMENT" | "REMINDER";
+  subject?: string;
+}
+
+export interface CreateCommunicationResponse {
+  success: boolean;
+  data: {
+    newCommunication: Array<{
+      id: string;
+      notificationId: string | null;
+      eventId: string | null;
+      patientId: string;
+      providerId: string;
+      medspaId: string;
+      channel: "SMS" | "EMAIL";
+      content: string;
+      status: "SENT" | "QUEUED" | "FAILED";
+      sentAt: string;
+      deliveredAt: string | null;
+      readAt: string | null;
+      queuedMessage: any | null;
+      metadata: {
+        messageType: string;
+        isAiGenerated: boolean;
+      };
+      engagementData: any | null;
+      createdAt: string;
+      conversationId: string;
+      threadId: string;
+      messageDirection: "OUTBOUND" | "INBOUND";
+      senderName: string;
+      participantPhone: string;
+    }>;
+  };
+}
+
+// Types for AI message generation
+export interface GenerateMessageRequest {
+  patientId: string;
+  providerId: string;
+  channel: "SMS" | "EMAIL";
+  messageType: "AI_GENERATED";
+  direction: "OUTBOUND";
+  patientInfo: {
+    patientId: string;
+    patientName: string;
+  };
+  treatmentInfo: Record<string, any>;
+  contextData: {
+    medSpaFacility: string;
+    provideId: string;
+    providerName: string;
+  };
+  prompt: string;
+  tone: "professional" | "casual" | "friendly";
+  format: "text" | "html";
+  metadata: Record<string, any>;
+}
+
+export interface GenerateMessageResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    patientId: string;
+    providerId: string;
+    medspaId: string;
+    channel: "SMS" | "EMAIL";
+    content: string;
+    status: "PENDING" | "SENT" | "QUEUED" | "FAILED";
+    sentAt: string;
+    deliveredAt: string | null;
+    readAt: string | null;
+    createdAt: string;
+    metadata: {
+      tone: string;
+      format: string;
+      aiModel: string;
+      aiPrompt: string;
+      createdBy: string;
+      direction: string;
+      aiGenerated: boolean;
+      generatedAt: string;
+      messageType: string;
+      contextDataProvided: boolean;
+      patientInfoProvided: boolean;
+      treatmentInfoProvided: boolean;
+    };
+  };
+  aiGeneration: {
+    promptUsed: string;
+    model: string;
+    tone: string;
+    format: string;
+    generatedLength: number;
+  };
+}
+
+// Types for mark conversation as read
+export interface MarkConversationReadRequest {
+  isRead: boolean;
+}
+
+export interface MarkConversationReadResponse {
+  success: boolean;
+  message: string;
+  data: {
+    providerId: string;
+    patientId: string;
+    messagesMarkedRead: number;
+    markedAt: string;
+  };
+}
+
+// Types for communication response (patient replying)
+export interface CreateCommunicationResponseRequest {
+  patientId: string;
+  providerId: string;
+  channel: "SMS" | "EMAIL";
+  content: string;
+  messageType: "GENERAL";
+  direction: "OUTBOUND";
+  eventId?: string | null;
+  notificationId?: string | null;
+  status: "RECEIVED";
+  metadata: {
+    direction: "OUTBOUND";
+    patientName: string;
+  };
+}
+
+export interface CreateCommunicationResponseResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    patientId: string;
+    providerId: string;
+    medspaId: string;
+    channel: "SMS" | "EMAIL";
+    content: string;
+    status: "RECEIVED";
+    sentAt: string;
+    deliveredAt: string | null;
+    readAt: string | null;
+    createdAt: string;
+    metadata: {
+      createdBy: string;
+      direction: "OUTBOUND";
+      timestamp: any;
+      messageType: "GENERAL";
+      patientName: string;
+    };
+  };
+}
+
 export const communicationsApi = createApi({
   reducerPath: "communicationsApi",
   baseQuery: proxyAuthBaseQuery,
@@ -410,6 +572,58 @@ export const communicationsApi = createApi({
       }),
       invalidatesTags: ["Approvals", "ProviderCommunications"],
     }),
+    createCommunication: builder.mutation<CreateCommunicationResponse, CreateCommunicationRequest>({
+      query: (body) => ({
+        url: "/communication/communications/create-communication",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [
+        "Conversations",
+        "ProviderCommunications",
+        "PatientCommunications",
+        "Inbox",
+      ],
+    }),
+    generateMessage: builder.mutation<GenerateMessageResponse, GenerateMessageRequest>({
+      query: (body) => ({
+        url: "/communication/communications/generate-message",
+        method: "POST",
+        body,
+      }),
+    }),
+    markConversationRead: builder.mutation<
+      MarkConversationReadResponse,
+      { providerId: string; patientId: string; body: MarkConversationReadRequest }
+    >({
+      query: ({ providerId, patientId, body }) => ({
+        url: `/communication/communications/conversation/${providerId}/${patientId}/read-all`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: [
+        "Conversations",
+        "Inbox",
+        "ProviderCommunications",
+        "PatientCommunications",
+      ],
+    }),
+    createCommunicationResponse: builder.mutation<
+      CreateCommunicationResponseResponse,
+      CreateCommunicationResponseRequest
+    >({
+      query: (body) => ({
+        url: "/communication/communications/message",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [
+        "Conversations",
+        "Inbox",
+        "ProviderCommunications",
+        "PatientCommunications",
+      ],
+    }),
   }),
 });
 
@@ -424,4 +638,8 @@ export const {
   useDeclineApprovalMutation,
   useApproveApprovalMutation,
   useEditApproveApprovalMutation,
+  useCreateCommunicationMutation,
+  useGenerateMessageMutation,
+  useMarkConversationReadMutation,
+  useCreateCommunicationResponseMutation,
 } = communicationsApi;

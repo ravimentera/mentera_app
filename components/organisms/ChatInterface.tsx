@@ -6,6 +6,7 @@ import { PromptChip } from "@/components/molecules/PromptChip";
 import { MockPatientOverviewPanel } from "@/components/organisms/MockPatientOverviewPanel";
 import { cn } from "@/lib/utils";
 import type { ChatInterfaceProps, Message } from "@/types/chat";
+import { getLoggedInUserFirstName } from "@/utils/provider.utils";
 import { useState } from "react";
 
 function ChatMessage({ message }: { message: Message }) {
@@ -29,7 +30,7 @@ export function ChatInterface({
   className,
   onSendMessage,
   hasChatStarted = false,
-  username = "Rachel",
+  username = getLoggedInUserFirstName(),
   showDynamicContent = false,
 }: ChatInterfaceProps) {
   const [message, setMessage] = useState("");

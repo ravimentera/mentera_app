@@ -74,12 +74,7 @@ const TreatmentHistoryCard = ({
 
   if (!enrichedVisits.length) {
     return (
-      <div
-        className={cn(
-          "bg-white rounded-xl border h-fit",
-          showBorder && "border-b border-border p-4",
-        )}
-      >
+      <div className={cn("bg-white rounded-xl h-fit", showBorder && "border-b border-border p-4")}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Treatment History</h2>
         </div>
