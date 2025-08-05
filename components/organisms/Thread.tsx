@@ -41,6 +41,7 @@ import { MarkdownText } from "@/components/molecules/MarkdownText";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { usePatientContext } from "@/lib/hooks/patientContext";
 import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
+import { getAcceptedFileTypes } from "@/lib/rag/utils";
 import { AppDispatch } from "@/lib/store";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
@@ -253,8 +254,7 @@ const FilePreview: FC = () => {
 const Composer: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch<AppDispatch>();
-
-  const files = useSelector(selectAllFiles);
+  const { acceptString, displayString } = getAcceptedFileTypes();
 
   const triggerBrowse = () => fileInputRef.current?.click();
 
@@ -302,7 +302,7 @@ const Composer: FC = () => {
         </div>
         <div className="border-t border-slate-200 flex items-center px-2.5 py-1">
           <TooltipIconButton
-            tooltip="Upload document"
+            tooltip={`Upload a document (${displayString})`}
             variant="ghost"
             className="h-auto p-1.5"
             onClick={triggerBrowse}
@@ -321,7 +321,7 @@ const Composer: FC = () => {
             hidden
             onChange={handleFileChange}
             multiple
-            accept=".pdf,.docx"
+            accept={acceptString}
           />
         </div>
       </ComposerPrimitive.Root>
