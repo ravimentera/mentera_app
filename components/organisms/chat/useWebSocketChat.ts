@@ -18,9 +18,6 @@ import {
   clear as clearFiles,
   clearSearchResults,
   selectAllFiles,
-  selectDocumentFilesByThread,
-  setSearchResults,
-  setSearching,
 } from "@/lib/store/slices/fileUploadsSlice";
 import {
   selectPatientDatabase,
@@ -100,18 +97,6 @@ export function useWebSocketChat({
   const retryTimer = useRef<NodeJS.Timeout | null>(null);
   const maxRetries = 3;
   const retryDelay = 2_000;
-
-  /* ---------------- helper: File -> base64 -------------------- */
-  const encodeFile = useCallback(
-    (file: File) =>
-      new Promise<string>((ok, err) => {
-        const r = new FileReader();
-        r.onload = () => ok(String(r.result as string));
-        r.onerror = (e) => err(r.error);
-        r.readAsDataURL(file);
-      }),
-    [],
-  );
 
   /* ---------------- helper: stash AI message ------------------ */
   const stashAssistantMessage = useCallback(
@@ -237,7 +222,7 @@ export function useWebSocketChat({
         console.log("[SendMessage-03] Received search result from API", { searchResult });
 
         if (searchResult.success && searchResult.results && searchResult.results.length > 0) {
-          documentChunks = searchResult.results;
+          documentChunks = searchResult.results.map((r) => ({ ...r, score: 0 }));
           const documentContext = formatDocumentContext(searchResult.results);
           messageText = `${text}\n\n---\n**Document Context:**\n${documentContext}`;
           console.log("[SendMessage-04] Enriched message with document context");
@@ -357,7 +342,6 @@ export function useWebSocketChat({
       testMedSpa,
       testNurse.id,
       dispatch,
-      encodeFile,
       handlePatientSelectionRequired,
       classifyQueryViaAPI,
       needsFirstQueryEnhancement,
@@ -366,12 +350,14 @@ export function useWebSocketChat({
   );
 
   // Helper function to format document context
-  const formatDocumentContext = (results: SearchResult[]): string => {
+  const formatDocumentContext = (results: any[]): string => {
     if (results.length === 0) return "";
 
     return results
       .map((result, index) => {
-        return `**Section ${result.metadata.chunkIndex + 1}:**\n${result.content.trim()}\n\n*Relevance Score: ${(result.score * 100).toFixed(1)}%*`;
+        const metadata = result.metadata;
+        const pageNumber = metadata.loc?.pageNumber ? ` (Page ${metadata.loc?.pageNumber})` : "";
+        return `**Source: ${metadata.source}${pageNumber}**\n${result.pageContent.trim()}`;
       })
       .join("\n\n---\n\n");
   };
@@ -402,7 +388,7 @@ export function useWebSocketChat({
     const connect = async () => {
       try {
         /* ---- get JWT ---------------------------------------- */
-        const tokRes = await fetch("/api/token");
+        const tokRes: any = await fetch("/api/token");
         if (!tokRes) throw new Error(`token api ${tokRes.status}`);
         const { token } = await tokRes.json();
 
