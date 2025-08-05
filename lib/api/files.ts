@@ -15,10 +15,7 @@ export interface UploadAndSearchResult {
   error?: string;
 }
 
-export async function uploadAndSearch(
-  file: File,
-  query: string,
-): Promise<UploadAndSearchResult> {
+export async function uploadAndSearch(file: File, query: string): Promise<UploadAndSearchResult> {
   try {
     const formData = new FormData();
     formData.append("file", file);

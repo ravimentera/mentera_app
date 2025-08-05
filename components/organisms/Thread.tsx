@@ -40,7 +40,6 @@ import { Input } from "@/components/atoms/Input";
 import { MarkdownText } from "@/components/molecules/MarkdownText";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { usePatientContext } from "@/lib/hooks/patientContext";
-import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
 import { AppDispatch } from "@/lib/store";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
@@ -253,34 +252,13 @@ const FilePreview: FC = () => {
 
 const Composer: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const documentInputRef = useRef<HTMLInputElement>(null);
-  const { uploadFile } = useFileUpload();
   const dispatch = useDispatch<AppDispatch>();
 
   const files = useSelector(selectAllFiles);
 
   const triggerBrowse = () => fileInputRef.current?.click();
-  const triggerDocumentBrowse = () => documentInputRef.current?.click();
 
   const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
-    if (!e.target.files) return;
-    const incoming = Array.from(e.target.files);
-    if (incoming.length + files.length > 5) {
-      alert("You can attach a maximum of 5 files per message.");
-      e.target.value = "";
-      return;
-    }
-    for (const file of incoming) {
-      try {
-        await uploadFile(file);
-      } catch (err) {
-        console.error("File upload failed:", err);
-      }
-    }
-    e.target.value = "";
-  };
-
-  const handleDocumentChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     if (!e.target.files) return;
     const incoming = Array.from(e.target.files);
 
@@ -324,19 +302,10 @@ const Composer: FC = () => {
         </div>
         <div className="border-t border-slate-200 flex items-center px-2.5 py-1">
           <TooltipIconButton
-            tooltip="Attach image/file"
-            variant="ghost"
-            className="h-auto p-1.5"
-            onClick={triggerBrowse}
-          >
-            <PaperclipIcon className="h-5 w-5 text-black" />
-          </TooltipIconButton>
-
-          <TooltipIconButton
             tooltip="Upload document"
             variant="ghost"
             className="h-auto p-1.5"
-            onClick={triggerDocumentBrowse}
+            onClick={triggerBrowse}
           >
             <FileTextIcon className="h-5 w-5 text-black" />
           </TooltipIconButton>
@@ -351,14 +320,6 @@ const Composer: FC = () => {
             type="file"
             hidden
             onChange={handleFileChange}
-            multiple
-            accept="image/*,.txt,.csv,.json"
-          />
-          <input
-            ref={documentInputRef}
-            type="file"
-            hidden
-            onChange={handleDocumentChange}
             multiple
             accept=".pdf,.docx"
           />
