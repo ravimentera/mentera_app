@@ -1,4 +1,3 @@
-import { fileStorage } from "@/lib/storage/file-storage";
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 
 export interface DocumentChunk {
@@ -26,7 +25,7 @@ export interface SearchResult {
 export interface VectorSearchOptions {
   maxResults?: number;
   minScore?: number;
-  fileId?: string | string[];
+  chunks?: DocumentChunk[];
 }
 
 // Helper function to calculate cosine similarity
@@ -105,59 +104,6 @@ export class VectorStoreService {
     );
   }
 
-  async createVectorStore(
-    fileId: string,
-    fileName: string,
-    chunks: DocumentChunk[],
-    threadId: string,
-    metadata: { pages: number; wordCount: number },
-  ): Promise<void> {
-    try {
-      console.log(`📊 Creating embeddings for ${chunks.length} chunks...`);
-
-      const embeddings: number[][] = [];
-
-      // Generate embeddings for each chunk
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        console.log(`🔄 Processing chunk ${i + 1}/${chunks.length}`);
-
-        let embedding: number[];
-
-        if (this.useBedrock) {
-          try {
-            embedding = await generateBedrockEmbedding(chunk.content);
-          } catch (error) {
-            console.warn(`⚠️ AWS Bedrock failed for chunk ${i}, using simple embedding`);
-            embedding = generateSimpleEmbedding(chunk.content);
-          }
-        } else {
-          embedding = generateSimpleEmbedding(chunk.content);
-        }
-
-        embeddings.push(embedding);
-      }
-
-      // Save to persistent storage
-      const fileData = {
-        fileId,
-        fileName,
-        threadId,
-        chunks,
-        embeddings,
-        uploadedAt: Date.now(),
-        metadata,
-      };
-
-      await fileStorage.saveFile(fileData);
-
-      console.log(`✅ Vector store created and saved for ${fileName} (${fileId})`);
-    } catch (error) {
-      console.error(`❌ Error creating vector store for file ${fileId}:`, error);
-      throw error;
-    }
-  }
-
   async searchSimilarContent(
     query: string,
     options: VectorSearchOptions = {},
@@ -165,27 +111,14 @@ export class VectorStoreService {
     const {
       maxResults = Number.parseInt(process.env.MAX_SEARCH_RESULTS || "5", 10),
       minScore = Number.parseFloat(process.env.MIN_SIMILARITY_SCORE || "0.7"),
-      fileId,
+      chunks = [],
     } = options;
 
     console.log(`🔍 Searching for: "${query.substring(0, 50)}..."`);
 
     try {
-      // Load files from storage
-      let filesToSearch;
-      if (fileId && typeof fileId === "string") {
-        const file = await fileStorage.loadFile(fileId);
-        filesToSearch = file ? [file] : [];
-      } else if (Array.isArray(fileId) && fileId.length > 0) {
-        filesToSearch = await fileStorage.loadFiles(fileId);
-      } else {
-        filesToSearch = await fileStorage.getAllFiles();
-      }
-
-      console.log(`📁 Found ${filesToSearch.length} files to search`);
-
-      if (filesToSearch.length === 0) {
-        console.log("No files available for search");
+      if (chunks.length === 0) {
+        console.log("No chunks provided for search");
         return [];
       }
 
@@ -204,30 +137,35 @@ export class VectorStoreService {
 
       const results: SearchResult[] = [];
 
-      // Search through all files
-      for (const file of filesToSearch) {
-        for (let i = 0; i < file.chunks.length; i++) {
-          const chunk = file.chunks[i];
-          const chunkEmbedding = file.embeddings[i];
+      // Generate embeddings for each chunk and perform search
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        let chunkEmbedding: number[];
 
-          if (!chunkEmbedding) continue;
-
-          const similarity = cosineSimilarity(queryEmbedding, chunkEmbedding);
-
-          console.log({ similarity });
-
-          if (similarity >= minScore) {
-            results.push({
-              content: chunk.content,
-              score: similarity,
-              metadata: {
-                chunkId: chunk.id,
-                chunkIndex: chunk.metadata.chunkIndex,
-                fileId: file.fileId,
-                fileName: file.fileName,
-              },
-            });
+        if (this.useBedrock) {
+          try {
+            chunkEmbedding = await generateBedrockEmbedding(chunk.content);
+          } catch (error) {
+            console.warn(`⚠️ AWS Bedrock failed for chunk ${i}, using simple embedding`);
+            chunkEmbedding = generateSimpleEmbedding(chunk.content);
           }
+        } else {
+          chunkEmbedding = generateSimpleEmbedding(chunk.content);
+        }
+
+        const similarity = cosineSimilarity(queryEmbedding, chunkEmbedding);
+
+        if (similarity >= minScore) {
+          results.push({
+            content: chunk.content,
+            score: similarity,
+            metadata: {
+              chunkId: chunk.id,
+              chunkIndex: chunk.metadata.chunkIndex,
+              fileId: "", // No fileId in in-memory search
+              fileName: "", // No fileName in in-memory search
+            },
+          });
         }
       }
 
@@ -240,70 +178,6 @@ export class VectorStoreService {
     } catch (error) {
       console.error("❌ Error searching vector store:", error);
       return [];
-    }
-  }
-
-  async removeVectorStore(fileId: string): Promise<boolean> {
-    try {
-      const success = await fileStorage.deleteFile(fileId);
-      console.log(`🗑️ Vector store removed for file ${fileId}: ${success}`);
-      return success;
-    } catch (error) {
-      console.error("❌ Error removing vector store:", error);
-      return false;
-    }
-  }
-
-  async getStoredFileIds(): Promise<string[]> {
-    try {
-      const fileIds = await fileStorage.getAllFileIds();
-      console.log(`📋 Found ${fileIds.length} stored files`);
-      return fileIds;
-    } catch (error) {
-      console.error("❌ Error getting stored file IDs:", error);
-      return [];
-    }
-  }
-
-  async getFileMetadata(fileId: string) {
-    try {
-      const file = await fileStorage.loadFile(fileId);
-      return file
-        ? {
-            fileName: file.fileName,
-            chunks: file.chunks.length,
-            threadId: file.threadId,
-            uploadedAt: file.uploadedAt,
-            metadata: file.metadata,
-          }
-        : null;
-    } catch (error) {
-      console.error("❌ Error getting file metadata:", error);
-      return null;
-    }
-  }
-
-  async getStats() {
-    try {
-      const files = await fileStorage.getAllFiles();
-      return {
-        totalFiles: files.length,
-        fileIds: files.map((f) => f.fileId),
-        files: files.map((f) => ({
-          fileId: f.fileId,
-          fileName: f.fileName,
-          threadId: f.threadId,
-          chunks: f.chunks.length,
-          uploadedAt: f.uploadedAt,
-        })),
-      };
-    } catch (error) {
-      console.error("❌ Error getting stats:", error);
-      return {
-        totalFiles: 0,
-        fileIds: [],
-        files: [],
-      };
     }
   }
 }

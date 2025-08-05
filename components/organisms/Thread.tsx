@@ -40,7 +40,6 @@ import { Input } from "@/components/atoms/Input";
 import { MarkdownText } from "@/components/molecules/MarkdownText";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { usePatientContext } from "@/lib/hooks/patientContext";
-import { useDocumentUpload } from "@/lib/hooks/useDocumentUpload";
 import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
 import { AppDispatch } from "@/lib/store";
@@ -49,9 +48,9 @@ import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/slices/authSlice";
 import {
   UploadedFile,
+  addFile,
   removeFile,
   selectAllFiles,
-  selectDocumentFilesByThread,
 } from "@/lib/store/slices/fileUploadsSlice";
 import { addMessage } from "@/lib/store/slices/messagesSlice";
 import {
@@ -256,13 +255,9 @@ const Composer: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
   const { uploadFile } = useFileUpload();
-  const { uploadDocument } = useDocumentUpload();
+  const dispatch = useDispatch<AppDispatch>();
 
   const files = useSelector(selectAllFiles);
-  const activeThreadId = useSelector(getActiveThreadId);
-  const documentFiles = useSelector((state: any) =>
-    selectDocumentFilesByThread(state, activeThreadId || ""),
-  );
 
   const triggerBrowse = () => fileInputRef.current?.click();
   const triggerDocumentBrowse = () => documentInputRef.current?.click();
@@ -289,31 +284,21 @@ const Composer: FC = () => {
     if (!e.target.files) return;
     const incoming = Array.from(e.target.files);
 
-    // Validate document files
-    const validDocuments = incoming.filter(
-      (file) =>
-        file.type === "application/pdf" ||
-        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    );
-    if (validDocuments.length !== incoming.length) {
-      alert("Please select only PDF or DOCX files.");
+    // For now, we only support one file at a time
+    if (incoming.length > 1) {
+      alert("Please select only one file.");
       e.target.value = "";
       return;
     }
 
-    if (validDocuments.length + documentFiles.length > 3) {
-      alert("You can upload a maximum of 3 document files per thread.");
-      e.target.value = "";
-      return;
-    }
+    const file = incoming[0];
 
-    for (const file of validDocuments) {
-      try {
-        await uploadDocument(file);
-      } catch (err) {
-        console.error("document upload failed:", err);
-      }
-    }
+    // You can add file type validation here if needed
+
+    // The file will be sent with the next message
+    // We can add it to a temporary state to show a preview
+    dispatch(addFile({ id: uuidv4(), name: file.name, type: "file", file, previewUrl: "" }));
+
     e.target.value = "";
   };
 
