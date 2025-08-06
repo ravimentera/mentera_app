@@ -20,7 +20,7 @@ import {
 } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/slices/authSlice";
-import { Copy, Edit, Mail, Mic, Phone, RefreshCcw, X } from "lucide-react";
+import { Copy, Edit, Mail, Mic, Phone, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ChartContentEditor } from "./ChartContentEditor";
@@ -460,14 +460,14 @@ ${soapSections.plan}`;
                       >
                         {isApproving ? "Approving..." : "Approve"}
                       </Button>
-                      <Button
+                      {/* <Button
                         variant="outline"
                         onClick={handleRegenerate}
                         className="border-gray-300 text-gray-700 hover:bg-gray-50"
                       >
                         <RefreshCcw className="w-4 h-4 mr-2" />
                         Regenerate
-                      </Button>
+                      </Button> */}
                     </>
                   )}
                 </div>

@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  PATIENT_STATUS_OPTIONS,
+  PatientStatus,
+  PatientStatusFilter,
+} from "@/app/constants/patient-constants";
 import { Badge, Button, Input } from "@/components/atoms";
 import {
   Table,
@@ -9,9 +14,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/atoms/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/molecules/DropdownMenu";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { getLoggedInUserProviderId } from "@/utils/provider.utils";
-import { ChevronDownIcon, Filter, MoreHorizontalIcon, Plus, Search } from "lucide-react";
+import { ChevronDownIcon, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -45,6 +56,7 @@ type Patient = {
 export default function PatientsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<PatientStatusFilter>(PatientStatusFilter.ALL);
 
   // API call to fetch patients from slice
   const { data: apiPatients, isLoading: apiLoading } = useGetPatientsByProviderQuery(
@@ -54,8 +66,14 @@ export default function PatientsPage() {
   // Use API data or fallback to empty array
   const patientsData = apiPatients || [];
 
-  // Filter patients based on search query
+  // Filter patients based on search query and status
   const filteredPatients = patientsData.filter((patient: Patient) => {
+    // Status filter
+    if (statusFilter !== PatientStatusFilter.ALL && patient.status !== statusFilter) {
+      return false;
+    }
+
+    // Search query filter
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
@@ -96,23 +114,38 @@ export default function PatientsPage() {
             <h1 className="text-2xl font-semibold text-text-gray-900">Patients</h1>
             <p className="text-sm text-text-gray-500">Manage all patients and their data</p>
           </div>
-          <Button>
+          {/* <Button>
             <Plus className="h-4 w-4 mr-2 text-white" />
             Add New
-          </Button>
+          </Button> */}
         </div>
 
         {/* Search and Filters */}
         <div className="flex items-center justify-between">
           <div className="relative">
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="h-10 w-10 border-ui-border">
+              {/* <Button variant="outline" size="icon" className="h-10 w-10 border-ui-border">
                 <Filter className="h-4.5 w-4.5 text-text-gray-500" />
-              </Button>
-              <Button variant="outline" className="h-10 px-4 py-2 border-ui-border">
-                All Status
-                <ChevronDownIcon className="h-4 w-4 ml-2 text-text-gray-500" />
-              </Button>
+              </Button>*/}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-10 px-4 py-2 border-ui-border">
+                    {PATIENT_STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label}
+                    <ChevronDownIcon className="h-4 w-4 ml-2 text-text-gray-500" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-40">
+                  {PATIENT_STATUS_OPTIONS.map((option) => (
+                    <DropdownMenuItem
+                      key={option.value}
+                      onClick={() => setStatusFilter(option.value)}
+                      className={`hover:!bg-gray-100 outline-none border-none focus:outline-none focus:border-none ${statusFilter === option.value ? "bg-gray-200" : ""}`}
+                    >
+                      {option.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <div className="relative flex items-center">
                 <Input
                   placeholder="Search by ID, name, email, or phone"
@@ -156,7 +189,7 @@ export default function PatientsPage() {
                 <TableHead className="text-xs uppercase">Last Visit Date</TableHead>
                 <TableHead className="text-xs uppercase">Tags</TableHead>
                 <TableHead className="text-xs uppercase">Status</TableHead>
-                <TableHead className="text-xs uppercase">Action</TableHead>
+                {/* <TableHead className="text-xs uppercase">Action</TableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody className="overflow-y-auto">
@@ -199,7 +232,7 @@ export default function PatientsPage() {
                     <TableCell>
                       <Badge
                         className={
-                          patient.status === "active"
+                          patient.status === PatientStatus.ACTIVE
                             ? "bg-brand-green-light text-brand-green hover:bg-brand-green-light"
                             : "bg-secondary text-text hover:bg-secondary"
                         }
@@ -207,11 +240,11 @@ export default function PatientsPage() {
                         {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreHorizontalIcon className="h-[17px] w-[17px] text-ui-icon-gray" />
                       </Button>
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))
               ) : (

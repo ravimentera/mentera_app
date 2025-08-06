@@ -339,7 +339,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </div>
         {/* Toggle button positioned to overlap sidebar and content */}
         <div
-          className="absolute z-[60]"
+          className="absolute z-40"
           style={{
             top: "50px",
             right: "0",

@@ -126,7 +126,7 @@ export function CommunicationCompositionDialog({
 
   return (
     <div
-      className="fixed top-0 right-0 bottom-0 z-50 bg-white transition-all duration-300 ease-in-out"
+      className="fixed top-0 right-0 bottom-0 z-10 bg-white transition-all duration-300 ease-in-out"
       style={{ left: `${sidebarWidth}px` }}
     >
       <CommunicationCompositionPage

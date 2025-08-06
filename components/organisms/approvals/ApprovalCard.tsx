@@ -1,5 +1,4 @@
 import { Avatar, AvatarFallback, Badge, Button, Skeleton } from "@/components/atoms";
-import { CommunicationToggle } from "@/components/molecules/CommunicationToggle";
 import {
   useApproveApprovalMutation,
   useDeclineApprovalMutation,
@@ -223,11 +222,11 @@ export function ApprovalCard({
               </div>
 
               {/* Communication Method Toggle */}
-              <CommunicationToggle
+              {/* <CommunicationToggle
                 activeMethod={activeCommMethod}
                 onMethodChange={setActiveCommMethod}
                 className="h-fit"
-              />
+              /> */}
             </div>
 
             {/* Message */}

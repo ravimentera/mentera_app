@@ -1,4 +1,6 @@
 // Types for the patient profile
+import { PatientStatus } from "@/app/constants/patient-constants";
+
 export interface TreatmentNotes {
   procedure: string;
   areasTreated: string[];
@@ -29,7 +31,7 @@ export interface Patient {
   lastName: string;
   email: string;
   phone: string;
-  status: "active" | "inactive";
+  status: PatientStatus;
   tags: string[];
   address: {
     street: string;

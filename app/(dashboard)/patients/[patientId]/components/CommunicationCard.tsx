@@ -32,11 +32,11 @@ export function CommunicationCard({
             </div>
           )}
           <h3 className="text-lg font-semibold">Communication</h3>
-          {showBorder && (
+          {/* {showBorder && (
             <button type="button" className="ml-auto text-sm font-medium text-blue-700">
               Edit
             </button>
-          )}
+          )} */}
         </div>
 
         {/* Preferences */}
@@ -49,6 +49,7 @@ export function CommunicationCard({
             <Switch
               checked={preferences.emailNotifications}
               onCheckedChange={(checked) => onToggle("emailNotifications", checked)}
+              disabled
             />
           </div>
           <div className="flex items-center justify-between">
@@ -59,6 +60,7 @@ export function CommunicationCard({
             <Switch
               checked={preferences.smsReminders}
               onCheckedChange={(checked) => onToggle("smsReminders", checked)}
+              disabled
             />
           </div>
         </div>
