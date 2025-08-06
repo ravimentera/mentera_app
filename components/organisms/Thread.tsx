@@ -40,13 +40,18 @@ import { Input } from "@/components/atoms/Input";
 import { MarkdownText } from "@/components/molecules/MarkdownText";
 import { TooltipIconButton } from "@/components/molecules/TooltipIconButton";
 import { usePatientContext } from "@/lib/hooks/patientContext";
-import { useFileUpload } from "@/lib/hooks/useFileUpload";
 import { useFirstMessageHandler } from "@/lib/hooks/useFirstMessageHandler";
+import { getAcceptedFileTypes } from "@/lib/rag/utils";
 import { AppDispatch } from "@/lib/store";
 import { useGetPatientsByProviderQuery } from "@/lib/store/api";
 import { useAppSelector } from "@/lib/store/hooks";
 import { selectUser } from "@/lib/store/slices/authSlice";
-import { UploadedFile, removeFile, selectAllFiles } from "@/lib/store/slices/fileUploadsSlice";
+import {
+  UploadedFile,
+  addFile,
+  removeFile,
+  selectAllFiles,
+} from "@/lib/store/slices/fileUploadsSlice";
 import { addMessage } from "@/lib/store/slices/messagesSlice";
 import {
   clearThreadPatient,
@@ -248,27 +253,30 @@ const FilePreview: FC = () => {
 
 const Composer: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { uploadFile } = useFileUpload();
-
-  const files = useSelector(selectAllFiles);
+  const dispatch = useDispatch<AppDispatch>();
+  const { acceptString, displayString } = getAcceptedFileTypes();
 
   const triggerBrowse = () => fileInputRef.current?.click();
 
-  const handleChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     if (!e.target.files) return;
     const incoming = Array.from(e.target.files);
-    if (incoming.length + files.length > 5) {
-      alert("You can attach a maximum of 5 files per message.");
+
+    // For now, we only support one file at a time
+    if (incoming.length > 1) {
+      alert("Please select only one file.");
       e.target.value = "";
       return;
     }
-    for (const file of incoming) {
-      try {
-        await uploadFile(file);
-      } catch (err) {
-        console.error("File upload failed:", err);
-      }
-    }
+
+    const file = incoming[0];
+
+    // You can add file type validation here if needed
+
+    // The file will be sent with the next message
+    // We can add it to a temporary state to show a preview
+    dispatch(addFile({ id: uuidv4(), name: file.name, type: "file", file, previewUrl: "" }));
+
     e.target.value = "";
   };
 
@@ -294,18 +302,27 @@ const Composer: FC = () => {
         </div>
         <div className="border-t border-slate-200 flex items-center px-2.5 py-1">
           <TooltipIconButton
-            tooltip="Attach file"
+            tooltip={`Upload a document (${displayString})`}
             variant="ghost"
             className="h-auto p-1.5"
             onClick={triggerBrowse}
           >
-            <PaperclipIcon className="h-5 w-5 text-black" />
+            <FileTextIcon className="h-5 w-5 text-black" />
           </TooltipIconButton>
+
           <div className="border-l border-slate-200 h-4 mx-2" />
           <Button variant="ghost" className="text-slate-500 p-1.5 h-auto text-sm font-medium">
             Explore Prompts
           </Button>
-          <input ref={fileInputRef} type="file" hidden onChange={handleChange} multiple />
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            onChange={handleFileChange}
+            multiple
+            accept={acceptString}
+          />
         </div>
       </ComposerPrimitive.Root>
     </div>

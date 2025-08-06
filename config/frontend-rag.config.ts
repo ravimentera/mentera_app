@@ -1,0 +1,6 @@
+export const frontendRagConfig = {
+  supportedFileTypes: {
+    "application/pdf": ".pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+  },
+};

@@ -82,3 +82,31 @@ export function sanitizeMarkdown(content: string): string {
       .replace(/(\n\s*[-*]\s[^\n]+)+\n{2,}/g, (match) => match.trimEnd() + "\n\n")
   );
 }
+
+/**
+ * Sanitizes a file name by removing problematic characters and balancing parentheses.
+ * @param fileName The original file name.
+ * @returns The sanitized file name.
+ */
+export function sanitizeFileName(fileName: string): string {
+  let sanitized = fileName;
+
+  // Remove potentially problematic characters
+  sanitized = sanitized.replace(/[\\[\\]{}|\\^~%`<>]/g, "");
+
+  // Balance parentheses
+  let openParenCount = (sanitized.match(/\(/g) || []).length;
+  let closeParenCount = (sanitized.match(/\)/g) || []).length;
+
+  while (openParenCount > closeParenCount) {
+    sanitized += ")";
+    closeParenCount++;
+  }
+
+  while (closeParenCount > openParenCount) {
+    sanitized = "(" + sanitized;
+    openParenCount++;
+  }
+
+  return sanitized;
+}

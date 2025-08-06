@@ -16,6 +16,7 @@ import { fetchDynamicLayout } from "@/lib/store/slices/dynamicLayoutSlice";
 import {
   UploadedFile,
   clear as clearFiles,
+  clearSearchResults,
   selectAllFiles,
 } from "@/lib/store/slices/fileUploadsSlice";
 import {
@@ -33,6 +34,8 @@ import {
   updateThreadLastMessageAt,
 } from "@/lib/store/slices/threadsSlice";
 
+import { uploadAndSearch } from "@/lib/api/files";
+import type { SearchResult } from "@/lib/api/files";
 import { sanitizeMarkdown } from "@/lib/utils";
 import { useChatMockHandler } from "@/mock/mockTera/useChatMockHandler";
 import { logValidationEvent } from "@/utils/responseValidator";
@@ -94,18 +97,6 @@ export function useWebSocketChat({
   const retryTimer = useRef<NodeJS.Timeout | null>(null);
   const maxRetries = 3;
   const retryDelay = 2_000;
-
-  /* ---------------- helper: File -> base64 -------------------- */
-  const encodeFile = useCallback(
-    (file: File) =>
-      new Promise<string>((ok, err) => {
-        const r = new FileReader();
-        r.onload = () => ok(String(r.result as string));
-        r.onerror = (e) => err(r.error);
-        r.readAsDataURL(file);
-      }),
-    [],
-  );
 
   /* ---------------- helper: stash AI message ------------------ */
   const stashAssistantMessage = useCallback(
@@ -213,6 +204,8 @@ export function useWebSocketChat({
   /* ---------------- sendMessage ------------------------------- */
   const sendMessage = useCallback(
     async (text: string, files?: UploadedFile[]) => {
+      console.log("[SendMessage-01] Initiating message send", { text, files });
+
       if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
         console.warn(tag("WARN"), blue, "socket not open – abort send");
         return;
@@ -220,18 +213,34 @@ export function useWebSocketChat({
 
       let messageText = text;
       let currentClassification = threadClassification;
+      let documentChunks: SearchResult[] = [];
 
-      // LAYER 1: Only call API for first query in thread
+      if (files && files.length > 0) {
+        console.log("[SendMessage-02] File detected, starting upload and search process");
+        const file = files[0];
+        const searchResult = await uploadAndSearch(file.file, text);
+        console.log("[SendMessage-03] Received search result from API", { searchResult });
+
+        if (searchResult.success && searchResult.results && searchResult.results.length > 0) {
+          documentChunks = searchResult.results.map((r) => ({ ...r, score: 0 }));
+          const documentContext = formatDocumentContext(searchResult.results);
+          messageText = `${text}\n\n---\n**Document Context:**\n${documentContext}`;
+          console.log("[SendMessage-04] Enriched message with document context");
+        } else {
+          console.log("[SendMessage-05] No relevant content found in uploaded documents");
+        }
+      }
+
+      // Continue with existing classification logic...
       if (needsFirstQueryEnhancement) {
-        console.log(`🔍 FIRST_QUERY: Calling classifier for thread ${activeThreadId}`);
+        console.log(`[SendMessage-06] Calling classifier for thread ${activeThreadId}`);
         const apiResult = await classifyQueryViaAPI(text, files);
+        console.log("[SendMessage-07] Received classification result", { apiResult });
 
-        // Handle patient selection requirement
         if (apiResult.action === "REQUEST_PATIENT_SELECTION") {
           return handlePatientSelectionRequired(text, files);
         }
 
-        // Store classification in Redux (now in threadsSlice)
         currentClassification = apiResult.classification;
         dispatch(
           setThreadClassification({
@@ -245,34 +254,36 @@ export function useWebSocketChat({
           }),
         );
 
-        // Use enhanced query for first message
-        messageText = apiResult.enhancedQuery || text;
+        if (apiResult.enhancedQuery) {
+          const hasDocumentContext = messageText.includes("Document Context:");
+          messageText = hasDocumentContext
+            ? messageText.replace(text, apiResult.enhancedQuery)
+            : apiResult.enhancedQuery;
+          console.log("[SendMessage-08] Enhanced message with query from classifier");
+        }
 
-        console.log("FIRST_QUERY: Thread classified and enhanced", {
+        console.log("[SendMessage-09] Thread classified and enhanced", {
           threadId: activeThreadId,
           // @ts-ignore
           scope: currentClassification.scope,
           enhanced: !!apiResult.enhancedQuery,
+          hasDocuments: files && files.length > 0,
           originalLength: text.length,
           enhancedLength: messageText.length,
         });
       } else {
-        // Subsequent queries: use stored classification, check patient requirement
-        console.log("SUBSEQUENT_QUERY: Using stored classification", {
+        console.log("[SendMessage-10] Using stored classification", {
           threadId: activeThreadId,
           scope: currentClassification?.scope,
           requiresPatient: currentClassification?.requiresPatient,
+          hasDocuments: files && files.length > 0,
         });
 
         if (currentClassification?.requiresPatient && !currentPatientId) {
           return handlePatientSelectionRequired(text, files);
         }
-
-        // Use original text for subsequent queries (no enhancement)
-        messageText = text;
       }
 
-      // Log validation event
       logValidationEvent("ALLOWED", text, {
         activePatientId: currentPatientId,
         conversationScope: currentClassification?.scope as any,
@@ -283,14 +294,13 @@ export function useWebSocketChat({
       const convo = `${store.getState().threads.activeThreadId}_thread_${activeThreadId}`;
 
       const payload: any = {
-        type: hasDoc ? "CHAT_WITH_DOCUMENT" : "chat",
+        type: "chat",
         nurseId: testNurse.id,
         conversationId: convo,
         medspaId: testMedSpa.medspaId,
         medSpaContext: testMedSpa,
         streaming: true,
         cacheControl: { debug: cacheDebug, forceFresh },
-        // Add session attributes for downstream processing
         sessionAttributes: {
           activePatientId: currentPatientId,
           providerId: testNurse?.id,
@@ -299,6 +309,9 @@ export function useWebSocketChat({
           threadId: activeThreadId,
           queryEnhanced: needsFirstQueryEnhancement,
           classification: currentClassification,
+          hasDocumentContext: files && files.length > 0,
+          documentCount: files?.length || 0,
+          documentChunks,
         },
       };
 
@@ -310,37 +323,14 @@ export function useWebSocketChat({
 
       setLoading(true);
 
-      if (!hasDoc) {
-        payload.message = messageText;
-        socketRef.current.send(JSON.stringify(payload));
-        return;
-      }
+      payload.message = messageText;
 
-      /* ------- chat + first file ---- */
-      const file = files[0];
-      const dataUrl = await encodeFile(file.file); // data:…;base64,xxx
-      const base64 = dataUrl.includes(",") ? dataUrl.split(",", 2)[1] : dataUrl;
-
-      payload.payload = {
-        message: messageText || `Please analyze this document: ${file.name}`,
-        document: {
-          fileName: file.name,
-          base64Data: base64,
-          mimeType: file.file.type || "application/octet-stream",
-          fileSize: file.file.size,
-        },
-        conversationId: convo,
-        nurseId: testNurse.id,
-        streaming: true,
-        processingOptions: {
-          maxFileSize: 10 * 1024 * 1024,
-          sanitizeFileName: true,
-          extractTextContent: true,
-        },
-      };
-
+      console.log("[SendMessage-11] Sending payload to WebSocket", { payload });
       socketRef.current.send(JSON.stringify(payload));
-      dispatch(clearFiles());
+
+      if (hasDoc) {
+        dispatch(clearFiles());
+      }
     },
     [
       activeThreadId,
@@ -352,13 +342,25 @@ export function useWebSocketChat({
       testMedSpa,
       testNurse.id,
       dispatch,
-      encodeFile,
       handlePatientSelectionRequired,
       classifyQueryViaAPI,
       needsFirstQueryEnhancement,
       threadClassification,
     ],
   );
+
+  // Helper function to format document context
+  const formatDocumentContext = (results: any[]): string => {
+    if (results.length === 0) return "";
+
+    return results
+      .map((result, index) => {
+        const metadata = result.metadata;
+        const pageNumber = metadata.loc?.pageNumber ? ` (Page ${metadata.loc?.pageNumber})` : "";
+        return `**Source: ${metadata.source}${pageNumber}**\n${result.pageContent.trim()}`;
+      })
+      .join("\n\n---\n\n");
+  };
 
   /* ---------------- mock handler ------------------------------ */
   const { isMockActive, mockSendMessage, initialMockConnectedState } = useChatMockHandler({
@@ -386,8 +388,8 @@ export function useWebSocketChat({
     const connect = async () => {
       try {
         /* ---- get JWT ---------------------------------------- */
-        const tokRes = await fetch("/api/token");
-        if (!tokRes.ok) throw new Error(`token api ${tokRes.status}`);
+        const tokRes: any = await fetch("/api/token");
+        if (!tokRes) throw new Error(`token api ${tokRes.status}`);
         const { token } = await tokRes.json();
 
         /* ---- open socket ------------------------------------ */

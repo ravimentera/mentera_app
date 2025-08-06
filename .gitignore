@@ -16,3 +16,6 @@ out/
 tsconfig.tsbuildinfo
 
 /public/uploads
+
+# PDF storage
+.mentera-storage/
