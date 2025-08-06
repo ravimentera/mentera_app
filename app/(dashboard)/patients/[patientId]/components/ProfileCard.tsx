@@ -1,7 +1,7 @@
 "use client";
 
-import { Badge, Button } from "@/components/atoms";
-import { Mail, Pencil, Phone, Plus } from "lucide-react";
+import { Badge } from "@/components/atoms";
+import { Mail, Phone } from "lucide-react";
 import { Patient } from "../types";
 
 interface ProfileCardProps {
@@ -57,9 +57,9 @@ export function ProfileCard({ patient }: ProfileCardProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Tags</span>
-            <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-gray-100">
+            {/* <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-gray-100">
               <Plus className="h-4 w-4 text-gray-500" />
-            </Button>
+            </Button> */}
           </div>
           <div className="flex flex-wrap gap-2">
             {patient.tags.map((tag) => (
@@ -85,9 +85,9 @@ export function ProfileCard({ patient }: ProfileCardProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Details</span>
-            <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-gray-100">
+            {/* <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-gray-100">
               <Pencil className="h-4 w-4 text-gray-500" />
-            </Button>
+            </Button> */}
           </div>
           <div className="space-y-4">
             <div className="space-y-1">

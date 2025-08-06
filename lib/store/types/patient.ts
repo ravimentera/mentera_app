@@ -1,3 +1,5 @@
+import { PatientStatus, PatientStatusFilter } from "@/app/constants/patient-constants";
+
 export interface Patient {
   id: string;
   patientId: string;
@@ -5,7 +7,7 @@ export interface Patient {
   lastName: string;
   email?: string;
   phone?: string;
-  status?: "active" | "inactive";
+  status?: PatientStatus;
   lastVisitDate?: string | null;
   nextAppointment?: string | null;
   tags?: string[];
@@ -48,7 +50,7 @@ export interface PatientsState {
   selectedPatient: Patient | null;
   searchQuery: string;
   filters: {
-    status: "All" | "active" | "inactive";
+    status: PatientStatusFilter;
     provider?: string;
     specialty?: string;
   };

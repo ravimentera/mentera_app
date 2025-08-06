@@ -1,3 +1,4 @@
+import { PatientStatusFilter } from "@/app/constants/patient-constants";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "../index";
 import type { Patient, PatientsState } from "../types";
@@ -6,7 +7,7 @@ const initialState: PatientsState = {
   selectedPatient: null,
   searchQuery: "",
   filters: {
-    status: "All",
+    status: PatientStatusFilter.ALL,
   },
   viewMode: "table",
   loading: false,
@@ -27,7 +28,7 @@ export const patientsSlice = createSlice({
       state.filters = { ...state.filters, ...action.payload };
     },
     clearFilters: (state) => {
-      state.filters = { status: "All" };
+      state.filters = { status: PatientStatusFilter.ALL };
       state.searchQuery = "";
     },
     setViewMode: (state, action: PayloadAction<"table" | "grid">) => {

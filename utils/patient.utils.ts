@@ -1,4 +1,5 @@
 import { CommunicationPreferences } from "@/app/(dashboard)/patients/[patientId]/types";
+import { PatientStatus } from "@/app/constants/patient-constants";
 import { MedicalHistoryResponse, PatientDetailsResponse, VisitsResponse } from "@/lib/store/api";
 import { getFullName } from "@/lib/utils";
 import {
@@ -18,7 +19,7 @@ export function transformPatientData(patientDetails: PatientDetailsResponse): Pa
     lastName: patientDetails?.data?.lastName ?? "N/A",
     email: patientDetails?.data?.email ?? "N/A",
     phone: patientDetails?.data?.phone ?? "N/A",
-    status: (patientDetails?.data?.status as "active" | "inactive") ?? "inactive",
+    status: (patientDetails?.data?.status as PatientStatus) ?? PatientStatus.INACTIVE,
     tags: patientDetails?.data?.tags?.length > 0 ? patientDetails?.data?.tags : ["N/A"],
     address: {
       street: patientDetails?.data?.address ?? "N/A",

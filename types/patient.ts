@@ -1,10 +1,12 @@
+import { PatientStatus } from "@/app/constants/patient-constants";
+
 export interface Patient {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
-  status: "active" | "inactive";
+  status: PatientStatus;
   tags: string[];
   address: {
     street: string;
